@@ -12,6 +12,9 @@ SESSION_MAX_AGE_S = 30 * 24 * 3600
 # Unset: only the request's own host is accepted.
 ALLOWED_ORIGINS = [o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 BACKGROUND_TASKS = os.environ.get("BACKGROUND_TASKS", "1") == "1"  # tests turn this off
+# Local development only: sign every localhost visitor in as this handle (must already
+# have an account in the local database). Refused when COOKIE_SECURE=1.
+DEV_AUTO_LOGIN = os.environ.get("DEV_AUTO_LOGIN", "").strip()
 
 # ---------- Codeforces API client ----------
 CF_API_BASE = os.environ.get("CF_API_BASE", "https://codeforces.com/api")
@@ -96,7 +99,10 @@ RANKED_READY_TIMEOUT_S = 60
 
 
 def check_production_settings() -> None:
-    """Refuse to run with secure cookies (i.e. in production) and the default secret key."""
+    """Refuse to run with secure cookies (i.e. in production) and the default secret key,
+    or with the local-only DEV_AUTO_LOGIN."""
+    if COOKIE_SECURE and DEV_AUTO_LOGIN:
+        raise RuntimeError("DEV_AUTO_LOGIN is for local development only; unset it when COOKIE_SECURE=1.")
     if COOKIE_SECURE and SECRET_KEY == DEFAULT_SECRET_KEY:
         raise RuntimeError(
             "SECRET_KEY is still the default value but COOKIE_SECURE=1. Set SECRET_KEY to a long "
