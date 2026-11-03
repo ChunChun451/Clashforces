@@ -92,7 +92,7 @@ let globalListeners = false;
 export async function mountTopbar(current) {
   const bar = $("#topbar");
   if (!bar) return;
-  const links = [["/", "Play"], ["/queue", "Ranked"], ["/friends", "Friends"], ["/upsolve", "Upsolve"]];
+  const links = [["/", "Play"], ["/events", "Events"], ["/queue", "Ranked"], ["/friends", "Friends"], ["/upsolve", "Upsolve"]];
   const nav = el("nav.nav", { "aria-label": "Main" },
     links.map(([href, label]) => el("a", { href, "aria-current": current === href ? "page" : null }, label)));
   const right = el("div.topbar-right");

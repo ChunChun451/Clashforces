@@ -354,6 +354,7 @@ async def test_events_listing_and_visibility(client, world):
     past = contest.listing(None)["past"]
     assert past[0]["title"] == "Live one" and past[0]["winner"]["players"][0]["handle"] == "c2"
     assert client.get("/api/events").status_code == 200
+    assert client.get("/events").status_code == 200 and client.get("/events/new").status_code == 200
     assert pub and hidden
 
 

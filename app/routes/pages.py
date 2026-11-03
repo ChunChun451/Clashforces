@@ -20,6 +20,8 @@ PAGES = {
     "/login": "login",
     "/settings": "settings",
     "/new": "new",
+    "/events": "events",
+    "/events/new": "event-new",
     "/m/{code}": "match",
     "/queue": "queue",
     "/upsolve": "upsolve",

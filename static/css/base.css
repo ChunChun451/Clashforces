@@ -107,6 +107,13 @@ main.wide { max-width: 1240px; }
 .site-footer a { border-bottom-color: transparent; }
 .site-footer a:hover { color: var(--text-strong); }
 
+/* five nav items: a little tighter on tablets so the last one isn't cut off */
+@media (min-width: 721px) and (max-width: 900px) {
+  .topbar { gap: var(--s3); }
+  .nav a { padding: 0 var(--s2); }
+  .nav a[aria-current="page"]::after { left: var(--s2); right: var(--s2); }
+}
+
 @media (max-width: 720px) {
   main { padding: var(--s5) var(--s4) var(--s7); }
   .site-footer { padding: var(--s5) var(--s4); }
