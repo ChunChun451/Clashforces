@@ -16,18 +16,20 @@ function joinForm({ big = false, id = "join-code" } = {}) {
 }
 
 const MODES = [
-  { key: "friend", icon: "swords", title: "Friend duel", text: "1 vs 1 with a link. ICPC or Lockout, any rating range, optional handicap. Unrated.", href: "/new", go: "Create a duel" },
-  { key: "group", icon: "users", title: "Group room", text: "3–10 players and a contest-style standings table. Unrated.", href: "/new?mode=group", go: "Open a room" },
-  { key: "ranked", icon: "trophy", title: "Ranked", text: "3 problems, 60 minutes, ICPC rules. Matched by duel rating, which moves with Elo.", href: "/queue", go: "Find a match" },
+  { key: "friend", icon: "swords", title: "Friend duel", tag: "1v1", text: "Send a link, race on the same problems. ICPC or Lockout, optional handicap.", href: "/new", go: "Create a duel" },
+  { key: "team", icon: "shield", title: "Team duel", tag: "2v2 · 3v3", text: "Two teams, one scoreboard. A problem counts when any teammate solves it.", href: "/new?mode=team", go: "Create a team duel" },
+  { key: "group", icon: "users", title: "Group room", tag: "3–10", text: "Everyone on one contest-style standings table.", href: "/new?mode=group", go: "Open a room" },
+  { key: "ranked", icon: "trophy", title: "Ranked", tag: "Elo", text: "3 problems, 60 minutes, ICPC. Matched by duel rating.", href: "/queue", go: "Find a match" },
 ];
+const UPSOLVE = { key: "upsolve", icon: "retry", title: "Upsolve", tag: "list", text: "Problems you missed in matches. They tick off on Accepted.", href: "/upsolve", go: "Open the list" };
 
 function modeCard(m, loggedIn) {
   const href = loggedIn ? m.href : `/login?next=${encodeURIComponent(m.href)}`;
   return el("a.card.mode-card", { href },
-    el("div.mode-icon", icon(m.icon)),
+    el("div.mode-top", el("div.mode-icon", icon(m.icon)), m.tag ? el("span.mode-tag", m.tag) : null),
     el("h2", m.title),
     el("p", m.text),
-    el("div.go", m.go));
+    el("div.go", m.go, el("span.arrow", { "aria-hidden": "true" }, "→")));
 }
 
 // ---------- logged out ----------
@@ -99,32 +101,67 @@ function loggedOut() {
         el("h3", s.title), el("p", s.text), el("div.term", s.term))))),
     el("section", { "aria-labelledby": "modes" },
       el("div.section-head", el("h2", { id: "modes" }, "Ways to play")),
-      el("div.card-grid", MODES.map((m) => modeCard(m, false))))));
+      el("div.card-grid.mode-grid.n4", MODES.map((m) => modeCard(m, false))))));
   mountFooter();
 }
 
 // ---------- logged in ----------
 
-const MODE_NAME = { friend: "Friend duel", group: "Group room", ranked: "Ranked" };
+const MODE_NAME = { friend: "Friend duel", group: "Group room", ranked: "Ranked", team: "Team duel" };
 const ordinal = (n) => `${n}${["th", "st", "nd", "rd"][(n % 100 > 10 && n % 100 < 14) ? 0 : n % 10 < 4 ? n % 10 : 0]}`;
 
+function ago(t) {
+  const s = Math.max(0, Date.now() / 1000 - t);
+  if (s < 3600) return `${Math.max(1, Math.round(s / 60))}m ago`;
+  if (s < 86400) return `${Math.round(s / 3600)}h ago`;
+  if (s < 86400 * 30) return `${Math.round(s / 86400)}d ago`;
+  return new Date(t * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  return h < 5 ? "Up late" : h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+}
+
+// The result badge: Won / Lost / Draw for two-sided matches, a place for rooms.
+function resultBadge(m) {
+  const two = m.mode !== "group";
+  let text, cls;
+  if (two) {
+    const r = m.result || (m.place === 1 ? "win" : "loss");
+    text = { win: "Won", loss: "Lost", draw: "Draw" }[r];
+    cls = r;
+  } else {
+    text = `${ordinal(m.place)}/${m.players}`;
+    cls = m.place === 1 ? "win" : "room";
+  }
+  return el("span", { class: `result-badge ${cls}`, title: two ? text : `Place ${m.place} of ${m.players}` }, text);
+}
+
+function people(list, max = 3) {
+  return [list.slice(0, max).map((o, i) => [i ? ", " : "", handleEl(o.handle, o.cf_rating)]),
+    list.length > max ? el("span.muted", ` +${list.length - max}`) : ""];
+}
+
 function recentPanel(matches) {
-  const body = matches.length
-    ? el("ul.panel-list", matches.slice(0, 6).map((m) => el("li",
-      el("div.match-row",
-        el("span", { class: `place${m.place === 1 ? " first" : ""}`, title: `Place ${m.place} of ${m.players}` }, `${ordinal(m.place)}/${m.players}`),
-        el("div.opp",
-          m.opponents.length ? ["vs ", m.opponents.slice(0, 3).map((o, i) => [i ? ", " : "", handleEl(o.handle, o.cf_rating)]),
-            m.opponents.length > 3 ? ` +${m.opponents.length - 3}` : ""] : "Solo",
-          el("div.meta", `${MODE_NAME[m.mode] || m.mode}, ${m.rules === "icpc" ? "ICPC" : "Lockout"}`))),
-      el("a.match-code", { href: `/m/${m.code}` }, m.code))))
-    : emptyState({ iconName: "history", title: "No matches yet",
-      text: "Your finished duels and rooms show up here, with places and opponents.",
-      action: el("a.btn.primary.small", { href: "/new" }, "Start a friend duel") });
-  return el("section.panel",
-    el("div.panel-head", el("h2", "Recent matches"),
-      matches.length ? el("a", { href: `/u/${encodeURIComponent(me.user.handle)}` }, "All matches") : null),
-    body);
+  const head = el("div.panel-head", el("h2", "Recent matches"),
+    matches.length ? el("a", { href: `/u/${encodeURIComponent(me.user.handle)}` }, "All matches") : null);
+  if (!matches.length) {
+    return el("section.panel.recent", head,
+      el("div.inline-empty",
+        el("div.empty-icon", icon("history")),
+        el("div.grow", el("strong", "No matches yet"), el("p", "Finished duels, team duels and rooms show up here with results and opponents.")),
+        el("a.btn.primary.small", { href: "/new" }, "Start a duel")));
+  }
+  return el("section.panel.recent", head,
+    el("ol.recent-list", matches.slice(0, 6).map((m) => el("li",
+      resultBadge(m),
+      el("div.opp",
+        m.opponents.length ? ["vs ", people(m.opponents)] : "Solo",
+        m.teammates && m.teammates.length ? el("span.with", " · with ", people(m.teammates, 2)) : null),
+      el("span.recent-mode", `${MODE_NAME[m.mode] || m.mode} · ${m.rules === "icpc" ? "ICPC" : "Lockout"}`),
+      el("span.recent-when", { title: new Date(m.ended_at * 1000).toLocaleString() }, ago(m.ended_at)),
+      el("a.match-code", { href: `/m/${m.code}`, "aria-label": `Open match ${m.code}` }, m.code)))));
 }
 
 function sparkline(points) {
@@ -149,22 +186,28 @@ function sparkline(points) {
   return svg;
 }
 
-function ratingPanel(hist) {
+function statsPanel(hist, stats) {
   const u = me.user;
   const pts = [];
   if (hist.length) pts.push({ y: hist[0].before });
   for (const p of hist.slice(-20)) pts.push({ y: p.after });
   const last = hist[hist.length - 1];
   const delta = last ? last.after - last.before : null;
-  return el("section.panel.rating-panel",
-    el("div.panel-head", el("h2", "Rating"), el("a", { href: "/queue" }, "Ranked queue")),
-    el("div.panel-body",
-      el("div.kpis",
-        el("div", el("div.kpi", String(u.duel_rating)), el("div.kpi-label", "Duel rating",
-          delta !== null ? el("span", { class: delta >= 0 ? "accent" : "danger" }, `  ${delta >= 0 ? "+" : ""}${delta} last`) : null)),
-        el("div", el("div", { class: `kpi ${ratingClass(u.cf_rating)}` }, u.cf_rating ? String(u.cf_rating) : "—"), el("div.kpi-label", "Codeforces"))),
+  const rec = (stats && stats.record.overall) || { win: 0, loss: 0, draw: 0 };
+  const played = rec.win + rec.loss + rec.draw;
+  const kpi = (value, label, extra, cls = "") => el("div.stat",
+    el("div", { class: `kpi ${cls}`.trim() }, value), el("div.kpi-label", label, extra || null));
+  return el("section.panel.stats-panel",
+    el("div.panel-head", el("h2", "Your stats"), el("a", { href: `/u/${encodeURIComponent(u.handle)}` }, "Profile")),
+    el("div.stat-grid",
+      kpi(String(u.duel_rating), "Duel rating",
+        delta !== null ? el("span", { class: delta >= 0 ? "accent" : "danger" }, ` ${delta >= 0 ? "+" : ""}${delta}`) : null),
+      kpi(u.cf_rating ? String(u.cf_rating) : "—", "Codeforces", null, ratingClass(u.cf_rating)),
+      kpi(played ? `${rec.win}–${rec.loss}${rec.draw ? `–${rec.draw}` : ""}` : "—", rec.draw ? "W–L–D" : "W–L"),
+      kpi(played ? `${Math.round(((rec.win + rec.draw / 2) / played) * 100)}%` : "—", `Win rate · ${played} played`)),
+    el("div.spark-wrap",
       pts.length > 1 ? sparkline(pts)
-        : el("p.small.muted.spark-note", "Ranked matches move your duel rating. Play one to start the graph.")));
+        : el("p.small.muted", "Ranked matches move your duel rating. ", el("a", { href: "/queue" }, "Find a ranked match"), " to start the graph.")));
 }
 
 function friendsPanel(friends) {
@@ -172,45 +215,51 @@ function friendsPanel(friends) {
   let body;
   if (!friends.length) {
     body = emptyState({ iconName: "userPlus", title: "No friends added",
-      text: "Add friends by their Codeforces handle to see when they're online and challenge them.",
+      text: "Add friends by handle to see when they're online.",
       action: el("a.btn.small", { href: "/friends" }, "Add friends") });
   } else if (!online.length) {
     body = emptyState({ iconName: "users", title: "Nobody online right now",
-      text: `${friends.length} ${friends.length === 1 ? "friend" : "friends"} added. Send a duel link and they can join when they're back.`,
+      text: `${friends.length} ${friends.length === 1 ? "friend" : "friends"} added. Send a duel link and they can join later.`,
       action: el("a.btn.small", { href: "/new" }, "Create a duel link") });
   } else {
-    body = el("ul.panel-list", online.slice(0, 6).map((f) => el("li",
+    body = el("ul.panel-list", online.slice(0, 5).map((f) => el("li",
       el("span", el("span.online-dot.on", { "aria-hidden": "true" }), handleEl(f.handle, f.cf_rating)),
       el("span.meta.mono", { title: "Your head-to-head record" }, `${f.h2h.win}–${f.h2h.loss}`))));
   }
-  return el("section.panel",
-    el("div.panel-head", el("h2", "Friends online", online.length ? el("span.muted", `  ${online.length}`) : null),
+  return el("section.panel.friends-panel",
+    el("div.panel-head", el("h2", "Friends online", online.length ? el("span.count", String(online.length)) : null),
       el("a", { href: "/friends" }, "Friends")),
-    body);
+    el("div.panel-fill", body));
 }
 
 async function loggedIn() {
   const active = me.active;
   const handle = encodeURIComponent(me.user.handle || "");
-  const [recent, hist, friends] = await Promise.all([
+  const [recent, hist, friends, stats] = await Promise.all([
     api(`/api/users/${handle}/matches`).then((r) => r.matches).catch(() => []),
     api(`/api/users/${handle}/rating-history`).then((r) => r.points).catch(() => []),
     api("/api/friends").then((r) => r.friends).catch(() => []),
+    api(`/api/users/${handle}/stats`).catch(() => null),
   ]);
-  const modes = [...MODES, { key: "upsolve", icon: "retry", title: "Upsolve", text: "Problems you didn't solve in your matches. They tick off when you get Accepted.", href: "/upsolve", go: "Open the list" }];
   app.replaceChildren(el("div.page",
     el("div.stack",
-      el("div.page-head",
-        el("div", el("h1", "Play"), el("p.lede", "Pick a mode, or join a match with its code.")),
-        joinForm()),
+      el("header.home-head",
+        el("div",
+          el("h1", `${greeting()}, `, handleEl(me.user.handle, me.user.cf_rating, { link: false })),
+          el("p.lede", "Pick a way to play, or jump into a match with its code.")),
+        el("div.home-join",
+          el("label.small", { for: "join-code" }, "Have a match code?"),
+          joinForm())),
       active ? el("div.banner.good", { role: "status" },
         el("span.pulse", { "aria-hidden": "true" }),
         el("span.grow", active.kind === "queue" ? "You're in the ranked queue." : ["You're in match ", el("span.mono", active.code), "."]),
         el("a.btn.primary.small", { href: active.kind === "queue" ? "/queue" : `/m/${active.code}` }, active.kind === "queue" ? "Open queue" : "Back to match")) : null),
-    el("div.card-grid", modes.map((m) => modeCard(m, true))),
+    el("section.stack", { "aria-label": "Ways to play" },
+      el("div.card-grid.mode-grid.n5", [...MODES, UPSOLVE].map((m) => modeCard(m, true)))),
     el("div.dash",
-      recentPanel(recent),
-      el("div.dash-side", ratingPanel(hist), friendsPanel(friends)))));
+      statsPanel(hist, stats),
+      friendsPanel(friends),
+      recentPanel(recent))));
 }
 
 function mountFooter() {

@@ -1,4 +1,4 @@
-// Create a friend duel or group room, or edit a lobby's settings (?edit=CODE).
+// Create a friend duel, team duel or group room, or edit a lobby's settings (?edit=CODE).
 import { $, api, el, getMe, mountTopbar } from "./api.js";
 
 mountTopbar("/");
@@ -12,7 +12,8 @@ const RATINGS = [];
 for (let r = 800; r <= 3500; r += 100) RATINGS.push(r);
 
 const state = {
-  mode: params.get("mode") === "group" ? "group" : "friend",
+  mode: ["group", "team"].includes(params.get("mode")) ? params.get("mode") : "friend",
+  team_size: 2,
   rules: "icpc",
   count: 3, rating_min: 1200, rating_max: 1600,
   tags_include: new Set(), tags_avoid: new Set(),
@@ -30,9 +31,12 @@ if (editCode) {
     tags_include: new Set(s.tags_include), tags_avoid: new Set(s.tags_avoid),
     avoid_interactive: s.avoid_interactive, use_custom: !!s.custom_problems,
     custom_problems: s.custom_problems || "", duration_min: s.duration_min, freeze_min: s.freeze_min || 0,
-    handicap: s.handicap,
+    handicap: s.handicap, team_size: s.team_size || 2,
   });
 }
+
+const TITLES = { friend: "New friend duel", team: "New team duel", group: "New group room" };
+const CREATE = { friend: "Create duel", team: "Create team duel", group: "Create room" };
 
 let tags = [];
 try { tags = (await api("/api/tags")).tags; } catch { /* cache still loading */ }
@@ -106,7 +110,8 @@ function payload() {
       custom_problems: state.use_custom ? state.custom_problems : null,
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
-      handicap: state.handicap,
+      handicap: state.mode === "team" ? null : state.handicap,
+      ...(state.mode === "team" ? { team_size: state.team_size } : {}),
     },
   };
 }
@@ -163,10 +168,14 @@ function render() {
   app.replaceChildren(el("form.page", { onsubmit: submit, novalidate: true },
     el("div.page-head",
       el("div",
-        el("h1", editCode ? "Match settings" : state.mode === "group" ? "New group room" : "New friend duel"),
+        el("h1", editCode ? "Match settings" : TITLES[state.mode]),
         el("p.lede", editCode ? "Changes reset everyone's Ready." : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
-      editCode ? null : segmented([["friend", "Friend duel"], ["group", "Group room (3–10)"]], state.mode, (v) => state.mode = v, "Mode")),
+      editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => state.mode = v, "Mode")),
     el("div.stack",
+      state.mode === "team" ? panel("Teams", null,
+        segmented([[2, "2 vs 2"], [3, "3 vs 3"]], state.team_size, (v) => state.team_size = v, "Team size"),
+        el("p.small.muted", `${state.team_size * 2} players in two teams. A problem counts for the team when any member solves it. `
+          + "Players pick a side in the lobby; you can shuffle or balance by rating there. Unrated.")) : null,
       panel("Rules", null,
         segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
           state.rules = v;
@@ -183,10 +192,12 @@ function render() {
           state.rules === "icpc"
             ? el("div.field", el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
             : null)),
-      el("p.small.muted", "Handicaps are set in the lobby once your friend has joined."),
+      el("p.small.muted", state.mode === "team" ? "Team duels have no handicaps."
+        : state.mode === "group" ? "Handicaps are set in the lobby once players have joined."
+          : "Handicaps are set in the lobby once your friend has joined."),
       err,
       el("div.actions",
-        el("button.btn.primary.big", { type: "submit" }, editCode ? "Save settings" : state.mode === "group" ? "Create room" : "Create duel"),
+        el("button.btn.primary.big", { type: "submit" }, editCode ? "Save settings" : CREATE[state.mode]),
         editCode ? el("a.btn.ghost.big", { href: `/m/${editCode}` }, "Cancel") : null))));
   refreshPreview();
 }

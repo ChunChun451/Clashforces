@@ -94,7 +94,9 @@ a.card:active { transform: translateY(1px); }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--s4); }
 
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); box-shadow: var(--shadow); overflow: hidden; }
-.panel-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s4) var(--s5); border-bottom: 1px solid var(--line); min-height: 56px; }
+/* One header height for every panel (56px), whether it holds a link, a button or nothing. */
+.panel-head { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); padding: var(--s2) var(--s5); border-bottom: 1px solid var(--line); min-height: 56px; }
+.panel-head:has(p) { padding-top: var(--s4); padding-bottom: var(--s4); }
 .panel-head h2 { font-size: 15px; }
 .panel-head a { font-size: 13px; color: var(--muted); border-bottom-color: transparent; }
 .panel-head a:hover { color: var(--text-strong); }
@@ -104,15 +106,41 @@ a.card:active { transform: translateY(1px); }
 .panel-list > li:last-child { border-bottom: 0; }
 .panel-list .meta { font-size: 13px; color: var(--muted); }
 
-.mode-card { display: grid; gap: var(--s2); align-content: start; }
+/* Mode cards: icon + tag on top, text, and the call to action pinned to the bottom so rows line up. */
+a.card.mode-card, .mode-card { display: grid; grid-template-rows: auto auto 1fr auto; gap: var(--s2); padding: var(--s4) var(--s4) var(--s4); }
+.mode-top { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); margin-bottom: var(--s2); }
 .mode-card .mode-icon {
-  display: grid; place-items: center; width: 40px; height: 40px; margin-bottom: var(--s2);
+  display: grid; place-items: center; width: 36px; height: 36px;
   border-radius: var(--r); border: 1px solid var(--line); background: var(--surface-2); color: var(--accent);
+  transition: border-color var(--fast);
 }
-.mode-card h2 { font-size: 16px; }
-.mode-card p { font-size: 13px; color: var(--muted); }
-.mode-card .go { margin-top: var(--s2); font-size: 13px; font-weight: 500; color: var(--text-strong); }
+.mode-card .mode-icon svg { width: 18px; height: 18px; }
+.mode-tag { font: 500 11px var(--font-mono); color: var(--muted); letter-spacing: .02em; white-space: nowrap; }
+.mode-card h2 { font-size: 15px; }
+.mode-card p { font-size: 13px; line-height: 1.5; color: var(--muted); }
+.mode-card .go { display: flex; align-items: center; justify-content: space-between; margin-top: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); font-size: 13px; font-weight: 500; color: var(--text-strong); }
+.mode-card .go .arrow { color: var(--muted); transition: transform var(--fast), color var(--fast); }
 a.mode-card:hover .mode-icon { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+a.mode-card:hover .go .arrow { color: var(--accent); transform: translateX(3px); }
+
+/* Mode grids are sized for their card count, so a row never ends with a lone orphan.
+   5 cards: one row of 5, then 3 + 2 (wider) on tablets, then a list on phones. */
+.mode-grid.n5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.mode-grid.n4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 1000px) {
+  .mode-grid.n5 { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .mode-grid.n5 > * { grid-column: span 2; }
+  .mode-grid.n5 > :nth-child(n + 4) { grid-column: span 3; }
+  .mode-grid.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 720px) {
+  .mode-grid.n5, .mode-grid.n4 { grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+  .mode-grid.n5 > *, .mode-grid.n5 > :nth-child(n + 4) { grid-column: auto; }
+  /* compact on phones: icon beside the text */
+  a.card.mode-card, .mode-card { grid-template-columns: 36px minmax(0, 1fr); grid-template-rows: auto auto; column-gap: var(--s4); row-gap: 2px; }
+  .mode-top { grid-row: span 2; margin: 0; align-self: start; }
+  .mode-tag, .mode-card .go { display: none; }
+}
 
 .section-title { font-size: 13px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin: 0; }
 h2.section-title { font-size: 13px; }
@@ -262,3 +290,15 @@ td.rank { width: 48px; color: var(--muted); }
 .queue-card .btn.big { min-width: 200px; }
 /* small text links still get a 40px tap target */
 .panel-head a, .match-code { display: inline-flex; align-items: center; min-height: var(--h-md); padding: 0 var(--s2); margin-right: calc(-1 * var(--s2)); }
+
+/* ---------- team colors (team duels) ---------- */
+.team-a { --team: var(--team-a); --team-soft: var(--team-a-soft); }
+.team-b { --team: var(--team-b); --team-soft: var(--team-b-soft); }
+.team-badge {
+  display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--r-sm);
+  font: 600 11px/1 var(--font-mono); color: var(--team); background: var(--team-soft);
+  border: 1px solid color-mix(in srgb, var(--team) 35%, transparent);
+}
+.team-badge.team-a, .team-badge.team-b { color: var(--team); }
+.team-name { display: inline-flex; align-items: center; gap: var(--s2); }
+.chip.you { height: 18px; padding: 0 6px; font-size: 11px; }

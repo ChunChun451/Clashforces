@@ -102,12 +102,14 @@ main.wide { max-width: 1240px; }
   border-top: 1px solid var(--line);
   padding: var(--s5); color: var(--muted); font-size: 13px;
 }
-.site-footer .inner { max-width: 1080px; margin: 0 auto; display: flex; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
+/* the footer's text lines up with the page content above it */
+.site-footer .inner { max-width: calc(1080px - 2 * var(--s5)); margin: 0 auto; display: flex; justify-content: space-between; gap: var(--s3); flex-wrap: wrap; }
 .site-footer a { border-bottom-color: transparent; }
 .site-footer a:hover { color: var(--text-strong); }
 
 @media (max-width: 720px) {
   main { padding: var(--s5) var(--s4) var(--s7); }
+  .site-footer { padding: var(--s5) var(--s4); }
   .page > * + * { margin-top: var(--s6); }
   .topbar { flex-wrap: wrap; height: auto; padding: var(--s2) var(--s4) 0; gap: 0 var(--s2); }
   .topbar .brand { flex: 1; }

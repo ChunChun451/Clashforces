@@ -1,7 +1,7 @@
 // The match page: lobby -> countdown -> live scoreboard -> result + timeline.
 import { $, api, cfProblemUrl, el, fmtDuration, getMe, handleEl, mountTopbar, toast } from "./api.js";
 import { connect, on, send, serverNow, subscribe, syncClock } from "./ws.js";
-import { fmtPts, flipNew, okSet, standingsTable } from "./standings.js";
+import { TEAM_LETTER, fmtPts, flipNew, okSet, standingsTable, teamBadge, teamStandingsTable } from "./standings.js";
 import { notify } from "./notify.js";
 
 mountTopbar("");
@@ -18,7 +18,16 @@ let showTags = false;
 try { showTags = localStorage.getItem("showTags") === "1"; } catch { /* ignore */ }
 
 const isPlayer = () => M && M.me !== null;
-const myRow = () => M && M.standings.find((r) => r.user_id === myId);
+const isTeam = () => M && M.mode === "team";
+const myRow = () => M && M.standings.find((r) => (isTeam() ? r.team === M.my_team : r.user_id === myId));
+const teamName = (t) => `Team ${TEAM_LETTER[t]}`;
+
+// The standings grid for this match: players, or teams with their members.
+function board() {
+  return isTeam()
+    ? teamStandingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myTeam: isPlayer() ? M.my_team : null, myId })
+    : standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId });
+}
 
 // ---------- live connection ----------
 on("match.state", (data) => {
@@ -33,7 +42,9 @@ on("standings", (data) => {
   if (!M || revealing) return;
   M.standings = data.standings;
   for (const c of data.changed || []) {
-    if (c.user_id !== myId && c.accepted && isPlayer()) notify(`${c.handle} solved ${c.label}`, "opponent");
+    if (c.user_id === myId || !c.accepted || !isPlayer()) continue;
+    if (isTeam() && c.team === M.my_team) toast(`Teammate ${c.handle} solved ${c.label}`);
+    else notify(isTeam() ? `${c.handle} (${teamName(c.team)}) solved ${c.label}` : `${c.handle} solved ${c.label}`, "opponent");
   }
   renderStandingsOnly();
 });
@@ -99,7 +110,7 @@ function myEnd() {
   return M.end_time;
 }
 
-function settingsSummary(s) {
+function settingsSummary(s, wide = false) {
   const items = [
     ["Rules", M.rules === "icpc" ? "ICPC" : "Lockout"],
     ["Problems", s.custom_problems ? `Custom: ${s.custom_problems}` : `${s.count} · ${s.rating_min}–${s.rating_max}`],
@@ -110,6 +121,8 @@ function settingsSummary(s) {
   items.push(["Duration", `${s.duration_min} min`]);
   if (s.freeze_min) items.push(["Freeze", `last ${s.freeze_min} min`]);
   if (s.handicap) items.push(["Handicap", handicapText(s.handicap)]);
+  if (M.mode === "team") items.splice(1, 0, ["Teams", `${M.team_size} vs ${M.team_size} · unrated`]);
+  if (wide) return el("dl.settings-grid", items.map(([k, v]) => el("div", el("dt", k), el("dd", v))));
   return el("dl.settings-list", items.map(([k, v]) => [el("dt", k), el("dd", v)]));
 }
 
@@ -144,14 +157,14 @@ function afterRender() {
 function renderStandingsOnly() {
   const box = $("#standings-box");
   if (!box) return render();
-  box.replaceChildren(standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }));
+  box.replaceChildren(board());
   const cards = $("#problem-cards");
   if (cards) cards.replaceWith(problemCards());
   afterRender();
 }
 
 function header() {
-  const modeName = { friend: "Friend duel", group: "Group room", ranked: "Ranked" }[M.mode] || M.mode;
+  const modeName = { friend: "Friend duel", group: "Group room", ranked: "Ranked", team: `Team duel · ${M.team_size}v${M.team_size}` }[M.mode] || M.mode;
   const link = `${location.origin}/m/${code}`;
   return el("div.match-head",
     el("div",
@@ -159,7 +172,8 @@ function header() {
       el("div.match-meta",
         el("span.chip", M.rules === "icpc" ? "ICPC" : "Lockout"),
         el("span.code-pill", { title: "Match code" }, code),
-        isPlayer() ? null : el("span.chip", "Spectating"))),
+        isPlayer() ? null : el("span.chip", "Spectating"),
+        isTeam() && isPlayer() && M.my_team !== null ? el("span.chip.team-chip", teamBadge(M.my_team), `You're on ${teamName(M.my_team)}`) : null)),
     el("div.share",
       el("button.btn", { type: "button", onclick: () => copy(link) }, M.status === "lobby" ? "Copy invite link" : "Copy watch link")));
 }
@@ -170,6 +184,7 @@ async function copy(text) {
 }
 
 function lobby() {
+  if (isTeam()) return teamLobby();
   const s = M.settings;
   const creator = M.creator_id === myId;
   const needed = M.mode === "group" ? 3 : 2;
@@ -213,6 +228,87 @@ function lobby() {
     el("div.stack",
       el("section.panel", el("div.panel-head", el("h2", "Settings")), el("div.panel-body", settingsSummary(s))),
       creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null));
+}
+
+// ---------- team lobby ----------
+function teamLobby() {
+  const size = M.team_size;
+  const creator = M.creator_id === myId;
+  const rating = (p) => p.cf_rating || 1200;
+
+  const teamPanel = (t) => {
+    const members = M.players.filter((p) => p.team === t);
+    const total = members.reduce((a, p) => a + rating(p), 0);
+    const open = size - members.length;
+    let action = null;
+    if (myId && isPlayer() && M.my_team !== t && open > 0 && M.status === "lobby") {
+      action = el("button.btn.small", { type: "button", onclick: () => act("team", { team: t }) }, "Switch here");
+    } else if (myId && !isPlayer() && open > 0) {
+      action = el("button.btn.small.primary", { type: "button", onclick: () => joinTeam(t) }, `Join ${teamName(t)}`);
+    }
+    const rows = members.map((p) => el("div.lobby-player",
+      el("span.who", el("span", { class: `ready-dot${p.ready ? " on" : ""}`, "aria-hidden": "true" }),
+        handleEl(p.handle, p.cf_rating),
+        p.user_id === M.creator_id ? el("span.chip", "host") : null,
+        p.user_id === myId ? el("span.chip.you", "you") : null,
+        p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null),
+      el("span", { class: p.ready ? "side small accent" : "side small muted" }, p.ready ? "Ready" : "Not ready")));
+    for (let i = 0; i < open; i++) rows.push(el("div.lobby-player.slot", el("span.who", el("span.ready-dot", { "aria-hidden": "true" }), "Open slot")));
+    return el(`section.panel.team-panel.team-${TEAM_LETTER[t].toLowerCase()}`, { "aria-label": teamName(t) },
+      el("div.panel-head",
+        el("h2.team-name", teamBadge(t), teamName(t)),
+        el("div.row.tight",
+          el("span.team-meta", { title: "Players and total Codeforces rating" }, `${members.length}/${size}`, el("span.sep", "·"), `Σ ${total}`),
+          action)),
+      el("div.team-slots", rows));
+  };
+
+  const notReady = M.players.filter((p) => !p.ready);
+  let status;
+  if (M.status === "starting") status = el("div.banner", { role: "status" }, el("span.spinner"), "Checking handles and picking problems…");
+  else if (M.start_blocked) status = el("div.banner.wait", { role: "status" }, el("span.wait-label", "Can't start yet"), el("span.grow", M.start_blocked));
+  else if (notReady.length) status = el("div.banner.wait", { role: "status" }, el("span.wait-label", "Teams are set"),
+    el("span.grow", `Waiting for ${notReady.map((p) => p.handle).join(", ")} to press Ready.`));
+  else status = el("div.banner.good", { role: "status" }, el("span.pulse"), "Everyone is ready. Starting…");
+
+  let actions;
+  if (!myId) {
+    actions = el("div.actions", el("a.btn.primary", { href: `/login?next=/m/${code}` }, "Log in to join"));
+  } else if (!isPlayer()) {
+    actions = M.players.length < 2 * size
+      ? el("div.actions", el("button.btn.primary", { type: "button", onclick: () => act("join") }, "Join match"),
+        el("span.small.muted", "or pick a team above"))
+      : el("p.muted", "This match is full. You can watch it.");
+  } else {
+    const ready = M.me.ready;
+    actions = el("div.actions",
+      M.status === "starting" ? null
+        : el("button.btn" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }) }, ready ? "Not ready" : "Ready"),
+      el("button.btn.ghost", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave"),
+      creator ? el("a.btn.ghost", { href: `/new?edit=${code}` }, "Edit settings") : null);
+  }
+  const tools = creator && M.players.length >= 2 && M.status === "lobby"
+    ? el("div.actions.tools",
+      el("button.btn", { type: "button", onclick: () => arrange("shuffle"), title: "Random sides" }, "Shuffle"),
+      el("button.btn", { type: "button", onclick: () => arrange("balance"), title: "Split players so the total ratings are as close as possible" }, "Balance by rating"))
+    : null;
+
+  return el("div.stack.team-lobby",
+    el("div.teams-grid", teamPanel(0), el("div.vs", { "aria-hidden": "true" }, "vs"), teamPanel(1)),
+    status,
+    el("div.lobby-bar", actions, tools),
+    el("section.panel", el("div.panel-head", el("h2", "Settings")), el("div.panel-body", settingsSummary(M.settings, true))),
+    el("p.small.muted", "Problems are revealed when both teams are full and everyone is ready. A problem counts for your team when any member solves it."));
+}
+
+async function joinTeam(t) {
+  if (await act("join") === null) return;
+  await act("team", { team: t });
+}
+
+async function arrange(how) {
+  const r = await act("teams", { how });
+  if (r) toast(how === "balance" ? "Teams balanced by rating" : "Teams shuffled");
 }
 
 function handicapEditor() {
@@ -292,7 +388,7 @@ function live() {
     el("button.btn.ghost", { type: "button", onclick: toggleTags, "aria-pressed": String(showTags), title: "Shortcut: T" }, showTags ? "Hide tags" : "Show tags"),
     isPlayer() && !M.me.forfeited ? el("button.btn.ghost.danger", { type: "button", onclick: confirmForfeit }, "Forfeit") : null)));
   parts.push(el("section.stack", el("h2.section-title", "Standings"),
-    el("div", { id: "standings-box" }, standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }))));
+    el("div", { id: "standings-box" }, board())));
   parts.push(el("p.small.muted", "Verdicts can take a while to appear when many people are playing. Press “I submitted” (or S) after you submit and we'll check right away. Times always come from Codeforces."));
   return parts;
 }
@@ -303,20 +399,21 @@ async function confirmForfeit() {
 }
 
 function problemCards() {
-  const owners = new Map(); // label -> handle that owns it (lockout)
+  const owners = new Map(); // label -> row that owns it (lockout)
   const solvedByMe = new Set();
+  const mine = (r) => (isTeam() ? isPlayer() && r.team === M.my_team : r.user_id === myId);
   for (const r of M.standings) {
     for (const c of r.cells) {
-      if (c.state === "ok" && c.first) owners.set(c.label, r);
-      if (c.state === "ok" && r.user_id === myId) solvedByMe.add(c.label);
+      if (c.state === "ok" && c.first) owners.set(c.label, { ...r, by: c.by_handle });
+      if (c.state === "ok" && mine(r)) solvedByMe.add(c.label);
     }
   }
   const perPlayer = M.problems.some((p) => p.owner !== null);
   const list = perPlayer && isPlayer() ? M.problems.filter((p) => p.owner === myId) : M.problems;
   return el("div.problems", { id: "problem-cards" }, list.map((p) => {
     const owner = M.rules === "lockout" ? owners.get(p.label) : null;
-    const cls = ["problem", solvedByMe.has(p.label) && (!owner || owner.user_id === myId) ? "solved" : "",
-      owner && owner.user_id !== myId ? "taken" : ""].join(" ");
+    const cls = ["problem", solvedByMe.has(p.label) && (!owner || mine(owner)) ? "solved" : "",
+      owner && !mine(owner) ? "taken" : ""].join(" ");
     const ownerPlayer = perPlayer && p.owner ? playerById(p.owner) : null;
     return el("article", { class: cls },
       el("div.problem-top",
@@ -327,7 +424,8 @@ function problemCards() {
         el("span", p.rating ? String(p.rating) : "—"),
         M.rules === "lockout" ? el("span.pts", `${fmtPts(p.points)} pts`) : null),
       showTags && p.tags.length ? el("div.chips", p.tags.map((t) => el("span.chip", t))) : null,
-      owner ? el("div.owner.muted", "Taken by ", handleEl(owner.handle, owner.cf_rating, { link: false })) : null,
+      owner && isTeam() ? el("div.owner.muted", "Taken by ", teamBadge(owner.team), ` ${owner.name}`, owner.by ? ` · ${owner.by}` : "") : null,
+      owner && !isTeam() ? el("div.owner.muted", "Taken by ", handleEl(owner.handle, owner.cf_rating, { link: false })) : null,
       ownerPlayer && !isPlayer() ? el("div.owner.muted", "For ", handleEl(ownerPlayer.handle, ownerPlayer.cf_rating, { link: false })) : null);
   }));
 }
@@ -336,11 +434,20 @@ function resultTitle() {
   if (M.result_status !== "final") return el("div.banner", el("span.spinner"), "Waiting for Codeforces to confirm the last submissions…");
   const top = M.standings.filter((r) => r.place === 1);
   let text;
+  const reason = { clinched: "Decided early — nobody could catch up.", forfeit: "Ended by forfeit.", all_solved: "Everything was solved." }[M.end_reason];
+  if (isTeam()) {
+    const won = top.length === 1 ? top[0] : null;
+    if (!won) text = "Draw";
+    else if (isPlayer()) text = won.team === M.my_team ? "Your team won" : "Your team lost";
+    else text = `${won.name} wins`;
+    const sub = won ? won.members.map((m) => m.handle).join(" & ") : null;
+    return el("div.stack", el("h2.result-title", won ? el("span.team-name", teamBadge(won.team), text) : text),
+      sub ? el("p.muted", `${won.name}: ${sub}`) : null, reason ? el("p.muted", reason) : null);
+  }
   if (top.length > 1) text = top.some((r) => r.user_id === myId) ? "Draw" : "Draw at the top";
   else if (top[0] && top[0].user_id === myId) text = "You won";
   else if (isPlayer()) text = M.mode === "group" ? `You placed ${myRow() ? myRow().place : "—"}` : "You lost";
   else text = top[0] ? `${top[0].handle} wins` : "Match over";
-  const reason = { clinched: "Decided early — nobody could catch up.", forfeit: "Ended by forfeit.", all_solved: "Everything was solved." }[M.end_reason];
   return el("div.stack", el("h2.result-title", text), reason ? el("p.muted", reason) : null);
 }
 
@@ -365,7 +472,7 @@ function ended() {
     isPlayer() && M.mode === "ranked" ? el("a.btn.primary", { href: "/queue" }, "Queue again") : null,
     el("a.btn.ghost", { href: "/" }, "Home")));
   parts.push(el("section.stack", el("h2.section-title", "Final standings"),
-    el("div", { id: "standings-box" }, standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }))));
+    el("div", { id: "standings-box" }, board())));
   parts.push(problemList());
   parts.push(timelineSection());
   return parts;
@@ -401,9 +508,10 @@ function timelineSection() {
   if (!timeline.items.length) { box.append(el("div.empty-state.boxed", el("p", "Nobody submitted during this match."))); return box; }
   box.append(el("div.timeline", timeline.items.map((it) => {
     const cls = it.verdict === "OK" ? "ok" : it.verdict === "COMPILATION_ERROR" || it.verdict === "TESTING" ? "neutral" : "bad";
-    return el("div.tl-item",
+    return el("div.tl-item", { class: it.team !== null && it.team !== undefined ? `tl-item team-${TEAM_LETTER[it.team].toLowerCase()}` : "tl-item" },
       el("span.tl-min", `${it.minute}'`),
-      el("span", handleEl(it.handle, it.cf_rating), el("span.mono", `  ${it.label}`)),
+      el("span", it.team !== null && it.team !== undefined ? [teamBadge(it.team), " "] : null,
+        handleEl(it.handle, it.cf_rating), el("span.mono", `  ${it.label}`)),
       it.url ? el("a", { class: `verdict ${cls}`, href: it.url, target: "_blank", rel: "noopener" }, verdictText(it.verdict))
         : el("span", { class: `verdict ${cls}` }, verdictText(it.verdict)));
   })));
@@ -426,7 +534,7 @@ async function playReveal(data) {
     M.standings = step.rows;
     const box = $("#standings-box");
     if (box) {
-      box.replaceChildren(standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }));
+      box.replaceChildren(board());
       flipNew(box, before, M.standings);
       const cell = box.querySelector(`tr[data-user="${step.user_id}"] .cell[data-label="${step.label}"]`);
       if (cell && !cell.classList.contains("flip")) cell.closest("tr").classList.add("row-flash");
