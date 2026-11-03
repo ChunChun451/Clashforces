@@ -56,8 +56,10 @@ def ended(match_id: int) -> None:
 
 
 def result(match_id: int) -> None:
+    from app.matches import reveal
     match = store.match_by_id(match_id)
-    hub.send_match(match["code"], "match.result", view.result_payload(match))
+    if not reveal.locked(match):  # a contest waiting for its freeze reveal keeps the result to itself
+        hub.send_match(match["code"], "match.result", view.result_payload(match))
     state(match_id)
 
 

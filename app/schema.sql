@@ -146,6 +146,17 @@ CREATE TABLE IF NOT EXISTS match_kicks (
   PRIMARY KEY (match_id, user_id)
 );
 
+-- team chat: one private channel per team of a team match (idx matches match_players.team)
+CREATE TABLE IF NOT EXISTS team_messages (
+  id          INTEGER PRIMARY KEY,
+  match_id    INTEGER NOT NULL REFERENCES matches(id),
+  team_idx    INTEGER NOT NULL,
+  user_id     INTEGER NOT NULL REFERENCES users(id),
+  body        TEXT NOT NULL,                     -- plain text, <= 500 chars
+  created_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS team_messages_match ON team_messages(match_id, team_idx, id);
+
 -- one active lobby/match/queue entry per user (the insert fails if one exists)
 CREATE TABLE IF NOT EXISTS active_locks (
   user_id    INTEGER PRIMARY KEY REFERENCES users(id),

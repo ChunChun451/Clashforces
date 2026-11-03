@@ -19,9 +19,12 @@ def freeze_start(match, s: dict) -> int | None:
 
 
 def freeze_active(match, s: dict) -> bool:
-    """True while viewers should get the frozen view (until the result is final)."""
+    """True while viewers should get the frozen view (until the result is final and, for a contest, revealed)."""
     fs = freeze_start(match, s)
-    return fs is not None and clock.now() >= fs and match["result_status"] != "final"
+    if fs is None or clock.now() < fs:
+        return False
+    from app.matches import reveal
+    return match["result_status"] != "final" or reveal.locked(match)
 
 
 def cell_json(cell, label: str, frozen_tries: int = 0) -> dict:
@@ -212,8 +215,12 @@ def build(match, viewer: int | None) -> dict:
         "rematch_code": rematch_code(match),
         "is_host": viewer is not None and viewer == match["creator_id"],
     }
+    rv = None
     if match["mode"] == "contest":
-        from app.matches import contest
+        from app.matches import contest, reveal
+        rv = reveal.info(match)
+        if rv:
+            state["reveal"] = rv
         state["contest"] = contest.public_info(match)
         state["announcements"] = contest.announcements(match["id"])
         if state["is_host"]:
@@ -229,6 +236,11 @@ def build(match, viewer: int | None) -> dict:
         if match["status"] in ("lobby", "starting"):
             state["start_blocked"] = lobby_blocker(match, s, pr)
     if not revealed:
+        return state
+    if rv and rv["status"] == "running":
+        # the freeze reveal: everyone sees the same board, one revealed cell at a time
+        state["frozen"] = True
+        state["standings"] = reveal.board(match, rv["step"])
         return state
 
     score = store.scorer(match, pr, pb)

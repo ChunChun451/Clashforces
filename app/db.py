@@ -12,7 +12,7 @@ from pathlib import Path
 from app import config
 
 SCHEMA = Path(__file__).with_name("schema.sql")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3  # 3: team_messages (created by schema.sql, IF NOT EXISTS)
 
 _conn: sqlite3.Connection | None = None
 

@@ -82,6 +82,13 @@ CONTEST_STALE_S = 2 * 3600        # a lobby this long past its start time is can
 CONTEST_UNSCHEDULED_IDLE_S = 7 * 24 * 3600
 EXTEND_MAX_MIN = 120
 ANNOUNCEMENT_MAX = 500
+REVEAL_AUTO_S = 1.5               # freeze reveal: seconds per step on auto-play
+
+# ---------- team chat ----------
+CHAT_MAX = 500                    # characters per message
+CHAT_HISTORY = 200                # messages kept on screen per team
+CHAT_MIN_GAP_S = 1                # at most one message per second per user
+CHAT_PER_MIN = 20                 # and at most this many per minute
 
 # ---------- ranked ----------
 RANKED_COUNT = 3

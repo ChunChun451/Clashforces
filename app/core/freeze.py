@@ -54,3 +54,28 @@ def reveal_steps(score: Callable[[list[Sub]], list[Row]], problem_order: dict, s
         visible += pending.pop(target)
         steps.append({"player": target[0], "problem": target[1], "rows": score(visible)})
     return steps
+
+
+def reveal_targets(score: Callable[[list[Sub]], list[Row]], problem_order: dict, subs: list[Sub],
+                   freeze_start: int | None) -> list[tuple]:
+    """The same ICPC order as reveal_steps, as (player, problem) pairs only (no rows kept per step).
+
+    Always the lowest-ranked player that still has a hidden cell, their leftmost hidden problem first.
+    """
+    visible, hidden = split_visible(subs, None, freeze_start)
+    pending = defaultdict(list)
+    for s in hidden:
+        pending[(s.player, s.problem)].append(s)
+    out = []
+    while pending:
+        target = None
+        for row in reversed(score(visible)):
+            target = next(((row.player, p) for p in problem_order.get(row.player, ()) if (row.player, p) in pending),
+                          None)
+            if target:
+                break
+        if target is None:
+            break
+        visible += pending.pop(target)
+        out.append(target)
+    return out
