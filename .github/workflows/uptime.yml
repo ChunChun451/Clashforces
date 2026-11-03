@@ -1,0 +1,97 @@
+# Checks production every 15 minutes. If /api/health fails three times in a row (20 s apart),
+# it opens an issue (or comments on the open one, at most once an hour). When health is back,
+# it closes the issue. Uses only the built-in GITHUB_TOKEN.
+# Scheduled workflows only run from the default branch, so this starts once it is on main.
+name: Uptime
+
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+env:
+  HEALTH_URL: https://clashforces.duckdns.org/api/health
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check /api/health
+        id: health
+        run: |
+          for attempt in 1 2 3; do
+            code="$(curl -sS -o body.json -w '%{http_code}' --max-time 20 "$HEALTH_URL" 2> err.txt)" || code=000
+            if [ "$code" = 200 ] && jq -e 'has("cf_api")' body.json > /dev/null 2>&1; then
+              echo "ok=true" >> "$GITHUB_OUTPUT"
+              echo "Healthy: $(cat body.json)" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$(jq -r .cf_api body.json)" = down ]; then
+                echo "Note: the app is up but reports the Codeforces API as down." >> "$GITHUB_STEP_SUMMARY"
+              fi
+              exit 0
+            fi
+            echo "attempt $attempt: HTTP $code"
+            [ "$attempt" = 3 ] || sleep 20
+          done
+          {
+            echo "ok=false"
+            echo "detail<<DETAIL_EOF"
+            echo "HTTP $code"
+            head -c 400 err.txt
+            head -c 400 body.json 2> /dev/null
+            echo
+            echo "DETAIL_EOF"
+          } >> "$GITHUB_OUTPUT"
+          echo "DOWN: HTTP $code" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open, update or close the uptime issue
+        uses: actions/github-script@v7
+        env:
+          OK: ${{ steps.health.outputs.ok }}
+          DETAIL: ${{ steps.health.outputs.detail }}
+        with:
+          script: |
+            const marker = '<!-- uptime-monitor -->';
+            const { owner, repo } = context.repo;
+            const url = process.env.HEALTH_URL;
+            const run = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const now = new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC';
+            const issues = await github.paginate(github.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 });
+            const open = issues.find(i => !i.pull_request && (i.body || '').includes(marker));
+
+            if (process.env.OK === 'true') {
+              if (open) {
+                await github.rest.issues.createComment({ owner, repo, issue_number: open.number,
+                  body: `✅ Healthy again at ${now}. ([run](${run}))` });
+                await github.rest.issues.update({ owner, repo, issue_number: open.number,
+                  state: 'closed', state_reason: 'completed' });
+                core.notice(`Closed #${open.number}`);
+              }
+              return;
+            }
+
+            const detail = '```\n' + (process.env.DETAIL || 'no detail').trim() + '\n```';
+            if (!open) {
+              const created = await github.rest.issues.create({ owner, repo,
+                title: `Production is down: ${new URL(url).host}`,
+                body: `${marker}\n${url} failed 3 checks in a row at ${now}.\n\n${detail}\n\n` +
+                      `Run: ${run}\n\nWhat to do: see docs/event-runbook.md ("Site is down"). ` +
+                      `This issue closes itself when the health check passes again.` });
+              core.setFailed(`Down; opened #${created.data.number}`);
+              return;
+            }
+            // Still down: comment at most once an hour so the issue doesn't flood everyone's inbox.
+            const ageMin = (Date.now() - new Date(open.updated_at).getTime()) / 60000;
+            if (ageMin >= 55) {
+              await github.rest.issues.createComment({ owner, repo, issue_number: open.number,
+                body: `Still down at ${now}.\n\n${detail}\n\n([run](${run}))` });
+            }
+            core.setFailed(`Still down (#${open.number})`);
