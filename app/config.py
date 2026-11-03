@@ -12,6 +12,9 @@ SESSION_MAX_AGE_S = 30 * 24 * 3600
 # Unset: only the request's own host is accepted.
 ALLOWED_ORIGINS = [o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 BACKGROUND_TASKS = os.environ.get("BACKGROUND_TASKS", "1") == "1"  # tests turn this off
+# Local development only: sign every localhost visitor in as this handle (must already
+# have an account in the local database). Refused when COOKIE_SECURE=1.
+DEV_AUTO_LOGIN = os.environ.get("DEV_AUTO_LOGIN", "").strip()
 
 # ---------- Codeforces API client ----------
 CF_API_BASE = os.environ.get("CF_API_BASE", "https://codeforces.com/api")
@@ -63,10 +66,25 @@ COUNTDOWN_S = 5
 WARNING_MINUTES_LEFT = 5
 LOBBY_IDLE_S = 2 * 3600
 ROOM_MIN_PLAYERS, ROOM_MAX_PLAYERS = 3, 10
-TEAM_SIZES = (2, 3)               # team duels: 2v2 or 3v3
+TEAM_SIZE_MIN, TEAM_SIZE_MAX = 2, 6     # players per team
+TEAM_COUNT_MIN, TEAM_COUNT_MAX = 2, 6   # teams per match
+TEAM_NAME_MAX = 24
+DRAFT_PICK_S = 45                 # captains' draft: seconds per pick before an auto-pick
 CODE_LENGTH = 6
 PER_PLAYER_RANGE_BELOW, PER_PLAYER_RANGE_ABOVE = 100, 200  # 1300 -> 1200-1500
 ICPC_WRONG_PENALTY = 20
+
+# ---------- hosted contests ----------
+CONTEST_MAX_PLAYERS = 40          # solo contests
+CONTEST_PROBLEMS_MAX = 15
+CONTEST_TITLE_MAX = 60
+CONTEST_SCHEDULE_MAX_DAYS = 60    # how far ahead a start can be scheduled
+CONTEST_PREFETCH_S = 5 * 60       # re-sync missing histories this long before the start
+CONTEST_RETRY_START_S = 30        # auto-start retry when Codeforces isn't answering
+CONTEST_STALE_S = 2 * 3600        # a lobby this long past its start time is cancelled
+CONTEST_UNSCHEDULED_IDLE_S = 7 * 24 * 3600
+EXTEND_MAX_MIN = 120
+ANNOUNCEMENT_MAX = 500
 
 # ---------- ranked ----------
 RANKED_COUNT = 3
@@ -81,7 +99,10 @@ RANKED_READY_TIMEOUT_S = 60
 
 
 def check_production_settings() -> None:
-    """Refuse to run with secure cookies (i.e. in production) and the default secret key."""
+    """Refuse to run with secure cookies (i.e. in production) and the default secret key,
+    or with the local-only DEV_AUTO_LOGIN."""
+    if COOKIE_SECURE and DEV_AUTO_LOGIN:
+        raise RuntimeError("DEV_AUTO_LOGIN is for local development only; unset it when COOKIE_SECURE=1.")
     if COOKIE_SECURE and SECRET_KEY == DEFAULT_SECRET_KEY:
         raise RuntimeError(
             "SECRET_KEY is still the default value but COOKIE_SECURE=1. Set SECRET_KEY to a long "

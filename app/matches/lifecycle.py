@@ -13,7 +13,7 @@ import logging
 from app import clock, config, db
 from app.cf.client import CFError, get_client
 from app.core import lockout
-from app.matches import events, finalize, locks, store, view
+from app.matches import contest, draft, events, finalize, locks, store, view
 from app.models import Submission
 from app.poller.poller import poller
 
@@ -129,12 +129,15 @@ def _decided(match, now: int | None = None) -> bool:
 async def tick() -> None:
     now = clock.now()
 
-    for m in db.all("SELECT id, code FROM matches WHERE status = 'lobby' AND created_at < ?",
+    for m in db.all("SELECT id, code FROM matches WHERE status = 'lobby' AND mode != 'contest' AND created_at < ?",
                     (now - config.LOBBY_IDLE_S,)):
         db.execute("UPDATE matches SET status = 'cancelled', end_reason = 'cancelled', ended_at = ? WHERE id = ?",
                    (now, m["id"]))
         locks.release_match(m["id"])
         events.state(m["id"])
+
+    contest.tick(now)
+    draft.tick(now)
 
     for match in db.all("SELECT * FROM matches WHERE status = 'running'"):
         _tick_running(match, now)

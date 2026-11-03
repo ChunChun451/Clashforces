@@ -28,9 +28,7 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         "exclude": list(raw.get("exclude") or []),
     }
     if mode == "team":
-        s["team_size"] = int(raw.get("team_size", 2))
-        if s["team_size"] not in config.TEAM_SIZES:
-            raise SettingsError("Teams have 2 or 3 players.")
+        s.update(clean_teams(raw))
         if s["handicap"]:
             raise SettingsError("Team duels have no handicaps.")
     if not config.DURATION_MIN <= s["duration_min"] <= config.DURATION_MAX:
@@ -45,6 +43,22 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
             raise SettingsError(errors[0])
     s["handicap"] = clean_handicap(s["handicap"], rules, s, mode)
     return s
+
+
+def clean_teams(raw: dict) -> dict:
+    try:
+        size = int(raw.get("team_size", 2))
+        count = int(raw.get("team_count", 2))
+    except (TypeError, ValueError):
+        raise SettingsError("Team size and team count must be numbers.")
+    if not config.TEAM_SIZE_MIN <= size <= config.TEAM_SIZE_MAX:
+        raise SettingsError(f"Teams have {config.TEAM_SIZE_MIN}–{config.TEAM_SIZE_MAX} players.")
+    if not config.TEAM_COUNT_MIN <= count <= config.TEAM_COUNT_MAX:
+        raise SettingsError(f"A match has {config.TEAM_COUNT_MIN}–{config.TEAM_COUNT_MAX} teams.")
+    fill = raw.get("fill", "free")
+    if fill not in ("free", "draft"):
+        raise SettingsError("Teams are filled freely or by a captains' draft.")
+    return {"team_size": size, "team_count": count, "fill": fill, "uneven_ok": bool(raw.get("uneven_ok", False))}
 
 
 def clean_handicap(h, rules: str, s: dict, mode: str):

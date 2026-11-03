@@ -33,11 +33,19 @@
   --dot: rgba(255, 255, 255, 0.045);
   --glow: rgba(61, 220, 132, 0.10);
 
-  /* team duels: two side colors, kept away from the green "accepted" accent */
+  /* team colors (up to 6 teams): muted, kept away from the green "accepted" accent and the red "wrong" */
   --team-a: #7aa7ff;
   --team-a-soft: rgba(122, 167, 255, 0.09);
   --team-b: #f0a35e;
   --team-b-soft: rgba(240, 163, 94, 0.08);
+  --team-c: #b79cf2;
+  --team-c-soft: rgba(183, 156, 242, 0.09);
+  --team-d: #5fc4d3;
+  --team-d-soft: rgba(95, 196, 211, 0.08);
+  --team-e: #e292c6;
+  --team-e-soft: rgba(226, 146, 198, 0.08);
+  --team-f: #cdb76a;
+  --team-f-soft: rgba(205, 183, 106, 0.08);
 
   /* one control height scale: small / default / large */
   --h-sm: 32px; --h-md: 40px; --h-lg: 48px;
@@ -83,5 +91,13 @@
   --team-a-soft: rgba(47, 98, 214, 0.09);
   --team-b: #b8630f;
   --team-b-soft: rgba(184, 99, 15, 0.10);
+  --team-c: #7a52cc;
+  --team-c-soft: rgba(122, 82, 204, 0.09);
+  --team-d: #0d7f8f;
+  --team-d-soft: rgba(13, 127, 143, 0.09);
+  --team-e: #b0468f;
+  --team-e-soft: rgba(176, 70, 143, 0.08);
+  --team-f: #866f12;
+  --team-f-soft: rgba(134, 111, 18, 0.10);
   color-scheme: light;
 }

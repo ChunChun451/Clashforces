@@ -10,6 +10,8 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from app import config, db
+from app.auth import users
+from app.auth.session import login, user_from_session
 from app.cf import cache
 from app.cf.client import get_client
 from app.matches import lifecycle
@@ -59,6 +61,20 @@ async def csrf_guard(request: Request, call_next):
     if (request.url.path.startswith("/api/") and request.method in ("POST", "PATCH", "PUT", "DELETE")
             and request.headers.get("x-requested-with") != "fetch"):
         return JSONResponse({"detail": "Missing X-Requested-With header."}, status_code=403)
+    return await call_next(request)
+
+
+LOOPBACK = {"127.0.0.1", "::1", "localhost"}
+
+
+@app.middleware("http")
+async def dev_auto_login(request: Request, call_next):
+    """Local development: sign localhost visitors in as config.DEV_AUTO_LOGIN."""
+    if (config.DEV_AUTO_LOGIN and request.client and request.client.host in LOOPBACK
+            and request.url.hostname in LOOPBACK and not user_from_session(request.session)):
+        row = users.by_handle(config.DEV_AUTO_LOGIN)
+        if row is not None:
+            login(request, row["id"])
     return await call_next(request)
 
 

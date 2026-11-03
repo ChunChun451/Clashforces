@@ -16,7 +16,8 @@ def finished_matches(user_id: int):
 def outcomes_and_solves(user_id: int) -> tuple[list, list]:
     outcomes, solves = [], []
     for m in finished_matches(user_id):
-        if m["mode"] == "team":
+        team = store.is_team(m)
+        if team:
             # one place per team, so a team win isn't mistaken for a shared first place
             places = [r["place"] for r in db.all("SELECT DISTINCT team, place FROM match_players WHERE match_id = ?",
                                                  (m["id"],))]
@@ -33,7 +34,7 @@ def outcomes_and_solves(user_id: int) -> tuple[list, list]:
                 info[p["problem_key"]] = (p["rating"], tuple(t))
         outcomes.append(stats.MatchOutcome(m["id"], m["mode"], m["my_place"],
                                            places.count(1) > 1 and m["my_place"] == 1, frozenset(tags)))
-        if m["mode"] == "team":
+        if team:
             pr = store.players(m["id"])
             row = store.member_rows(m, pr, pb, store.subs(m, pr, pb)).get(user_id)
         else:
@@ -69,14 +70,20 @@ def recent_matches(user_id: int, limit: int = 20) -> list[dict]:
                         (m["id"], user_id))
         item = {"code": m["code"], "mode": m["mode"], "rules": m["rules"], "place": m["my_place"],
                 "players": len(others) + 1, "ended_at": m["ended_at"]}
-        if m["mode"] == "team":
-            item["players"] = 2  # two teams: place is 1/2 (or 1/2 for both on a draw)
+        if m["mode"] == "contest":
+            item["title"] = store.settings(m).get("title")
+        team = store.is_team(m)
+        if team:
+            names = store.team_names(m)
+            n_teams = len({o["team"] for o in others if o["team"] is not None} | {m["my_team"]})
+            item["players"] = n_teams  # place is out of the number of teams
+            item["team_name"] = names[m["my_team"]] if m["my_team"] is not None and m["my_team"] < len(names) else None
             item["teammates"] = [_person(o) for o in others if o["team"] == m["my_team"]]
-            item["opponents"] = [_person(o) for o in others if o["team"] != m["my_team"]]
+            item["opponents"] = [_person(o) for o in others if o["team"] != m["my_team"]][:12]
         else:
             item["opponents"] = [_person(o) for o in others][:9]
-        if m["mode"] != "group":
-            item["result"] = _result(m)
+        if m["mode"] in ("friend", "ranked") or (team and item["players"] == 2):
+            item["result"] = _result(m, team)
         out.append(item)
     return out
 
@@ -85,12 +92,12 @@ def _person(row) -> dict:
     return {"handle": row["handle"], "cf_rating": row["cf_rating"], "place": row["place"]}
 
 
-def _result(m) -> str:
-    """win / loss / draw for two-sided matches (1v1 and team). A draw is a shared first place."""
+def _result(m, team: bool = False) -> str:
+    """win / loss / draw for two-sided matches (1v1 and two teams). A draw is a shared first place."""
     if m["my_place"] != 1:
         return "loss"
     sides = db.scalar("SELECT COUNT(DISTINCT COALESCE(team, user_id)) FROM match_players WHERE match_id = ? AND place = 1"
-                      if m["mode"] == "team" else
+                      if team else
                       "SELECT COUNT(*) FROM match_players WHERE match_id = ? AND place = 1", (m["id"],))
     return "draw" if sides > 1 else "win"
 
@@ -107,7 +114,8 @@ def opposing_team_places(a: int, b: int) -> tuple[dict[int, int], dict[int, int]
         "SELECT pa.match_id, pa.place AS pa, pb.place AS pb FROM match_players pa"
         " JOIN match_players pb ON pb.match_id = pa.match_id AND pb.user_id = ?"
         " JOIN matches m ON m.id = pa.match_id"
-        " WHERE pa.user_id = ? AND m.mode = 'team' AND m.result_status = 'final' AND pa.team != pb.team",
+        " WHERE pa.user_id = ? AND m.mode IN ('team', 'contest') AND m.result_status = 'final'"
+        " AND pa.team IS NOT NULL AND pb.team IS NOT NULL AND pa.team != pb.team",
         (b, a))
     return {r["match_id"]: r["pa"] for r in rows}, {r["match_id"]: r["pb"] for r in rows}
 

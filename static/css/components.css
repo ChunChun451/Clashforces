@@ -31,7 +31,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin-bottom: var
 .field + .field { margin-top: var(--s4); }
 .grid-2 > .field + .field, .row > .field + .field { margin-top: 0; }
 .field.grow { flex: 1; min-width: 0; }
-input[type="text"], input[type="number"], input[type="url"], select, textarea {
+input[type="text"], input[type="number"], input[type="url"], input[type="datetime-local"], select, textarea {
   width: 100%; height: var(--h-md); padding: 0 var(--s3);
   background: var(--surface); color: var(--text-strong);
   border: 1px solid var(--line); border-radius: var(--r);
@@ -302,14 +302,18 @@ td.rank { width: 48px; color: var(--muted); }
 /* small text links still get a 40px tap target */
 .panel-head a, .match-code { display: inline-flex; align-items: center; min-height: var(--h-md); padding: 0 var(--s2); margin-right: calc(-1 * var(--s2)); }
 
-/* ---------- team colors (team duels) ---------- */
+/* ---------- team colors (up to 6 teams) ---------- */
 .team-a { --team: var(--team-a); --team-soft: var(--team-a-soft); }
 .team-b { --team: var(--team-b); --team-soft: var(--team-b-soft); }
+.team-c { --team: var(--team-c); --team-soft: var(--team-c-soft); }
+.team-d { --team: var(--team-d); --team-soft: var(--team-d-soft); }
+.team-e { --team: var(--team-e); --team-soft: var(--team-e-soft); }
+.team-f { --team: var(--team-f); --team-soft: var(--team-f-soft); }
 .team-badge {
   display: inline-grid; place-items: center; flex: none; width: 20px; height: 20px; border-radius: var(--r-sm);
   font: 600 11px/1 var(--font-mono); color: var(--team); background: var(--team-soft);
   border: 1px solid color-mix(in srgb, var(--team) 35%, transparent);
 }
-.team-badge.team-a, .team-badge.team-b { color: var(--team); }
+.team-badge[class*="team-"] { color: var(--team); }
 .team-name { display: inline-flex; align-items: center; gap: var(--s2); }
 .chip.you { height: 18px; padding: 0 6px; font-size: 11px; }

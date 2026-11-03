@@ -95,12 +95,49 @@ def points(problem_rows) -> dict[str, int]:
 # ---------- team matches ----------
 
 def is_team(match) -> bool:
-    return match["mode"] == "team"
+    """Team duels, and hosted contests played in teams."""
+    if match["mode"] == "team":
+        return True
+    return match["mode"] == "contest" and settings(match).get("format") == "teams"
+
+
+def team_count(match) -> int:
+    return int(settings(match).get("team_count", 2))
+
+
+def team_size(match) -> int:
+    return int(settings(match).get("team_size", 2))
+
+
+def teams(match_id: int) -> list[sqlite3.Row]:
+    return db.all("SELECT * FROM match_teams WHERE match_id = ? ORDER BY idx", (match_id,))
+
+
+def team_names(match) -> list[str]:
+    """Names by index. Missing rows (very old matches) fall back to Team A, B, ..."""
+    stored = {t["idx"]: t["name"] for t in teams(match["id"])}
+    return [stored.get(i) or team_core.default_name(i) for i in range(team_count(match))]
+
+
+def ensure_teams(match_id: int, count: int) -> None:
+    """Make sure rows 0..count-1 exist (default names) and drop rows past count."""
+    db.execute("DELETE FROM match_teams WHERE match_id = ? AND idx >= ?", (match_id, count))
+    taken = {t["name"].casefold() for t in teams(match_id)}
+    for i in range(count):
+        if db.one("SELECT 1 FROM match_teams WHERE match_id = ? AND idx = ?", (match_id, i)):
+            continue
+        name = team_core.default_name(i)
+        n = 2
+        while name.casefold() in taken:  # a renamed team already uses the default name
+            name = f"{team_core.default_name(i)} {n}"
+            n += 1
+        taken.add(name.casefold())
+        db.execute("INSERT INTO match_teams(match_id, idx, name) VALUES (?,?,?)", (match_id, i, name))
 
 
 def team_of(player_rows) -> dict[int, int]:
-    """user_id -> 0 (Team A) / 1 (Team B). Players without a side are left out."""
-    return {p["user_id"]: p["team"] for p in player_rows if p["team"] in (0, 1)}
+    """user_id -> team index. Players without a team are left out."""
+    return {p["user_id"]: p["team"] for p in player_rows if p["team"] is not None and p["team"] >= 0}
 
 
 def member_end(match, player_rows) -> dict[int, int]:
@@ -108,27 +145,30 @@ def member_end(match, player_rows) -> dict[int, int]:
 
 
 def team_inputs(match, player_rows, problem_rows) -> dict[int, PlayerInput]:
+    """One scoring input per team that has players."""
     keys = player_problem_keys(problem_rows, -1)  # shared set (team mode has no per-player sets)
     out = {}
-    for t in (0, 1):
+    for t in range(team_count(match)):
         members = [p for p in player_rows if p["team"] == t]
-        ends = [p["end_time"] or match["end_time"] for p in members] or [match["end_time"]]
+        if not members:
+            continue
+        ends = [p["end_time"] or match["end_time"] for p in members]
         out[t] = team_core.team_input(t, max(ends), keys,
-                                      forfeited=bool(members) and all(p["forfeited_at"] is not None for p in members))
+                                      forfeited=all(p["forfeited_at"] is not None for p in members))
     return out
 
 
 def team_parts(match, player_rows, problem_rows):
     """(score(team_subs) -> ranked team rows, to_team(member_subs) -> team_subs)."""
-    teams = team_inputs(match, player_rows, problem_rows)
+    teams_in = team_inputs(match, player_rows, problem_rows)
     members = team_of(player_rows)
     ends = member_end(match, player_rows)
-    ident = {0: 0, 1: 1}
+    ident = {t: t for t in teams_in}
     if match["rules"] == "lockout":
         pts = points(problem_rows)
-        score = lambda ts: team_core.score_team_lockout(match["start_time"], teams, ident, pts, ts)  # noqa: E731
+        score = lambda ts: team_core.score_team_lockout(match["start_time"], teams_in, ident, pts, ts)  # noqa: E731
     else:
-        score = lambda ts: team_core.score_team(match["start_time"], teams, ident, ts)  # noqa: E731
+        score = lambda ts: team_core.score_team(match["start_time"], teams_in, ident, ts)  # noqa: E731
     return score, lambda s: team_core.team_subs(s, members, ends)
 
 
@@ -141,7 +181,7 @@ def member_rows(match, player_rows, problem_rows, subs_list) -> dict:
 def scorer(match, player_rows, problem_rows):
     """Returns score(subs) -> ranked rows for this match's rules.
 
-    Team matches return one row per team (row.player = 0 or 1).
+    Team matches return one row per team (row.player = team index).
     """
     if is_team(match):
         score, to_team = team_parts(match, player_rows, problem_rows)

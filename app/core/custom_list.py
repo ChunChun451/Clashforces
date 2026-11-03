@@ -24,6 +24,7 @@ class CustomCheck:
     running: list[str] = field(default_factory=list)       # from a contest running now
     duplicates: list[str] = field(default_factory=list)    # same problem twice (incl. Div.1/Div.2 copy)
     warnings: list[tuple] = field(default_factory=list)    # (player, key): already touched
+    max_count: int = config.PROBLEM_COUNT_MAX
 
     @property
     def errors(self) -> list[str]:
@@ -38,8 +39,8 @@ class CustomCheck:
             out.append("Listed twice (or a Div.1/Div.2 copy): " + ", ".join(self.duplicates))
         if not self.problems and not out:
             out.append("Paste at least one problem ID, e.g. 2043C.")
-        if len(self.problems) > config.PROBLEM_COUNT_MAX:
-            out.append(f"At most {config.PROBLEM_COUNT_MAX} problems.")
+        if len(self.problems) > self.max_count:
+            out.append(f"At most {self.max_count} problems.")
         return out
 
 
@@ -59,10 +60,11 @@ def parse(text: str) -> tuple[list[str], list[str]]:
     return keys, leftovers
 
 
-def check(text: str, by_key: dict[str, Problem], running: set[int], touched_by_player: dict) -> CustomCheck:
+def check(text: str, by_key: dict[str, Problem], running: set[int], touched_by_player: dict,
+          max_count: int = config.PROBLEM_COUNT_MAX) -> CustomCheck:
     """touched_by_player: player name -> set of touched dup groups."""
     keys, leftovers = parse(text)
-    result = CustomCheck(unreadable=leftovers)
+    result = CustomCheck(unreadable=leftovers, max_count=max_count)
     seen_groups = set()
     for key in keys:
         p = by_key.get(key)

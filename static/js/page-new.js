@@ -13,7 +13,7 @@ for (let r = 800; r <= 3500; r += 100) RATINGS.push(r);
 
 const state = {
   mode: ["group", "team"].includes(params.get("mode")) ? params.get("mode") : "friend",
-  team_size: 2,
+  team_size: 2, team_count: 2, fill: "free", uneven_ok: false,
   rules: "icpc",
   count: 3, rating_min: 1200, rating_max: 1600,
   tags_include: new Set(), tags_avoid: new Set(),
@@ -31,7 +31,8 @@ if (editCode) {
     tags_include: new Set(s.tags_include), tags_avoid: new Set(s.tags_avoid),
     avoid_interactive: s.avoid_interactive, use_custom: !!s.custom_problems,
     custom_problems: s.custom_problems || "", duration_min: s.duration_min, freeze_min: s.freeze_min || 0,
-    handicap: s.handicap, team_size: s.team_size || 2,
+    handicap: s.handicap, team_size: s.team_size || 2, team_count: s.team_count || 2, fill: s.fill || "free",
+    uneven_ok: !!s.uneven_ok,
   });
 }
 
@@ -111,7 +112,7 @@ function payload() {
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
       handicap: state.mode === "team" ? null : state.handicap,
-      ...(state.mode === "team" ? { team_size: state.team_size } : {}),
+      ...(state.mode === "team" ? { team_size: state.team_size, team_count: state.team_count, fill: state.fill, uneven_ok: state.uneven_ok } : {}),
     },
   };
 }
@@ -182,10 +183,16 @@ function render() {
             ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
             : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught."));
         if (state.mode !== "team") return rules;
+        const sizes = [2, 3, 4, 5, 6].map((v) => [v, String(v)]);
         const teams = panel("Teams", null,
-          segmented([[2, "2 vs 2"], [3, "3 vs 3"]], state.team_size, (v) => state.team_size = v, "Team size"),
-          el("p.small.muted", `${state.team_size * 2} players. A problem counts for a team when any member solves it. `
-            + "Pick sides in the lobby, or shuffle / balance by rating there. Unrated."));
+          el("div.row",
+            el("div.field", el("label", "Teams"), segmented(sizes, state.team_count, (v) => state.team_count = v, "Number of teams")),
+            el("div.field", el("label", "Players per team"), segmented(sizes, state.team_size, (v) => state.team_size = v, "Players per team"))),
+          el("label.check", el("input", { type: "checkbox", checked: state.fill === "draft", onchange: (e) => { state.fill = e.target.checked ? "draft" : "free"; } }),
+            "Captains' draft: you pick captains, they pick teams"),
+          el("p.small.muted", `${state.team_size * state.team_count} players. A problem counts for a team when any member solves it. `
+            + (state.fill === "draft" ? "Captains take turns picking in the lobby. Unrated."
+              : "Pick sides in the lobby, or shuffle / balance by rating there. Unrated.")));
         return el("div.grid-2.equal", teams, rules);
       })(),
       panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
