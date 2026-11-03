@@ -285,13 +285,13 @@ function renderBoard({ animate = false, toasts: wantToasts = false } = {}) {
       if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
       n.style.transition = "none";
       n.style.transform = `translate(${dx}px, ${dy}px)`;
-      n.classList.add("moving");
+      n.classList.add(dy > 0 ? "rising" : "moving");
       moved.push(n);
     }
     if (moved.length) {
       requestAnimationFrame(() => requestAnimationFrame(() => {
         for (const n of moved) { n.style.transition = ""; n.style.transform = ""; }
-        setTimeout(() => moved.forEach((n) => n.classList.remove("moving")), 800);
+        setTimeout(() => moved.forEach((n) => n.classList.remove("moving", "rising")), 800);
       }));
     }
   }

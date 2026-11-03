@@ -99,6 +99,7 @@
 .sc-row.resolving { background: color-mix(in srgb, var(--accent) 5%, var(--surface)); z-index: 2; }
 .sc-row.resolving::after { content: ""; position: absolute; inset: 0; border: 2px solid color-mix(in srgb, var(--accent) 55%, transparent); border-radius: var(--r-sm); pointer-events: none; }
 .sc-row.moving { z-index: 3; }
+.sc-row.rising { z-index: 4; box-shadow: 0 12px 32px -12px rgba(0, 0, 0, .5); }
 .sc-row .cell.next { border: 1px solid var(--line-strong); animation: next-cell 1.4s ease-in-out infinite; }
 @keyframes next-cell { 50% { border-color: var(--accent); } }
 .sc-row .cell.bad-flash { animation: bad-flash 700ms ease-out; }
@@ -118,6 +119,7 @@
 .sc-progress .bar > span { display: block; height: 100%; background: var(--accent); transition: width 600ms var(--ease); }
 .sc-controls { display: flex; justify-content: flex-end; gap: var(--s2); align-items: center; transition: opacity 400ms; }
 .screen-body.idle .sc-controls { opacity: 0; }
+.sc-controls .btn.primary kbd { color: inherit; border-color: currentColor; opacity: .7; }
 .sc-controls kbd { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
 .sc-offline { color: var(--warn); }
 

@@ -833,8 +833,7 @@ function revealPanel() {
         running ? el("button.btn.primary", { type: "button", onclick: () => go("next") }, "Next cell")
           : el("button.btn.primary", { type: "button", onclick: () => go("start") }, "Start reveal"),
         el("button.btn", { type: "button", "aria-pressed": String(!!rv.auto), onclick: () => go(rv.auto ? "pause" : "auto") }, rv.auto ? "Pause" : "Auto-play"),
-        el("button.btn.ghost", { type: "button", onclick: () => { if (confirm("Skip to the final standings?")) go("skip"); } }, "Skip to final"),
-        el("a.btn.ghost", { href: `/m/${code}/screen`, target: "_blank", rel: "noopener" }, icon("screen", 16), "Open big screen"))),
+        el("button.btn.ghost", { type: "button", onclick: () => { if (confirm("Skip to the final standings?")) go("skip"); } }, "Skip to final"))),
     el("div.panel-foot.spread",
       el("span", running ? `Step ${rv.step} of ${rv.total}` : `${rv.total} frozen ${rv.total === 1 ? "cell" : "cells"} to reveal`),
       el("div.reveal-bar", { "aria-hidden": "true" }, el("span", { style: `width: ${rv.total ? (rv.step / rv.total) * 100 : 0}%` }))));
