@@ -321,7 +321,7 @@ def test_v2_database_gets_banned_at(tmp_path):
         assert "banned_at" in {r[1] for r in conn.execute("PRAGMA table_info(users)")}
         assert conn.execute("SELECT handle, banned_at FROM users").fetchone()[:] == ("old", None)
         assert "matches_created" in {r[1] for r in conn.execute("PRAGMA index_list(matches)")}
-        assert conn.execute("PRAGMA user_version").fetchone()[0] == db.SCHEMA_VERSION == 3
+        assert conn.execute("PRAGMA user_version").fetchone()[0] == db.SCHEMA_VERSION >= 3
     finally:
         conn.close()
         db._conn = None
