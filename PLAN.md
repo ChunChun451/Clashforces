@@ -621,7 +621,7 @@ lobby ──all ready──▶ starting ──checks ok──▶ running ──a
 - **Rematch:** creates a new lobby with the same settings and new problems (the
   previous match's problems are excluded). The person who pressed it joins
   automatically. The others get a `rematch.offer` message.
-- **Freeze** (last X min of the base duration): for each viewer, other players'
+- **Freeze** (ICPC rules only; last X min of the base duration): for each viewer, other players'
   in-window submissions made after `freeze_start` show only as "? tries" with
   no verdict. Viewers always see their own results. Spectators see everything
   frozen. With extra time, that player stays frozen until their own end. At the
@@ -825,24 +825,18 @@ after Version 1 works.
 
 ---
 
-## 15. Open questions (defaults in bold; I'll use them unless you say otherwise)
+## 15. Decisions (approved)
 
-1. **Poller latency at 130 players.** Results are always exact, but without the
-   "I submitted" button a HOT player's verdict can take about 4 minutes to
-   appear. Default: **accept this, and make the button prominent**. Other
-   options: cap concurrent active players, or weight HOT players more heavily.
-2. **Login on a new device = redo the 2-minute compile-error check** (no
-   platform password). OK?
-3. **Scoreboard freeze only in ICPC.** In Lockout a freeze hides which problems
-   are still open, which breaks the race and the early finish. OK?
-4. **Editorial links.** The Codeforces API does not expose editorial links.
-   Default: **link to the contest page, where the editorial appears under
-   "Contest materials"**. The alternative is scraping contest pages, which is
-   fragile and can trip Codeforces bot protection.
-5. **Browser notifications only while a tab of the site is open** (no
-   background Web Push service). OK?
-6. **Ranked range = average CF rating ± 200**, so with 3 problems you get
-   avg−200, avg, avg+200. OK?
-7. **Head-to-head counts 1v1 matches only** (friend + ranked), not group rooms. OK?
-8. **Codeforces-unrated users start at duel rating 1200**, and their ranked
-   range uses 1200 as their rating. OK?
+1. **Latency is acceptable.** Detection delay only changes when a verdict shows
+   up. Every submission is placed and scored at its Codeforces
+   `creationTimeSeconds`. The timeline, penalty and Lockout ownership never use
+   the time our server saw the submission.
+2. **Login on a new device = redo the 2-minute compile-error check.**
+3. **Scoreboard freeze only in ICPC-rule modes** (friend/group ICPC, and team
+   mode in V2). The freeze setting is hidden and ignored for Lockout.
+4. **Editorial:** link to the contest page, where the editorial is under
+   "Contest materials". No scraping.
+5. **Browser notifications** only while a tab of the site is open.
+6. **Ranked range** = average CF rating ± 200 → problems at avg−200, avg, avg+200.
+7. **Head-to-head** counts 1v1 matches only (friend + ranked).
+8. **CF-unrated users** start at duel rating 1200, and 1200 is used for their ranked range.
