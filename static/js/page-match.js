@@ -206,6 +206,7 @@ function lobby() {
 
   return el("div.stack",
     el("section.stack", el("div.section-title", "Players"), players, waiting),
+    M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
     actions,
     el("section.stack", el("div.section-title", "Settings"), settingsSummary(s)),
     creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null,

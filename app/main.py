@@ -13,9 +13,11 @@ from app import config, db
 from app.cf import cache
 from app.cf.client import get_client
 from app.matches import lifecycle
+from app.matches import queue as ranked_queue
 from app.poller.poller import poller
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
+from app.routes import queue as queue_routes
 from app.routes import ws as ws_routes
 from app.ws.hub import hub
 from app.routes import pages
@@ -34,8 +36,10 @@ async def lifespan(app: FastAPI):
         tasks.append(asyncio.create_task(cache.refresh_loop(cf), name="cache-refresh"))
         tasks.append(asyncio.create_task(poller.run(), name="poller"))
         tasks.append(asyncio.create_task(lifecycle.run(), name="lifecycle"))
+        tasks.append(asyncio.create_task(ranked_queue.run(), name="ranked-queue"))
     else:
         lifecycle.setup()
+        ranked_queue.setup()
     yield
     for t in tasks:
         t.cancel()
@@ -64,6 +68,7 @@ app.add_middleware(
 )
 app.include_router(auth_routes.router)
 app.include_router(match_routes.router)
+app.include_router(queue_routes.router)
 app.include_router(ws_routes.router)
 app.include_router(pages.router)
 app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")

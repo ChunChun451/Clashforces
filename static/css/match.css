@@ -98,3 +98,15 @@
   .problems { grid-template-columns: 1fr; }
   .standings .col-who { min-width: 110px; }
 }
+
+/* ---------- matchmaking ---------- */
+.radar { position: relative; width: 168px; height: 168px; margin: var(--s6) auto; display: grid; place-items: center; }
+.radar::before, .radar::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  border: 1px solid var(--accent); opacity: 0; animation: ping 2.4s ease-out infinite;
+}
+.radar::after { animation-delay: 1.2s; }
+.radar-core { width: 84px; height: 84px; border-radius: 50%; background: var(--accent-soft); display: grid; place-items: center; font-family: var(--font-mono); color: var(--accent); font-size: 18px; }
+.radar.idle::before, .radar.idle::after { animation: none; }
+@keyframes ping { 0% { transform: scale(.5); opacity: .7; } 100% { transform: scale(1.15); opacity: 0; } }
+.center { text-align: center; }

@@ -21,6 +21,7 @@ PAGES = {
     "/settings": "settings",
     "/new": "new",
     "/m/{code}": "match",
+    "/queue": "queue",
 }
 
 for path, name in PAGES.items():

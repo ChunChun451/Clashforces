@@ -339,3 +339,48 @@ async def test_group_room_full_at_ten(world):
     late = users.by_id(users.create("late", 1500, 1500))
     with pytest.raises(service.MatchError):
         service.join(late, code)
+
+
+async def test_ranked_queue_to_elo(world):
+    from app.matches import queue
+    queue.setup()
+    w = world
+    db.execute("UPDATE users SET duel_rating = 1500")
+    queue.join(users.by_id(w.a["id"]))
+    with pytest.raises(service.MatchError):
+        service.create(users.by_id(w.a["id"]), "friend", "icpc", {})  # busy in the queue
+    queue.join(users.by_id(w.b["id"]))
+    codes = queue.match_pairs()
+    assert len(codes) == 1
+    match = store.match_by_code(codes[0])
+    assert match["mode"] == "ranked"
+    s = store.settings(match)
+    assert (s["count"], s["duration_min"]) == (3, 60)
+    assert db.scalar("SELECT COUNT(*) FROM queue") == 0
+    db.execute("UPDATE match_players SET ready = 1 WHERE match_id = ?", (match["id"],))
+    assert await service.start(match["id"], random.Random(5))
+    match = store.match_by_id(match["id"])
+    k = store.problems(match["id"])[0]["problem_key"]
+    w.subs["alice"].append(raw(1, k, "OK", match["start_time"] + 60))
+    w.now.t = match["end_time"] + 30
+    await finish(w, match)
+    assert users.by_id(w.a["id"])["duel_rating"] == 1516
+    assert users.by_id(w.b["id"])["duel_rating"] == 1484
+    assert db.scalar("SELECT COUNT(*) FROM rating_history") == 2
+
+
+async def test_ranked_ready_timeout_requeues(world):
+    from app.matches import queue
+    w = world
+    queue.join(users.by_id(w.a["id"]))
+    queue.join(users.by_id(w.b["id"]))
+    assert queue.match_pairs() == []  # 1650 vs 1320: too far apart at first
+    w.now.t += 120                     # the window widens to 400
+    code = queue.match_pairs()[0]
+    match = store.match_by_code(code)
+    db.execute("UPDATE match_players SET ready = 1 WHERE match_id = ? AND user_id = ?", (match["id"], w.a["id"]))
+    w.now.t += 61
+    queue.expire_ready_timeouts()
+    assert store.match_by_id(match["id"])["status"] == "cancelled"
+    assert db.scalar("SELECT user_id FROM queue") == w.a["id"]
+    assert locks.current(w.b["id"]) is None

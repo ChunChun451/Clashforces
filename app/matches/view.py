@@ -146,7 +146,7 @@ def build(match, viewer: int | None) -> dict:
 
 
 def public_settings(s: dict) -> dict:
-    out = {k: v for k, v in s.items() if k not in ("discord_webhook", "exclude")}
+    out = {k: v for k, v in s.items() if k not in ("discord_webhook", "exclude", "queue_joined")}
     out["has_discord_webhook"] = bool(s.get("discord_webhook"))
     return out
 
