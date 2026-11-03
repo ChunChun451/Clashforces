@@ -57,13 +57,13 @@ async def auth_check(body: CheckIn, request: Request):
 
 
 @router.post("/auth/logout")
-def auth_logout(request: Request, everywhere: bool = False):
+async def auth_logout(request: Request, everywhere: bool = False):
     session.logout(request, everywhere)
     return {"ok": True}
 
 
 @router.get("/me")
-def me(user=Depends(session.current_user)):
+async def me(user=Depends(session.current_user)):
     if user is None:
         return {"user": None}
     users.touch_seen(user["id"])
@@ -84,7 +84,7 @@ async def handle_change_start(body: StartIn, user=Depends(session.require_user))
 
 
 @router.patch("/me/settings")
-def update_settings(body: SettingsIn, user=Depends(session.require_user)):
+async def update_settings(body: SettingsIn, user=Depends(session.require_user)):
     hook = (body.discord_webhook or "").strip() or None
     if hook and not hook.startswith(config.DISCORD_PREFIX):
         raise HTTPException(400, "Discord webhook URLs start with " + config.DISCORD_PREFIX)

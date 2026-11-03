@@ -81,6 +81,15 @@ class Hub:
         except RuntimeError:
             pass  # no loop (sync tests)
 
+    def send_all(self, type_: str, data: dict) -> None:
+        for conns in list(self.by_user.values()):
+            for conn in list(conns):
+                self._spawn(conn, {"type": type_, "data": data})
+        for conns in list(self.by_match.values()):
+            for conn in list(conns):
+                if conn.user_id is None:
+                    self._spawn(conn, {"type": type_, "data": data})
+
     def send_user(self, user_id: int, type_: str, data: dict) -> None:
         for conn in list(self.by_user.get(user_id, ())):
             self._spawn(conn, {"type": type_, "data": data})

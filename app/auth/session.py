@@ -1,4 +1,8 @@
-"""Signed-cookie sessions. The cookie holds the user id and a session version."""
+"""Signed-cookie sessions. The cookie holds the user id and a session version.
+
+Route handlers and dependencies are all `async def` so they run on the event
+loop thread: SQLite access stays single-threaded and the hub can send messages.
+"""
 
 from fastapi import HTTPException, Request, WebSocket
 
@@ -29,12 +33,12 @@ def user_from_session(session: dict):
     return row
 
 
-def current_user(request: Request):
+async def current_user(request: Request):
     """FastAPI dependency: the logged-in user row or None."""
     return user_from_session(request.session)
 
 
-def require_user(request: Request):
+async def require_user(request: Request):
     """FastAPI dependency: the logged-in user row, or 401."""
     row = user_from_session(request.session)
     if row is None:
@@ -42,5 +46,3 @@ def require_user(request: Request):
     return row
 
 
-def ws_user(ws: WebSocket):
-    return user_from_session(ws.session if "session" in ws.scope else {})

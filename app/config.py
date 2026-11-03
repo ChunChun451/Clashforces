@@ -10,7 +10,7 @@ SESSION_MAX_AGE_S = 30 * 24 * 3600
 BACKGROUND_TASKS = os.environ.get("BACKGROUND_TASKS", "1") == "1"  # tests turn this off
 
 # ---------- Codeforces API client ----------
-CF_API_BASE = "https://codeforces.com/api"
+CF_API_BASE = os.environ.get("CF_API_BASE", "https://codeforces.com/api")
 CF_MIN_INTERVAL_S = 2.0          # at most one request every 2 seconds
 CF_TIMEOUT_S = 15.0
 CF_LONG_TIMEOUT_S = 60.0         # full user.status history
@@ -45,6 +45,7 @@ HARD_HINT_COOLDOWN_S = 20
 SOFT_HINT_MIN_AWAY_S = 30
 FINAL_CHECK_DELAY_S = 10
 FINAL_RETRY_S = 10
+TESTING_GIVE_UP_S = 3600          # a verdict stuck in TESTING this long after the end is ignored
 FINALIZE_RETRY_S = 60
 UPSOLVE_SWEEP_EVERY_S = 6 * 3600
 UPSOLVE_REFRESH_COOLDOWN_S = 5 * 60

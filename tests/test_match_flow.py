@@ -240,3 +240,15 @@ async def test_freeze_hides_others_then_reveals(world):
     payload = view.result_payload(m)
     assert payload["reveal"] and payload["reveal"]["steps"][0]["label"] == "A"
     assert {r["handle"]: r["solved"] for r in payload["rows"]} == {"alice": 1, "Bob_77": 1}
+
+
+async def test_stuck_testing_gives_up_after_an_hour(world):
+    w = world
+    match = await start_duel(w)
+    a_key = store.problems(match["id"])[0]["problem_key"]
+    w.subs["alice"].append({"id": 8, "creationTimeSeconds": match["end_time"] - 5,
+                            "problem": {"contestId": int(a_key[:-1]), "index": a_key[-1]}})
+    w.now.t = match["end_time"] + 30
+    assert (await finish(w, match))["result_status"] == "pending"
+    w.now.t = match["end_time"] + 3700
+    assert (await finish(w, match))["result_status"] == "final"

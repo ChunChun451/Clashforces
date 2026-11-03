@@ -38,7 +38,7 @@ export function el(spec, attrs, ...children) {
     else if (k === "dataset") Object.assign(node.dataset, v);
     else node.setAttribute(k, v === true ? "" : v);
   }
-  for (const c of children.flat()) {
+  for (const c of children.flat(Infinity)) {
     if (c === null || c === undefined || c === false) continue;
     node.append(c instanceof Node ? c : document.createTextNode(String(c)));
   }

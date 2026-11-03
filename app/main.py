@@ -16,6 +16,8 @@ from app.matches import lifecycle
 from app.poller.poller import poller
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
+from app.routes import ws as ws_routes
+from app.ws.hub import hub
 from app.routes import pages
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -27,6 +29,7 @@ async def lifespan(app: FastAPI):
     tasks = []
     if config.BACKGROUND_TASKS:
         cf = get_client()
+        cf.on_health_change.append(lambda down: hub.send_all("api.status", {"cf_api": "down" if down else "ok"}))
         tasks.append(asyncio.create_task(cf.run(), name="cf-worker"))
         tasks.append(asyncio.create_task(cache.refresh_loop(cf), name="cache-refresh"))
         tasks.append(asyncio.create_task(poller.run(), name="poller"))
@@ -61,12 +64,13 @@ app.add_middleware(
 )
 app.include_router(auth_routes.router)
 app.include_router(match_routes.router)
+app.include_router(ws_routes.router)
 app.include_router(pages.router)
 app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 
 
 @app.get("/api/health")
-def health():
+async def health():
     cf = get_client()
     return {"cf_api": "down" if cf.down else "ok", "lanes": cf.queue_depths(),
             "active_players": len(poller.watches)}

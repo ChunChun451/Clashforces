@@ -181,6 +181,9 @@ async def _final(match_id: int, user_id: int, handle: str, start: int, end: int)
     key = (match_id, user_id)
     try:
         ok = await poller.final_check(user_id, handle, start, end)
+        if not ok and clock.now() - end > config.TESTING_GIVE_UP_S:
+            log.warning("giving up on TESTING verdicts for %s in match %s", handle, match_id)
+            ok = True
         if ok:
             db.execute("UPDATE match_players SET final_checked = 1 WHERE match_id = ? AND user_id = ?",
                        (match_id, user_id))

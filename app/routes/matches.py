@@ -48,30 +48,30 @@ def _match_or_404(code: str):
 
 
 @router.post("/matches")
-def create(body: CreateIn, user=Depends(session.require_user)):
+async def create(body: CreateIn, user=Depends(session.require_user)):
     return {"code": _run(service.create, user, body.mode, body.rules, body.settings)}
 
 
 @router.get("/matches/{code}")
-def get_match(code: str, user=Depends(session.current_user)):
+async def get_match(code: str, user=Depends(session.current_user)):
     match = _match_or_404(code)
     return view.build(match, user["id"] if user else None)
 
 
 @router.post("/matches/{code}/join")
-def join(code: str, user=Depends(session.require_user)):
+async def join(code: str, user=Depends(session.require_user)):
     _run(service.join, user, code)
     return {"ok": True}
 
 
 @router.post("/matches/{code}/leave")
-def leave(code: str, user=Depends(session.require_user)):
+async def leave(code: str, user=Depends(session.require_user)):
     _run(service.leave, user, code)
     return {"ok": True}
 
 
 @router.patch("/matches/{code}/settings")
-def update_settings(code: str, body: SettingsIn, user=Depends(session.require_user)):
+async def update_settings(code: str, body: SettingsIn, user=Depends(session.require_user)):
     raw = dict(body.settings)
     if body.rules:
         raw["rules"] = body.rules
@@ -80,30 +80,30 @@ def update_settings(code: str, body: SettingsIn, user=Depends(session.require_us
 
 
 @router.post("/matches/{code}/ready")
-def ready(code: str, body: ReadyIn, user=Depends(session.require_user)):
+async def ready(code: str, body: ReadyIn, user=Depends(session.require_user)):
     _run(service.set_ready, user, code, body.ready)
     return {"ok": True}
 
 
 @router.post("/matches/{code}/submitted")
-def submitted(code: str, user=Depends(session.require_user)):
+async def submitted(code: str, user=Depends(session.require_user)):
     queued = _run(service.hint, user, code)
     return {"queued": queued}
 
 
 @router.post("/matches/{code}/forfeit")
-def forfeit(code: str, user=Depends(session.require_user)):
+async def forfeit(code: str, user=Depends(session.require_user)):
     _run(service.forfeit, user, code)
     return {"ok": True}
 
 
 @router.post("/matches/{code}/rematch")
-def rematch(code: str, user=Depends(session.require_user)):
+async def rematch(code: str, user=Depends(session.require_user)):
     return {"code": _run(service.rematch, user, code)}
 
 
 @router.get("/matches/{code}/result")
-def result(code: str):
+async def result(code: str):
     match = _match_or_404(code)
     if match["result_status"] != "final":
         raise HTTPException(409, "The result is not final yet.")
@@ -111,7 +111,7 @@ def result(code: str):
 
 
 @router.get("/matches/{code}/timeline")
-def timeline(code: str, user=Depends(session.current_user)):
+async def timeline(code: str, user=Depends(session.current_user)):
     match = _match_or_404(code)
     if match["status"] != "ended":
         raise HTTPException(409, "The timeline is shown after the match.")
@@ -140,12 +140,12 @@ def timeline(code: str, user=Depends(session.current_user)):
 # ---------- problem helpers for the create form ----------
 
 @router.get("/tags")
-def tags():
+async def tags():
     return {"tags": cache.all_tags()}
 
 
 @router.post("/problems/preview")
-def preview(body: dict, user=Depends(session.current_user)):
+async def preview(body: dict, user=Depends(session.current_user)):
     """Dry-run selection for the current user so the form can warn early."""
     try:
         s = settings_mod.clean(body, body.get("rules", "icpc"), "friend")
@@ -163,7 +163,7 @@ def preview(body: dict, user=Depends(session.current_user)):
 
 
 @router.post("/problems/validate")
-def validate(body: ValidateIn, user=Depends(session.current_user)):
+async def validate(body: ValidateIn, user=Depends(session.current_user)):
     touched = {}
     if body.match_code:
         match = store.match_by_code(body.match_code)
@@ -182,7 +182,7 @@ def validate(body: ValidateIn, user=Depends(session.current_user)):
 
 
 @router.get("/me/active")
-def my_active(user=Depends(session.require_user)):
+async def my_active(user=Depends(session.require_user)):
     row = db.one("SELECT l.kind, m.code FROM active_locks l LEFT JOIN matches m ON m.id = l.match_id"
                  " WHERE l.user_id = ?", (user["id"],))
     return {"active": dict(row) if row else None}

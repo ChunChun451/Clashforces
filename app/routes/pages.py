@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 def _page(name: str):
-    def handler():
+    async def handler():
         return FileResponse(STATIC / f"{name}.html")
     return handler
 
@@ -19,6 +19,8 @@ PAGES = {
     "/": "index",
     "/login": "login",
     "/settings": "settings",
+    "/new": "new",
+    "/m/{code}": "match",
 }
 
 for path, name in PAGES.items():
