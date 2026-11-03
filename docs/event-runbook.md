@@ -44,6 +44,8 @@ VM's output when the command finishes; there is no SSH. Times on the VM are UTC 
 - [ ] **Have everyone log in before the start.** Logins and match starts also use the
   Codeforces API: 30 people logging in at the same minute takes ~2.5 minutes, and starting
   all matches at once takes ~2 minutes.
+- [ ] Tell players a result becomes final **1–2 minutes after the end** (every player gets a
+  last check on Codeforces; ~80 s for a 30-player contest).
 
 ## During
 

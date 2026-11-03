@@ -12,6 +12,8 @@ puts them into a mix of matches and lets them submit for the whole match:
 - 40% of players press "I submitted" a few seconds after submitting,
   30% only come back to the tab (soft "focus" hint), 30% do neither
 - every player and one spectator per match keep a WebSocket open
+- --layout mix (default): rooms, 1v1s and team duels as below; --layout contest: one hosted
+  solo ICPC contest with everyone in it (5 problems, 5-minute freeze), run by a separate host
 - fake CF answers each call in --cf-latency-ms (default 300-700 ms, like the real API)
 - in team ICPC, nobody resubmits a problem their team already solved
 
@@ -267,7 +269,35 @@ class Run:
             raise RuntimeError(f"verification never finished for {p.handle}")
         p.user_id = (await p.http.get("/api/me")).json()["user"]["id"]
 
+    async def create_contest(self) -> None:
+        """One hosted contest for everyone. The host is an extra account that doesn't play."""
+        problems = json.loads((ROOT / "tests" / "fixtures" / "problemset.json").read_text())["result"]["problems"]
+        keys, names = [], set()
+        for p in problems:  # skip Div.1/Div.2 copies (same name)
+            if 1200 <= (p.get("rating") or 0) <= 1800 and p["name"] not in names and len(keys) < 5:
+                keys.append(f"{p['contestId']}{p['index']}")
+                names.add(p["name"])
+        host = self.host
+        r = await host.http.post("/api/contests", json={
+            "title": f"Load test {self.n}", "rules": "icpc", "format": "solo", "visibility": "unlisted",
+            "duration_min": self.args.duration,
+            "layout": self.args.layout, "freeze_min": 5, "problems": " ".join(keys)})
+        if r.status_code != 200:
+            raise RuntimeError(f"contest create failed: {r.text}")
+        code = r.json()["code"]
+        for p in self.players:
+            r = await p.http.post(f"/api/matches/{code}/join")
+            if r.status_code != 200:
+                raise RuntimeError(f"join failed: {r.text}")
+            p.code = code
+        self.matches[code] = Match(code, "contest", "icpc", list(self.players))
+        r = await host.http.post(f"/api/contests/{code}/start", json={"force": True})
+        if r.status_code != 200:
+            raise RuntimeError(f"contest start failed: {r.text}")
+
     async def create_matches(self) -> None:
+        if self.args.layout == "contest":
+            return await self.create_contest()
         idx = 0
         settings = {"count": 3, "rating_min": 1200, "rating_max": 1600, "duration_min": self.args.duration}
         for mode, rules, size in layout(self.n):
@@ -304,7 +334,7 @@ class Run:
                         me = next(x for x in st["players"] if x["user_id"] == p.user_id)
                         p.end_time, p.team = me["end_time"], me.get("team")
                     pending.discard(code)
-                elif st["status"] == "lobby" and not all(x["ready"] for x in st["players"]):
+                elif m.mode != "contest" and st["status"] == "lobby" and not all(x["ready"] for x in st["players"]):
                     # bounced back to the lobby (e.g. CF hiccup): ready again
                     await asyncio.gather(*[p.http.post(f"/api/matches/{code}/ready", json={"ready": True})
                                            for p in m.players])
@@ -335,7 +365,8 @@ class Run:
                 if t == "standings":
                     changed = data.get("changed") or []
                     sig = (code, tuple(sorted((c["handle"].lower(), c["time"], c["verdict"] or "") for c in changed)))
-                    self.fanout.setdefault(sig, []).append(now)
+                    if changed:  # frozen viewers get empty updates; those can't be matched across sockets
+                        self.fanout.setdefault(sig, []).append(now)
                     if p is None:
                         continue
                     for c in changed:
@@ -422,9 +453,11 @@ class Run:
                 for i in range(self.n):
                     self.players.append(Player(i, f"load{self.n}u{i:02d}", f"10.0.{i // 200}.{i % 200 + 1}",
                                                pick(self.rng, BEHAVIOURS)))
-                for p in self.players:
+                self.host = Player(self.n, f"load{self.n}host", "10.9.9.9", "none")
+                everyone = self.players + ([self.host] if self.args.layout == "contest" else [])
+                for p in everyone:
                     p.http = httpx.AsyncClient(base_url=self.app_url, headers=HEADERS, timeout=120)
-                await asyncio.gather(*[self.login(p) for p in self.players])
+                await asyncio.gather(*[self.login(p) for p in everyone])
                 self.phase_marks["logged_in"] = time.time() - t0
                 await self.create_matches()
                 await self.wait_running()
@@ -458,7 +491,7 @@ class Run:
                     await ws.close()
                 await asyncio.gather(*ws_tasks, return_exceptions=True)
                 await sampler
-                for p in self.players:
+                for p in everyone:
                     await p.http.aclose()
             return self.report(calls, t0, match_start, match_end)
         finally:
@@ -503,6 +536,7 @@ class Run:
                          "ended_early": bool(m.ended_at and m.ended_at < m.end_time - 5)}
                         for m in self.matches.values()],
             "duration_min": self.args.duration,
+            "layout": self.args.layout,
             "phases_s": {k: round(v, 1) for k, v in self.phase_marks.items()},
             "submissions": len(subs),
             "missed_on_ws": len(missed),
@@ -559,6 +593,8 @@ async def main() -> None:
     ap.add_argument("--sub-max", type=float, default=360, help="seconds between a player's submissions (max)")
     ap.add_argument("--spectators", type=int, default=1, help="extra anonymous WebSockets per match")
     ap.add_argument("--parallel", action="store_true", help="run the player counts at the same time (separate stacks)")
+    ap.add_argument("--layout", choices=["mix", "contest"], default="mix",
+                    help="mix: rooms, 1v1s and team duels; contest: everyone in one hosted contest")
     ap.add_argument("--seed", type=int, default=7)
     ap.add_argument("--cf-latency-ms", default="300-700", help="fake CF answer time, e.g. 300-700 or 0")
     ap.add_argument("--config", default="", help='JSON overrides for app/config.py, e.g. \'{"HARD_HINT_DELAY_S": 4}\'')

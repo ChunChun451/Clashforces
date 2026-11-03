@@ -1,6 +1,7 @@
 # Load test: 20, 30 and 40 players
 
 **Verdict: 20 and 30 players are fine; 40 works, but players who don't press "I submitted" wait too long.**
+This holds both for a mix of small matches and for one hosted contest with everyone in it.
 The server itself is never the bottleneck. It stayed under 70 MB of RAM and about 1% CPU, with no
 errors and no lost verdicts. What sets the speed is the Codeforces rule of one API call per 2 seconds.
 That rule caps us at ~25 checks per minute for everyone together. Pressing **I submitted** jumps the
@@ -95,6 +96,43 @@ against production or the real Codeforces API.
     HOT tier is designed for.
   - Samples are small (54–97 submissions per run), so treat differences under ~5 s as noise.
 
+## Hosted contest: everyone in one match
+
+`main` gained hosted contests while this was being written, and the event may run as one big
+contest. So the test was repeated with `--layout contest`:
+
+- one host (who doesn't play) creates a solo ICPC contest with 5 problems and a 5-minute freeze
+- everyone joins, the host presses Start
+- same player behaviour and fake-API latency as above ([data](loadtest-data/contest.json))
+
+| | 30 players, 1 contest | 40 players, 1 contest |
+|---|---|---|
+| Submissions / missing on the scoreboard | 87 / 0 | 116 / 0 |
+| "I submitted": p50 / p90 | 6.8 / 12.4 s | 6.6 / 25.8 s |
+| Came back to the tab: p50 / p90 | 14.3 / 59.4 s | 24.0 / 72.9 s |
+| No hint: p50 / p90 | 42.4 / 109.7 s | 78.4 / 157.8 s |
+| Codeforces calls: max in any 60 s / smallest gap | 25 / 2.30 s | 25 / 2.31 s |
+| App CPU: p50 / p90 / max | 0.5 / 3.0 / 5.0% | 0.5 / 4.0 / 7.0% |
+| App memory, max | 69 MB | 71 MB |
+| WebSocket messages received | 4195 (31 sockets) | 7141 (41 sockets) |
+| Fan-out spread per update (all sockets of the contest): p50 / p90 | 7 / 11 ms | 12 / 18 ms |
+| Contest end → final result | 83 s | 110 s |
+
+- **Verdict delays match the mixed layout.** They depend on the number of players, not on how
+  they're grouped.
+- **The scoreboard is rebuilt per viewer.** During the freeze every viewer sees a different
+  scoreboard, so one submission means 31 or 41 scoreboard builds. That's where the extra CPU (p90
+  3–4%) and the 12–18 ms fan-out come from. Still small.
+- **Results take longer to become final in one big contest.** Every player needs their own final
+  check (one or more calls, 2.3 s apart). With 40 players that's ~2 minutes. Tell people the result
+  appears a minute or two after the end.
+- A 30-player mixed run on the merged `main` (67dcf94) matched the earlier numbers
+  ([data](loadtest-data/mix-30-on-main-67dcf94.json)): "I submitted" 6.9 / 11.3 s, no hint
+  23.9 / 101.1 s.
+- The fan-out maximum isn't reported for these two runs. Frozen viewers receive empty updates,
+  and this version of the tool grouped those across different submissions, which made the max
+  meaningless. The median and p90 are unaffected; the tool now skips empty updates.
+
 ## Tuning proposals (`app/config.py`, not applied)
 
 The test can't buy more Codeforces capacity, so no setting makes the no-hint path fast at 40
@@ -126,6 +164,10 @@ python -m tools.loadtest --players 20 30 40 --parallel
 
 ```bash
 python -m tools.loadtest --players 30 --config '{"HARD_HINT_DELAY_S": 5}'
+```
+
+```bash
+python -m tools.loadtest --layout contest --players 30 40 --parallel
 ```
 
 Useful options:

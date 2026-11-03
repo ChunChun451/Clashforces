@@ -284,8 +284,10 @@ CPU/RAM and WebSocket fan-out. It never talks to production or the real Codeforc
 Results: [docs/loadtest.md](docs/loadtest.md).
 
 ```bash
-python -m tools.loadtest --players 20 30 40
+python -m tools.loadtest --players 20 30 40 --parallel
 ```
+
+`--layout contest` puts everyone in one hosted contest instead of a mix of small matches.
 
 ## Layout
 
