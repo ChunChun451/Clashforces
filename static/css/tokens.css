@@ -35,9 +35,9 @@
 
   /* team duels: two side colors, kept away from the green "accepted" accent */
   --team-a: #7aa7ff;
-  --team-a-soft: rgba(122, 167, 255, 0.12);
+  --team-a-soft: rgba(122, 167, 255, 0.09);
   --team-b: #f0a35e;
-  --team-b-soft: rgba(240, 163, 94, 0.12);
+  --team-b-soft: rgba(240, 163, 94, 0.08);
 
   /* one control height scale: small / default / large */
   --h-sm: 32px; --h-md: 40px; --h-lg: 48px;

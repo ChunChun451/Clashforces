@@ -387,7 +387,10 @@ function live() {
     el("div.timer", { id: "timer", role: "timer", "aria-label": "Time left" }, fmtDuration(end - serverNow())),
     el("div.timer-sub", { id: "timer-sub" }, M.me && M.me.end_time !== M.end_time ? "Your time (includes extra time)" : ""),
     el("div.timer-bar", { "aria-hidden": "true" }, el("span", { id: "timer-bar" }))));
-  if (M.frozen) parts.push(el("div.banner.freeze", "Scoreboard frozen. You see your own results; others are hidden until the end."));
+  if (M.frozen) parts.push(el("div.banner.freeze", isTeam()
+    ? (isPlayer() ? "Scoreboard frozen. You see your team live; the other team's new submissions are hidden until the end."
+      : "Scoreboard frozen. New submissions from both teams are hidden until the end.")
+    : "Scoreboard frozen. You see your own results; others are hidden until the end."));
   if (M.me && M.me.forfeited) parts.push(el("div.banner.bad", "You forfeited this match."));
   parts.push(el("div.stack", problemCards(), el("div.actions",
     isPlayer() && !M.me.forfeited ? el("button.btn.primary", { type: "button", onclick: submitted, title: "Shortcut: S" }, "I submitted") : null,
@@ -450,9 +453,9 @@ function resultTitle() {
     if (!won) text = "Draw";
     else if (isPlayer()) text = won.team === M.my_team ? "Your team won" : "Your team lost";
     else text = `${won.name} wins`;
-    const sub = won ? won.members.map((m) => m.handle).join(" & ") : null;
-    return el("div.stack", el("h2.result-title", won ? el("span.team-name", teamBadge(won.team), text) : text),
-      sub ? el("p.muted", `${won.name}: ${sub}`) : null, reason ? el("p.muted", reason) : null);
+    const sub = won ? el("p.team-name.muted", teamBadge(won.team), `${won.name} won · ${won.members.map((m) => m.handle).join(" & ")}`)
+      : el("p.muted", "Both teams finished level.");
+    return el("div.stack", el("h2.result-title", text), sub, reason ? el("p.muted", reason) : null);
   }
   if (top.length > 1) text = top.some((r) => r.user_id === myId) ? "Draw" : "Draw at the top";
   else if (top[0] && top[0].user_id === myId) text = "You won";
@@ -520,8 +523,8 @@ function timelineSection() {
     const cls = it.verdict === "OK" ? "ok" : it.verdict === "COMPILATION_ERROR" || it.verdict === "TESTING" ? "neutral" : "bad";
     return el("div.tl-item", { class: it.team !== null && it.team !== undefined ? `tl-item team-${TEAM_LETTER[it.team].toLowerCase()}` : "tl-item" },
       el("span.tl-min", `${it.minute}'`),
-      el("span", it.team !== null && it.team !== undefined ? [teamBadge(it.team), " "] : null,
-        handleEl(it.handle, it.cf_rating), el("span.mono", `  ${it.label}`)),
+      el("span.tl-who", it.team !== null && it.team !== undefined ? teamBadge(it.team) : null,
+        handleEl(it.handle, it.cf_rating), el("span.mono", it.label)),
       it.url ? el("a", { class: `verdict ${cls}`, href: it.url, target: "_blank", rel: "noopener" }, verdictText(it.verdict))
         : el("span", { class: `verdict ${cls}` }, verdictText(it.verdict)));
   })));

@@ -85,7 +85,7 @@
 
 /* ---------- timeline ---------- */
 .timeline { display: grid; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); box-shadow: var(--shadow); }
-.tl-item { display: grid; grid-template-columns: 56px 1fr auto; gap: var(--s3); padding: 12px var(--s4); border-bottom: 1px solid var(--line); align-items: baseline; font-size: 14px; }
+.tl-item { display: grid; grid-template-columns: 56px 1fr auto; gap: var(--s3); padding: 12px var(--s4); border-bottom: 1px solid var(--line); align-items: center; font-size: 14px; }
 .tl-item:last-child { border-bottom: 0; }
 .tl-min { font-family: var(--font-mono); color: var(--muted); }
 
@@ -134,7 +134,7 @@
 .mcell { display: inline-block; min-width: 40px; font: 12px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
 .mcell.ok { color: color-mix(in srgb, var(--accent) 80%, var(--muted)); }
 .mcell.wrong { color: color-mix(in srgb, var(--danger) 80%, var(--muted)); }
-.tl-item .team-badge { vertical-align: -4px; }
+.tl-who { display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; }
 .tl-item.team-a { box-shadow: inset 2px 0 0 var(--team-a); }
 .tl-item.team-b { box-shadow: inset 2px 0 0 var(--team-b); }
 

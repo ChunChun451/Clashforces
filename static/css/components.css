@@ -105,6 +105,10 @@ a.card:active { transform: translateY(1px); }
 /* Panels in a row share a height: .panel-fill takes the spare room (and centers an empty state),
    .panel-foot sits on the bottom edge. */
 .grid-2.equal > .panel { display: flex; flex-direction: column; }
+/* titled sections side by side: the boxes under the titles end on the same line */
+.equal-cols > section { display: flex; flex-direction: column; }
+.equal-cols > section > :last-child { flex: 1; }
+.equal-cols .empty-state.boxed { align-content: center; }
 .panel-fill { flex: 1; display: grid; align-content: center; }
 .panel-fill > .panel-list { align-self: start; }
 .panel-foot { margin: auto 0 0; padding: var(--s3) var(--s5); border-top: 1px solid var(--line); font-size: 13px; color: var(--muted); background: color-mix(in srgb, var(--surface-2) 40%, transparent); }

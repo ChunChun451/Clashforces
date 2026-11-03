@@ -544,10 +544,15 @@ penalty, last_ok_time, and a cell per problem (tries, solved_at_min, pending).
   and 0 + 699 < 801, so the match ends.
 - Default points: 100, 200, 300… in rating order (config `LOCKOUT_POINT_STEP`).
 
-### 7.3 Team (V2, `core/team.py`)
+### 7.3 Team (built, `core/team.py`)
 Merge all members' submissions under the team id, then run ICPC per team.
 Rejected tries from every member before the team's first OK count. Example:
 member 1 WA at 20 min, member 2 OK at 35 min → 35 + 20 = **55**.
+Lockout works the same way: the first member OK claims the problem for the
+team, and the clinch check runs per team. A member's submissions only count
+inside that member's own window, so after a forfeit the rest of the team plays
+on. Team matches are mode `team` with `team_size` 2 or 3, `match_players.team`
+0/1, no handicaps and no Elo.
 
 ### 7.4 Elo (`core/elo.py`)
 `expected = 1 / (1 + 10 ** ((Rb - Ra) / 400))`, `new = Ra + K * (score - expected)`

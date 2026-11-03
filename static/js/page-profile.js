@@ -69,7 +69,7 @@ function render() {
       points.length > 1 ? el("div.card", lineChart(points, { ariaLabel: `Duel rating of ${user.handle} over time` }))
         : el("div.empty-state.boxed", el("p", "Ranked matches move the duel rating. The graph appears after the first one."),
           user.is_me ? el("a.btn.small", { href: "/queue" }, "Find a ranked match") : null)),
-    el("div.grid-2",
+    el("div.grid-2.equal-cols",
       el("section.stack", el("h2.section-title", "Average solve time"),
         tableOrEmpty(stats.solve_times, el("table",
           el("thead", el("tr", el("th.num", "Rating"), el("th", "Tag"), el("th.num", "Avg"), el("th.num", "Solves"))),
