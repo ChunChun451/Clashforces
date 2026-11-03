@@ -5,6 +5,7 @@ import { fmtPts, flipNew, okSet, standingsTable, teamBadge, teamClass, teamStand
 import { fmtCountdown, fmtLocal } from "./time.js";
 import { icon } from "./icons.js";
 import { notify } from "./notify.js";
+import { teamChat } from "./team-chat.js";
 
 mountTopbar("");
 const app = $("#app");
@@ -27,6 +28,10 @@ const isContest = () => M && M.mode === "contest";
 const isHost = () => !!(M && M.is_host);
 const myRow = () => M && M.standings.find((r) => (isTeam() ? r.team === M.my_team : r.user_id === myId));
 const teamName = (t) => (M && M.teams && M.teams[t] ? M.teams[t].name : `Team ${"ABCDEF"[t]}`);
+// Contests with a freeze: the final result stays hidden until the host's reveal is done.
+const revealStatus = () => (M && M.reveal ? M.reveal.status : null);
+const resultLocked = () => revealStatus() === "waiting" || revealStatus() === "running";
+const chat = teamChat(code, myId);
 let announceOpen = false;   // "show all" on the announcements list
 let renaming = null;        // team index whose name is being edited
 
@@ -43,8 +48,16 @@ on("match.state", (data) => {
   syncClock(data.server_time);
   const was = M;
   M = data;
-  if (was && (was.status !== M.status || was.result_status !== M.result_status)) timeline = null;
+  if (was && (was.status !== M.status || was.result_status !== M.result_status
+    || (was.reveal && was.reveal.status) !== (M.reveal && M.reveal.status))) timeline = null;
+  chat.update(M);
   if (!revealing) render();
+});
+on("match.reveal", (d) => {
+  if (!M || revealing) return;
+  M.reveal = d.reveal;
+  if (d.standings) M.standings = d.standings;
+  render();
 });
 on("standings", (data) => {
   if (!M || revealing) return;
@@ -94,6 +107,10 @@ document.addEventListener("keydown", (e) => {
   if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
   if (e.key === "s" || e.key === "S") { if (M && M.status === "running" && isPlayer()) submitted(); }
   if (e.key === "t" || e.key === "T") toggleTags();
+  if ((e.key === " " || e.key === "ArrowRight") && isHost() && resultLocked() && M.result_status === "final" && !e.target.closest("button, a")) {
+    e.preventDefault();
+    api(`/api/contests/${code}/reveal`, { method: "POST", body: { action: revealStatus() === "waiting" ? "start" : "next" } }).catch((ex) => toast(ex.message, true));
+  }
 });
 
 // ---------- actions ----------
@@ -235,6 +252,8 @@ function header() {
         isTeam() && isPlayer() && M.my_team !== null ? el("span.chip.team-chip", teamBadge(M.my_team), `You're on ${teamName(M.my_team)}`) : null),
       isContest() && M.contest.description ? el("p.lede.small.contest-desc", M.contest.description) : null),
     el("div.share",
+      isHost() && isContest() ? el("a.btn", { href: `/m/${code}/screen`, target: "_blank", rel: "noopener", title: "A scoreboard for a projector or TV" }, icon("screen", 16), "Open big screen")
+        : !isPlayer() ? el("a.btn.ghost.small", { href: `/m/${code}/screen`, target: "_blank", rel: "noopener", title: "A scoreboard for a projector or TV" }, "Big screen") : null,
       el("button.btn", { type: "button", onclick: () => copy(link) }, M.status === "lobby" ? "Copy invite link" : "Copy watch link")));
 }
 
@@ -737,6 +756,14 @@ function problemCards() {
 
 function resultTitle() {
   if (M.result_status !== "final") return el("div.banner", el("span.spinner"), "Waiting for Codeforces to confirm the last submissions…");
+  if (resultLocked()) {
+    const rv = M.reveal;
+    return el("div.stack",
+      el("h2.result-title", rv.status === "running" ? "Revealing the results" : "Results are frozen"),
+      el("p.muted", rv.status === "running"
+        ? `Frozen submissions are shown one at a time, from the bottom up · ${rv.step} of ${rv.total}`
+        : isHost() ? "Start the reveal when the room is ready. The big screen follows along." : "The host reveals the frozen submissions next. Watch the big screen."));
+  }
   const top = M.standings.filter((r) => r.place === 1);
   let text;
   const reason = { clinched: "Decided early — nobody could catch up.", forfeit: "Ended by forfeit.", all_solved: "Everything was solved.", host: "Ended early by the host." }[M.end_reason];
@@ -774,18 +801,43 @@ function ratingChanges() {
 
 function ended() {
   const parts = [resultTitle()];
+  if (isHost() && resultLocked()) parts.push(revealPanel());
   parts.push(ratingChanges());
   parts.push(el("div.actions",
     isPlayer() && M.mode !== "ranked" && !isContest() ? el("button.btn.primary", { type: "button", onclick: rematch }, M.rematch_code ? "Join rematch" : "Rematch") : null,
     isPlayer() && M.mode === "ranked" ? el("a.btn.primary", { href: "/queue" }, "Queue again") : null,
     isContest() ? el("a.btn.primary", { href: "/events" }, "Back to events") : null,
     el("a.btn.ghost", { href: "/" }, "Home")));
-  parts.push(el("section.stack", el("h2.section-title", "Final standings"),
+  parts.push(el("section.stack", el("h2.section-title", resultLocked() ? (M.frozen ? "Standings (frozen)" : "Standings") : "Final standings"),
     el("div", { id: "standings-box" }, board())));
   if (isContest() && (M.announcements || []).length) parts.push(announcementsPanel());
   parts.push(problemList());
   parts.push(timelineSection());
   return parts;
+}
+
+// The host runs the freeze reveal here or on the big screen (Space / →); every screen follows.
+function revealPanel() {
+  const rv = M.reveal;
+  const go = async (action) => {
+    try { await api(`/api/contests/${code}/reveal`, { method: "POST", body: { action } }); }
+    catch (e) { toast(e.message, true); }
+  };
+  const running = rv.status === "running";
+  return el("section.panel.host-panel.reveal-panel",
+    el("div.panel-head", el("div", el("h2", "Freeze reveal"),
+      el("p.small.muted", "From the last place up, each frozen cell is resolved and the board re-ranks. Everyone watching sees the same step.")),
+    el("span.chip.on", "Host")),
+    el("div.panel-body",
+      el("div.actions",
+        running ? el("button.btn.primary", { type: "button", onclick: () => go("next") }, "Next cell")
+          : el("button.btn.primary", { type: "button", onclick: () => go("start") }, "Start reveal"),
+        el("button.btn", { type: "button", "aria-pressed": String(!!rv.auto), onclick: () => go(rv.auto ? "pause" : "auto") }, rv.auto ? "Pause" : "Auto-play"),
+        el("button.btn.ghost", { type: "button", onclick: () => { if (confirm("Skip to the final standings?")) go("skip"); } }, "Skip to final"),
+        el("a.btn.ghost", { href: `/m/${code}/screen`, target: "_blank", rel: "noopener" }, icon("screen", 16), "Open big screen"))),
+    el("div.panel-foot.spread",
+      el("span", running ? `Step ${rv.step} of ${rv.total}` : `${rv.total} frozen ${rv.total === 1 ? "cell" : "cells"} to reveal`),
+      el("div.reveal-bar", { "aria-hidden": "true" }, el("span", { style: `width: ${rv.total ? (rv.step / rv.total) * 100 : 0}%` }))));
 }
 
 async function rematch() {
@@ -808,6 +860,7 @@ function problemList() {
 function timelineSection() {
   const box = el("section.stack", { id: "timeline" }, el("h2.section-title", "Timeline"));
   if (M.result_status !== "final") { box.append(el("p.muted.small", "The timeline appears once the result is confirmed.")); return box; }
+  if (resultLocked()) { box.append(el("p.muted.small", "The timeline appears after the reveal.")); return box; }
   if (timeline === null) {
     timeline = "loading";
     api(`/api/matches/${code}/timeline`).then((t) => { timeline = t; if (!revealing) render(); }).catch(() => { timeline = { items: [] }; });

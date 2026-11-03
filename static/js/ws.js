@@ -5,6 +5,9 @@ const subscriptions = new Set();
 let socket = null;
 let backoff = 500;
 let serverOffset = 0; // server_time - local time, in seconds
+let socketQuery = "";  // "?view=screen" on the big screen: always the spectator view
+
+export function screenView() { socketQuery = "?view=screen"; }
 
 export function on(type, fn) {
   if (!handlers.has(type)) handlers.set(type, []);
@@ -40,7 +43,7 @@ function dispatch(msg) {
 export function connect() {
   if (socket && socket.readyState <= WebSocket.OPEN) return;
   const proto = location.protocol === "https:" ? "wss" : "ws";
-  socket = new WebSocket(`${proto}://${location.host}/ws`);
+  socket = new WebSocket(`${proto}://${location.host}/ws${socketQuery}`);
   socket.addEventListener("open", () => {
     backoff = 500;
     for (const code of subscriptions) send("subscribe", { code });
