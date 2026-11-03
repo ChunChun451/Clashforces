@@ -88,3 +88,6 @@ td.num, th.num { text-align: right; font-family: var(--font-mono); }
 .empty { color: var(--muted); padding: var(--s6) 0; text-align: center; font-size: 14px; }
 .spinner { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--line); border-top-color: var(--accent); animation: spin .8s linear infinite; display: inline-block; vertical-align: -2px; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.row > select, .row > input { width: auto; flex: 0 0 auto; min-width: 96px; }
+.narrow-section { max-width: 560px; }

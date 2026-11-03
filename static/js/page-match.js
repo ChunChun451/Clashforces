@@ -256,7 +256,7 @@ function handicapEditor() {
       toast("Handicap saved");
     } catch (e) { toast(e.message, true); }
   };
-  return el("section.stack",
+  return el("section.stack.narrow-section",
     el("div.section-title", "Handicap"),
     el("div.field", el("label", { for: "h-type" }, "Type"), typeSel),
     body,
