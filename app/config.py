@@ -78,10 +78,6 @@ QUEUE_WIDEN_EVERY_S = 30
 QUEUE_MAX_WINDOW = 400
 RANKED_READY_TIMEOUT_S = 60
 
-# ---------- misc ----------
-PUBLIC_URL = os.environ.get("PUBLIC_URL", "http://localhost:8000")  # used in Discord messages
-DISCORD_PREFIX = "https://discord.com/api/webhooks/"
-
 
 def check_production_settings() -> None:
     """Refuse to run with secure cookies (i.e. in production) and the default secret key."""

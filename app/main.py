@@ -14,7 +14,6 @@ from app.cf import cache
 from app.cf.client import get_client
 from app.matches import lifecycle
 from app.matches import queue as ranked_queue
-from app.notify import discord
 from app.poller import upsolve
 from app.poller.poller import poller
 from app.routes import auth as auth_routes
@@ -32,7 +31,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 async def lifespan(app: FastAPI):
     config.check_production_settings()
     db.connect()
-    discord.setup()
     tasks = []
     if config.BACKGROUND_TASKS:
         cf = get_client()

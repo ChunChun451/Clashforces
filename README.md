@@ -59,7 +59,6 @@ widening) is in [`app/config.py`](app/config.py). These come from environment va
 | `DB_PATH` | `clashforces.db` | SQLite file (WAL mode) |
 | `COOKIE_SECURE` | `0` | Set `1` behind HTTPS |
 | `ALLOWED_ORIGINS` | unset | Comma-separated origins allowed to open the WebSocket (e.g. `https://duel.example.com`). Unset: only the page's own host. |
-| `PUBLIC_URL` | `http://localhost:8000` | Used in Discord messages |
 | `CF_API_BASE` | `https://codeforces.com/api` | Point at the fake API for offline work |
 
 ## Tests
@@ -123,7 +122,7 @@ docker build -t clashforces .
 ```
 
 ```bash
-docker run -d --name clashforces -p 127.0.0.1:8000:8000 -v clashforces-data:/data -e SECRET_KEY=change-me -e PUBLIC_URL=https://duel.example.com clashforces
+docker run -d --name clashforces -p 127.0.0.1:8000:8000 -v clashforces-data:/data -e SECRET_KEY=change-me clashforces
 ```
 
 Then use `Caddyfile.example` as your Caddyfile. Run **one** worker only: the
@@ -140,7 +139,6 @@ app/
   poller/         submission poller, history sync, upsolve
   matches/        match service, lifecycle ticker, finalisation, ranked queue, views
   routes/         HTTP and WebSocket endpoints (all async, so SQLite stays on one thread)
-  notify/         Discord webhooks
 static/           HTML, CSS (tokens/base/components/match) and vanilla JS
 tests/            pytest suite and recorded-shape fixtures
 tools/fake_cf.py  fake Codeforces API for local development

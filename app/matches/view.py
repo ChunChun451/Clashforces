@@ -145,10 +145,14 @@ def build(match, viewer: int | None) -> dict:
     return state
 
 
+# Only these settings are sent to browsers. An allow-list, so private keys stored by
+# older versions (or added later) never leak.
+PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive",
+                       "custom_problems", "duration_min", "freeze_min", "handicap")
+
+
 def public_settings(s: dict) -> dict:
-    out = {k: v for k, v in s.items() if k not in ("discord_webhook", "exclude", "queue_joined")}
-    out["has_discord_webhook"] = bool(s.get("discord_webhook"))
-    return out
+    return {k: s[k] for k in PUBLIC_SETTING_KEYS if k in s}
 
 
 def rematch_code(match) -> str | None:

@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS users (
   duel_rating      INTEGER NOT NULL,             -- starts at CF rating (UNRATED_START if 0)
   needs_reverify   INTEGER NOT NULL DEFAULT 0,   -- handle vanished (renamed on CF)
   session_version  INTEGER NOT NULL DEFAULT 1,
-  discord_webhook  TEXT,
   history_synced   INTEGER NOT NULL DEFAULT 0,   -- full user.status import done
   last_sub_id      INTEGER NOT NULL DEFAULT 0,   -- newest CF submission id we have seen
   created_at       INTEGER NOT NULL,

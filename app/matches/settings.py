@@ -25,7 +25,6 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         "duration_min": int(raw.get("duration_min", 60)),
         "freeze_min": int(raw.get("freeze_min") or 0),
         "handicap": raw.get("handicap") or None,
-        "discord_webhook": (str(raw.get("discord_webhook") or "").strip() or None),
         "exclude": list(raw.get("exclude") or []),
     }
     if not config.DURATION_MIN <= s["duration_min"] <= config.DURATION_MAX:
@@ -38,8 +37,6 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         errors = filter_errors(filters(s))
         if errors:
             raise SettingsError(errors[0])
-    if s["discord_webhook"] and not s["discord_webhook"].startswith(config.DISCORD_PREFIX):
-        raise SettingsError("Discord webhook URLs start with " + config.DISCORD_PREFIX)
     s["handicap"] = clean_handicap(s["handicap"], rules, s, mode)
     return s
 

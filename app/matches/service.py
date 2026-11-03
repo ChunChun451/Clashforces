@@ -165,8 +165,6 @@ def update_settings(user, code: str, raw: dict) -> None:
     rules = raw.get("rules", match["rules"])
     old = store.settings(match)
     raw = {**raw, "exclude": old.get("exclude", [])}
-    if "discord_webhook" not in raw:
-        raw["discord_webhook"] = old.get("discord_webhook")
     try:
         s = settings_mod.clean(raw, rules, match["mode"])
     except settings_mod.SettingsError as e:

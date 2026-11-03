@@ -12,7 +12,6 @@ if (!me.user) {
 }
 
 function render() {
-  const hook = el("input", { type: "url", id: "hook", placeholder: "https://discord.com/api/webhooks/…", value: me.discord_webhook || "" });
   const blocked = me.active
     ? el("p.note", "You can't change your handle while you are in a match or the queue.")
     : verifyWidget({ startPath: "/api/me/handle/start", buttonLabel: "Verify new handle", onDone: () => location.reload() });
@@ -25,16 +24,6 @@ function render() {
       me.user.needs_reverify ? el("p.error-box", "Codeforces no longer knows this handle. Verify your new one below.") : null,
       el("p.muted.small", "Renamed your account on Codeforces? Verify the new handle here. Your history stays."),
       blocked),
-    el("hr"),
-    el("section.stack",
-      el("div.section-title", "Discord"),
-      el("div.field", el("label", { for: "hook" }, "Webhook for your match results (optional)"), hook),
-      el("button.btn", { type: "button", onclick: async () => {
-        try {
-          await api("/api/me/settings", { method: "PATCH", body: { discord_webhook: hook.value } });
-          toast("Saved");
-        } catch (e) { toast(e.message, true); }
-      } }, "Save")),
     el("hr"),
     el("section.stack",
       el("div.section-title", "Browser notifications"),

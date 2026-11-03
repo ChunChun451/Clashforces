@@ -11,7 +11,7 @@ log = logging.getLogger("finalize")
 
 # Called after the result is stored, before it is broadcast: fn(match_row, rows).
 before_broadcast: list[Callable] = []
-# Called after the broadcast (e.g. Discord): fn(match_id).
+# Called after the broadcast: fn(match_id).
 after_final: list[Callable] = []
 
 

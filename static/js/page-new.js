@@ -19,7 +19,6 @@ const state = {
   avoid_interactive: true,
   use_custom: false, custom_problems: "",
   duration_min: 60, freeze_min: 0,
-  discord_webhook: "",
   handicap: null,
 };
 
@@ -107,7 +106,6 @@ function payload() {
       custom_problems: state.use_custom ? state.custom_problems : null,
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
-      ...(editCode ? {} : { discord_webhook: state.discord_webhook || null }),
       handicap: state.handicap,
     },
   };
@@ -182,11 +180,6 @@ function render() {
         state.rules === "icpc"
           ? el("div.field", { style: "margin-top:0" }, el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
           : null)),
-    editCode ? null : el("section.stack",
-      el("div.section-title", "Discord (optional)"),
-      el("div.field", el("label", { for: "hook" }, "Post the final result to this webhook"),
-        el("input", { type: "url", id: "hook", placeholder: "https://discord.com/api/webhooks/…", value: state.discord_webhook,
-          oninput: (e) => { state.discord_webhook = e.target.value; } }))),
     el("p.small.muted", "Handicaps are set in the lobby once your friend has joined."),
     err,
     el("div.actions",
