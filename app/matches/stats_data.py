@@ -73,9 +73,10 @@ def recent_matches(user_id: int, limit: int = 20) -> list[dict]:
             item["players"] = 2  # two teams: place is 1/2 (or 1/2 for both on a draw)
             item["teammates"] = [_person(o) for o in others if o["team"] == m["my_team"]]
             item["opponents"] = [_person(o) for o in others if o["team"] != m["my_team"]]
-            item["result"] = _team_result(m)
         else:
             item["opponents"] = [_person(o) for o in others][:9]
+        if m["mode"] != "group":
+            item["result"] = _result(m)
         out.append(item)
     return out
 
@@ -84,11 +85,14 @@ def _person(row) -> dict:
     return {"handle": row["handle"], "cf_rating": row["cf_rating"], "place": row["place"]}
 
 
-def _team_result(m) -> str:
-    places = {r["place"] for r in db.all("SELECT DISTINCT place FROM match_players WHERE match_id = ?", (m["id"],))}
-    if m["my_place"] == 1:
-        return "draw" if places == {1} else "win"
-    return "loss"
+def _result(m) -> str:
+    """win / loss / draw for two-sided matches (1v1 and team). A draw is a shared first place."""
+    if m["my_place"] != 1:
+        return "loss"
+    sides = db.scalar("SELECT COUNT(DISTINCT COALESCE(team, user_id)) FROM match_players WHERE match_id = ? AND place = 1"
+                      if m["mode"] == "team" else
+                      "SELECT COUNT(*) FROM match_players WHERE match_id = ? AND place = 1", (m["id"],))
+    return "draw" if sides > 1 else "win"
 
 
 def one_v_one_places(user_id: int) -> dict[int, int]:

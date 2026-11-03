@@ -172,18 +172,22 @@ function render() {
         el("p.lede", editCode ? "Changes reset everyone's Ready." : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
       editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => state.mode = v, "Mode")),
     el("div.stack",
-      state.mode === "team" ? panel("Teams", null,
-        segmented([[2, "2 vs 2"], [3, "3 vs 3"]], state.team_size, (v) => state.team_size = v, "Team size"),
-        el("p.small.muted", `${state.team_size * 2} players in two teams. A problem counts for the team when any member solves it. `
-          + "Players pick a side in the lobby; you can shuffle or balance by rating there. Unrated.")) : null,
-      panel("Rules", null,
-        segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
-          state.rules = v;
-          if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
-        }, "Rules"),
-        el("p.small.muted", state.rules === "icpc"
-          ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
-          : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.")),
+      (() => {
+        const rules = panel("Rules", null,
+          segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
+            state.rules = v;
+            if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
+          }, "Rules"),
+          el("p.small.muted", state.rules === "icpc"
+            ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
+            : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught."));
+        if (state.mode !== "team") return rules;
+        const teams = panel("Teams", null,
+          segmented([[2, "2 vs 2"], [3, "3 vs 3"]], state.team_size, (v) => state.team_size = v, "Team size"),
+          el("p.small.muted", `${state.team_size * 2} players. A problem counts for a team when any member solves it. `
+            + "Pick sides in the lobby, or shuffle / balance by rating there. Unrated."));
+        return el("div.grid-2.equal", teams, rules);
+      })(),
       panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
         state.use_custom ? customFields : randomFields),
       panel("Time", null,

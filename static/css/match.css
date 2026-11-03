@@ -31,7 +31,8 @@
 @keyframes pop { 0% { transform: scale(1.12); opacity: .4; } 30% { transform: scale(1); opacity: 1; } }
 
 /* ---------- problem cards ---------- */
-.problems { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--s4); }
+.problems { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--s4); }
+@media (max-width: 1000px) { .problems { grid-template-columns: repeat(var(--cols-md, 2), minmax(0, 1fr)); } }
 .problem {
   position: relative; display: grid; gap: var(--s3); align-content: start;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: var(--s4);
@@ -74,7 +75,6 @@
 .settings-list { display: grid; grid-template-columns: max-content 1fr; gap: var(--s3) var(--s5); font-size: 14px; margin: 0; }
 .settings-list dt { color: var(--muted); }
 .settings-list dd { margin: 0; color: var(--text-strong); overflow-wrap: anywhere; }
-.lobby-grid { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: var(--s4); align-items: start; }
 .range-row .who { min-width: 120px; }
 
 /* ---------- result ---------- */
@@ -93,7 +93,6 @@
   .timer-wrap { padding: var(--s5) var(--s3) var(--s4); }
   .problems { grid-template-columns: 1fr; }
   .standings .col-who { min-width: 110px; }
-  .lobby-grid { grid-template-columns: 1fr; }
 }
 
 /* ---------- team duels ---------- */
@@ -144,4 +143,19 @@
   .teams-grid .vs { justify-self: center; }
   .team-standings tr.member-row td.col-who { padding-left: 20px; }
   .lobby-bar .actions { width: 100%; }
+}
+
+/* ---------- 1v1 / room lobby: two panels of equal height, actions below ---------- */
+.lobby-cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: stretch; }
+.lobby-panel { display: flex; flex-direction: column; }
+.lobby-panel .panel-body { flex: 1; }
+.team-slots + .panel-foot { margin-top: auto; }
+.handicap-body { display: grid; grid-template-columns: minmax(180px, 240px) minmax(0, 1fr) auto; gap: var(--s4); align-items: end; }
+.handicap-body > .field + .field { margin-top: 0; }
+.handicap-body > .stack:empty, .handicap-body > span:empty { display: none; }
+@media (max-width: 860px) {
+  .handicap-body { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 720px) {
+  .lobby-cols { grid-template-columns: minmax(0, 1fr); }
 }

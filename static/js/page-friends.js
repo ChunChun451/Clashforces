@@ -43,7 +43,7 @@ function render() {
         el("label.sr-only", { for: "friend-handle" }, "Codeforces handle"),
         el("input.mono", { id: "friend-handle", type: "text", placeholder: "Add by handle", autocomplete: "off", spellcheck: "false" }),
         el("button.btn", { type: "submit" }, "Add friend"))),
-    el("div.grid-2",
+    el("div.grid-2.equal",
       el("section.panel",
         el("div.panel-head", el("h2", "Your friends"), friends.length ? el("span.small.muted", `${online} of ${friends.length} online`) : null),
         friends.length
@@ -53,9 +53,9 @@ function render() {
             el("span.row",
               el("span.meta.mono", { title: "Your head-to-head record" }, record(f.h2h)),
               el("button.btn.small", { type: "button", onclick: () => invite(f.handle) }, "Duel")))))
-          : emptyState({ iconName: "userPlus", title: "No friends yet",
+          : el("div.panel-fill", emptyState({ iconName: "userPlus", title: "No friends yet",
             text: "Add friends by their Codeforces handle once they've logged in here. Or send them a duel link to get them started.",
-            action: el("a.btn.small", { href: "/new" }, "Create a duel link") })),
+            action: el("a.btn.small", { href: "/new" }, "Create a duel link") }))),
       el("section.panel",
         el("div.panel-head", el("h2", "Leaderboard"), el("span.small.muted", "Duel rating")),
         el("table",
@@ -63,7 +63,7 @@ function render() {
             el("td.num.rank", String(i + 1)),
             el("td", handleEl(u.handle, u.cf_rating), u.is_me ? el("span.muted.small", "  you") : null),
             el("td.num", String(u.duel_rating)))))),
-        board.length < 2 ? el("p.small.muted.panel-body", "Add friends to see how you stack up.") : null))));
+        el("p.panel-foot", board.length < 2 ? "Add friends to see how you stack up." : "Ranked matches move duel rating. Friend and team duels are unrated.")))));
 }
 
 render();

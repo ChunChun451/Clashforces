@@ -188,49 +188,55 @@ function lobby() {
   const s = M.settings;
   const creator = M.creator_id === myId;
   const needed = M.mode === "group" ? 3 : 2;
-  const players = el("div.lobby-players",
-    M.players.map((p) => el("div.lobby-player",
-      el("span.who", el("span", { class: `ready-dot${p.ready ? " on" : ""}`, "aria-hidden": "true" }),
-        handleEl(p.handle, p.cf_rating),
-        p.user_id === M.creator_id ? el("span.chip", "host") : null,
-        p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null),
-      el("span.side.small", { class: p.ready ? "side small accent" : "side small muted" }, p.ready ? "Ready" : "Not ready"))));
-
   const maxPlayers = M.mode === "group" ? 10 : 2;
+  const rows = M.players.map((p) => el("div.lobby-player",
+    el("span.who", el("span", { class: `ready-dot${p.ready ? " on" : ""}`, "aria-hidden": "true" }),
+      handleEl(p.handle, p.cf_rating),
+      p.user_id === M.creator_id ? el("span.chip", "host") : null,
+      p.user_id === myId ? el("span.chip.you", "you") : null,
+      p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null),
+    el("span", { class: p.ready ? "side small accent" : "side small muted" }, p.ready ? "Ready" : "Not ready")));
+  // 1v1: show the empty seat, so the panel reads as "waiting for one more".
+  if (M.mode !== "group") for (let i = M.players.length; i < maxPlayers; i++) {
+    rows.push(el("div.lobby-player.slot", el("span.who", el("span.ready-dot", { "aria-hidden": "true" }), M.mode === "ranked" ? "Opponent" : "Waiting for your friend")));
+  }
   const waiting = M.players.length < needed
-    ? el("p.muted", M.mode === "group" ? `Waiting for players (${M.players.length}/${needed} minimum).` : "Waiting for your friend to join.")
-    : null;
+    ? (M.mode === "group" ? `Waiting for players: ${M.players.length} of at least ${needed}.` : "Share the invite link to fill the empty seat.")
+    : M.players.every((p) => p.ready) ? "Everyone is ready." : `Waiting for ${M.players.filter((p) => !p.ready).map((p) => p.handle).join(", ")} to press Ready.`;
 
   let actions;
   if (!myId) {
-    actions = el("div.actions", el("a.btn.primary.big", { href: `/login?next=/m/${code}` }, "Log in to join"));
+    actions = el("div.actions", el("a.btn.primary", { href: `/login?next=/m/${code}` }, "Log in to join"));
   } else if (!isPlayer()) {
     actions = M.players.length < maxPlayers && M.mode !== "ranked"
-      ? el("button.btn.primary.big", { type: "button", onclick: () => act("join") }, "Join match")
-      : el("p.muted", "This match is full.");
+      ? el("div.actions", el("button.btn.primary", { type: "button", onclick: () => act("join") }, "Join match"))
+      : el("p.muted", "This match is full. You can watch it.");
   } else {
     const ready = M.me.ready;
     actions = el("div.actions",
       M.status === "starting"
         ? el("span.muted", el("span.spinner"), "  Checking handles and picking problems…")
-        : el("button.btn.big" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }) },
+        : el("button.btn" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }) },
           ready ? "Not ready" : "Ready"),
-      M.mode !== "ranked" ? el("button.btn.ghost.big", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave") : null,
-      creator && M.mode !== "ranked" ? el("a.btn.ghost.big", { href: `/new?edit=${code}` }, "Edit settings") : null);
+      M.mode !== "ranked" ? el("button.btn.ghost", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave") : null,
+      creator && M.mode !== "ranked" ? el("a.btn.ghost", { href: `/new?edit=${code}` }, "Edit settings") : null);
   }
 
-  return el("div.lobby-grid",
-    el("div.stack",
-      el("section.stack", el("h2.section-title", `Players ${M.players.length}/${maxPlayers}`), players, waiting),
-      M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
-      actions,
-      el("p.small.muted", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it.")),
-    el("div.stack",
-      el("section.panel", el("div.panel-head", el("h2", "Settings")), el("div.panel-body", settingsSummary(s))),
-      creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null));
+  return el("div.stack.lobby",
+    el("div.lobby-cols",
+      el("section.panel.lobby-panel",
+        el("div.panel-head", el("h2", "Players"), el("span.team-meta", `${M.players.length}/${maxPlayers}`)),
+        el("div.team-slots", rows),
+        el("p.panel-foot", { role: "status" }, waiting)),
+      el("section.panel.lobby-panel",
+        el("div.panel-head", el("h2", "Settings")),
+        el("div.panel-body", settingsSummary(s)),
+        el("p.panel-foot", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it."))),
+    M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
+    el("div.lobby-bar", actions),
+    creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null);
 }
 
-// ---------- team lobby ----------
 function teamLobby() {
   const size = M.team_size;
   const creator = M.creator_id === myId;
@@ -356,11 +362,11 @@ function handicapEditor() {
     } catch (e) { toast(e.message, true); }
   };
   return el("section.panel",
-    el("div.panel-head", el("h2", "Handicap")),
-    el("div.panel-body.stack",
+    el("div.panel-head", el("h2", "Handicap"), el("span.small.muted", "Optional. Evens out a rating gap.")),
+    el("div.panel-body.handicap-body",
       el("div.field", el("label", { for: "h-type" }, "Type"), typeSel),
       body,
-      el("div", el("button.btn", { type: "button", onclick: save }, "Save handicap"))));
+      el("div.handicap-save", el("button.btn", { type: "button", onclick: save }, "Save handicap"))));
 }
 
 function defaultRange(r) {
@@ -410,7 +416,11 @@ function problemCards() {
   }
   const perPlayer = M.problems.some((p) => p.owner !== null);
   const list = perPlayer && isPlayer() ? M.problems.filter((p) => p.owner === myId) : M.problems;
-  return el("div.problems", { id: "problem-cards" }, list.map((p) => {
+  // Columns follow the problem count so the last row is never a lone card: 3 → 3, 5 → 3+2, 8 → 4+4.
+  const n = list.length;
+  const cols = n <= 4 ? n : { 5: 3, 6: 3, 7: 4, 8: 4, 9: 3, 10: 5 }[n] || 4;
+  const colsMd = n <= 3 ? n : n % 2 === 0 ? 2 : 3; // tablets
+  return el("div.problems", { id: "problem-cards", style: `--cols: ${Math.max(1, cols)}; --cols-md: ${Math.max(1, colsMd)}` }, list.map((p) => {
     const owner = M.rules === "lockout" ? owners.get(p.label) : null;
     const cls = ["problem", solvedByMe.has(p.label) && (!owner || mine(owner)) ? "solved" : "",
       owner && !mine(owner) ? "taken" : ""].join(" ");

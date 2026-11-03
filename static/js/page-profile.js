@@ -19,7 +19,16 @@ const h2h = me.user && !user.is_me ? await api(`/api/h2h/${encodeURIComponent(ha
 
 const pct = (x) => `${Math.round(x * 100)}%`;
 const wl = (r) => `${r.win} W – ${r.loss} L${r.draw ? ` – ${r.draw} D` : ""}`;
-const modeName = { friend: "Friend duels", group: "Group rooms", ranked: "Ranked" };
+const modeName = { friend: "Friend duels", group: "Group rooms", ranked: "Ranked", team: "Team duels" };
+const modeOne = { friend: "Friend duel", group: "Group room", ranked: "Ranked", team: "Team duel" };
+const people = (list) => list.map((o, i) => [i ? ", " : "", handleEl(o.handle, o.cf_rating)]);
+function resultCell(m) {
+  if (m.result) {
+    const text = { win: "Won", loss: "Lost", draw: "Draw" }[m.result];
+    return el("td.num", { class: `num ${m.result === "win" ? "accent" : m.result === "loss" ? "danger" : ""}` }, text);
+  }
+  return el("td.num", { class: `num ${m.place === 1 ? "accent" : ""}` }, `${m.place}/${m.players}`);
+}
 
 function kpi(label, value) {
   return el("div", el("div.kpi", value), el("div.kpi-label", label));
@@ -74,12 +83,12 @@ function render() {
     el("section.stack", el("h2.section-title", "Recent matches"),
       recent.matches.length
         ? el("div.table-wrap", el("table",
-          el("thead", el("tr", el("th", "Match"), el("th", "Mode"), el("th", "Opponents"), el("th.num", "Place"))),
+          el("thead", el("tr", el("th", "Match"), el("th", "Mode"), el("th", "Opponents"), el("th.num", "Result"))),
           el("tbody", recent.matches.map((m) => el("tr",
             el("td", el("a.mono", { href: `/m/${m.code}` }, m.code)),
-            el("td", `${modeName[m.mode] || m.mode} · ${m.rules === "icpc" ? "ICPC" : "Lockout"}`),
-            el("td", m.opponents.map((o, i) => [i ? ", " : "", handleEl(o.handle, o.cf_rating)])),
-            el("td.num", { class: `num ${m.place === 1 ? "accent" : ""}` }, `${m.place}/${m.players}`))))))
+            el("td", `${modeOne[m.mode] || m.mode} · ${m.rules === "icpc" ? "ICPC" : "Lockout"}`),
+            el("td", people(m.opponents), m.teammates && m.teammates.length ? el("span.muted", "  with ", people(m.teammates)) : null),
+            resultCell(m))))))
         : el("div.empty-state.boxed", el("p", user.is_me ? "No finished matches yet." : `${user.handle} hasn't finished a match yet.`),
           user.is_me ? el("a.btn.small.primary", { href: "/new" }, "Start a friend duel") : null))));
 }

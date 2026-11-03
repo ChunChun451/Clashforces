@@ -92,8 +92,6 @@
 .dash { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--s4); align-items: stretch; }
 .dash > .panel { display: flex; flex-direction: column; }
 .dash > .recent { grid-column: 1 / -1; }
-.panel-fill { flex: 1; display: grid; align-content: center; }
-.panel-fill > .panel-list { align-self: start; }
 .panel-head .count {
   display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: var(--s2); border-radius: 999px;
   background: var(--accent-soft); color: var(--accent); font: 600 11px var(--font-mono); vertical-align: 2px;
