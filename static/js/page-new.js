@@ -90,7 +90,7 @@ async function validateCustom() {
     customResult.replaceChildren(
       ...r.problems.map((p) => el("div.mono", `${p.key} · ${p.name} · ${p.rating ?? "unrated"}`)),
       ...r.errors.map((e) => el("div.danger", e)),
-      ...r.warnings.map((w) => el("div", { style: "color: var(--warn)" }, `Warning: ${w}`)));
+      ...r.warnings.map((w) => el("div.warn", `Warning: ${w}`)));
   } catch (e) { customResult.replaceChildren(el("div.danger", e.message)); }
 }
 
@@ -141,8 +141,8 @@ function render() {
     el("div.grid-2",
       el("div.field", el("label", { for: "count" }, "Problems"), numberInput("count", state.count, 1, 10, (v) => state.count = v)),
       el("div.row",
-        el("div.field", { style: "flex:1" }, el("label", { for: "rmin" }, "Rating from"), ratingSelect("rmin", state.rating_min, (v) => state.rating_min = v)),
-        el("div.field", { style: "flex:1; margin-top:0" }, el("label", { for: "rmax" }, "to"), ratingSelect("rmax", state.rating_max, (v) => state.rating_max = v)))),
+        el("div.field.grow", el("label", { for: "rmin" }, "Rating from"), ratingSelect("rmin", state.rating_min, (v) => state.rating_min = v)),
+        el("div.field.grow", el("label", { for: "rmax" }, "to"), ratingSelect("rmax", state.rating_max, (v) => state.rating_max = v)))),
     el("div",
       el("label", "Tags — click once to require, twice to avoid"),
       tags.length ? tagPicker() : el("p.small.muted", "Tags appear once the problem list has loaded.")),
@@ -157,34 +157,37 @@ function render() {
     el("button.btn.small", { type: "button", onclick: validateCustom }, "Check list"),
     customResult);
 
-  app.replaceChildren(el("form.stack", { onsubmit: submit, novalidate: true },
-    el("h1", editCode ? "Match settings" : state.mode === "group" ? "New group room" : "New friend duel"),
-    editCode ? null : segmented([["friend", "Friend duel"], ["group", "Group room (3–10)"]], state.mode, (v) => state.mode = v, "Mode"),
-    el("section.stack",
-      el("div.section-title", "Rules"),
-      segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
-        state.rules = v;
-        if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
-      }, "Rules"),
-      el("p.small.muted", state.rules === "icpc"
-        ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
-        : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.")),
-    el("section.stack",
-      el("div.spread", el("div.section-title", "Problems"),
-        segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source")),
-      state.use_custom ? customFields : randomFields),
-    el("section.stack",
-      el("div.section-title", "Time"),
-      el("div.grid-2",
-        el("div.field", el("label", { for: "dur" }, "Duration (minutes)"), numberInput("dur", state.duration_min, 15, 300, (v) => state.duration_min = v)),
-        state.rules === "icpc"
-          ? el("div.field", { style: "margin-top:0" }, el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
-          : null)),
-    el("p.small.muted", "Handicaps are set in the lobby once your friend has joined."),
-    err,
-    el("div.actions",
-      el("button.btn.primary.big", { type: "submit" }, editCode ? "Save" : "Create"),
-      editCode ? el("a.btn.ghost", { href: `/m/${editCode}` }, "Cancel") : null)));
+  const panel = (title, aside, ...body) => el("section.panel",
+    el("div.panel-head", el("h2", title), aside || null),
+    el("div.panel-body.stack", body));
+  app.replaceChildren(el("form.page", { onsubmit: submit, novalidate: true },
+    el("div.page-head",
+      el("div",
+        el("h1", editCode ? "Match settings" : state.mode === "group" ? "New group room" : "New friend duel"),
+        el("p.lede", editCode ? "Changes reset everyone's Ready." : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
+      editCode ? null : segmented([["friend", "Friend duel"], ["group", "Group room (3–10)"]], state.mode, (v) => state.mode = v, "Mode")),
+    el("div.stack",
+      panel("Rules", null,
+        segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
+          state.rules = v;
+          if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
+        }, "Rules"),
+        el("p.small.muted", state.rules === "icpc"
+          ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
+          : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.")),
+      panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
+        state.use_custom ? customFields : randomFields),
+      panel("Time", null,
+        el("div.grid-2",
+          el("div.field", el("label", { for: "dur" }, "Duration (minutes)"), numberInput("dur", state.duration_min, 15, 300, (v) => state.duration_min = v)),
+          state.rules === "icpc"
+            ? el("div.field", el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
+            : null)),
+      el("p.small.muted", "Handicaps are set in the lobby once your friend has joined."),
+      err,
+      el("div.actions",
+        el("button.btn.primary.big", { type: "submit" }, editCode ? "Save settings" : state.mode === "group" ? "Create room" : "Create duel"),
+        editCode ? el("a.btn.ghost.big", { href: `/m/${editCode}` }, "Cancel") : null))));
   refreshPreview();
 }
 

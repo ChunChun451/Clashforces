@@ -139,7 +139,7 @@ app/
   poller/         submission poller, history sync, upsolve
   matches/        match service, lifecycle ticker, finalisation, ranked queue, views
   routes/         HTTP and WebSocket endpoints (all async, so SQLite stays on one thread)
-static/           HTML, CSS (tokens/base/components/match) and vanilla JS
+static/           HTML, CSS (tokens/base/components/home/match), vanilla JS, favicon.svg
 tests/            pytest suite and recorded-shape fixtures
 tools/fake_cf.py  fake Codeforces API for local development
 ```

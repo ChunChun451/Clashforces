@@ -126,11 +126,11 @@ function render() {
   const parts = [header()];
   if (M.cf_api === "down") parts.push(el("div.banner.bad", "Codeforces API is not answering. Timers keep running; results will be confirmed once it's back."));
   if (M.status === "lobby" || M.status === "starting") parts.push(lobby());
-  else if (M.status === "cancelled") parts.push(el("div.empty", "This match was cancelled."));
+  else if (M.status === "cancelled") parts.push(el("div.empty-state.boxed", el("strong", "This match was cancelled"), el("p", "Everyone left the lobby before it started."), el("a.btn.small.primary", { href: "/new" }, "Start a new duel")));
   else if (M.status === "running" && serverNow() < M.start_time) parts.push(countdown());
   else if (M.status === "running") parts.push(...live());
   else parts.push(...ended());
-  app.replaceChildren(el("div.stack", parts));
+  app.replaceChildren(el("div.page", parts));
   afterRender();
 }
 
@@ -158,10 +158,10 @@ function header() {
       el("h1", modeName),
       el("div.match-meta",
         el("span.chip", M.rules === "icpc" ? "ICPC" : "Lockout"),
-        el("span.code-pill.small", code),
+        el("span.code-pill", { title: "Match code" }, code),
         isPlayer() ? null : el("span.chip", "Spectating"))),
     el("div.share",
-      el("button.btn.small", { type: "button", onclick: () => copy(link) }, M.status === "lobby" ? "Copy invite link" : "Copy watch link")));
+      el("button.btn", { type: "button", onclick: () => copy(link) }, M.status === "lobby" ? "Copy invite link" : "Copy watch link")));
 }
 
 async function copy(text) {
@@ -175,11 +175,11 @@ function lobby() {
   const needed = M.mode === "group" ? 3 : 2;
   const players = el("div.lobby-players",
     M.players.map((p) => el("div.lobby-player",
-      el("span", el("span", { class: `ready-dot${p.ready ? " on" : ""}`, "aria-hidden": "true" }),
+      el("span.who", el("span", { class: `ready-dot${p.ready ? " on" : ""}`, "aria-hidden": "true" }),
         handleEl(p.handle, p.cf_rating),
-        p.user_id === M.creator_id ? el("span.muted.small", "  host") : null,
-        p.needs_reverify ? el("span.danger.small", "  must re-verify handle") : null),
-      el("span.small.muted", p.ready ? "Ready" : "Not ready"))));
+        p.user_id === M.creator_id ? el("span.chip", "host") : null,
+        p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null),
+      el("span.side.small", { class: p.ready ? "side small accent" : "side small muted" }, p.ready ? "Ready" : "Not ready"))));
 
   const maxPlayers = M.mode === "group" ? 10 : 2;
   const waiting = M.players.length < needed
@@ -188,7 +188,7 @@ function lobby() {
 
   let actions;
   if (!myId) {
-    actions = el("a.btn.primary", { href: `/login?next=/m/${code}` }, "Log in to join");
+    actions = el("div.actions", el("a.btn.primary.big", { href: `/login?next=/m/${code}` }, "Log in to join"));
   } else if (!isPlayer()) {
     actions = M.players.length < maxPlayers && M.mode !== "ranked"
       ? el("button.btn.primary.big", { type: "button", onclick: () => act("join") }, "Join match")
@@ -200,17 +200,19 @@ function lobby() {
         ? el("span.muted", el("span.spinner"), "  Checking handles and picking problems…")
         : el("button.btn.big" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }) },
           ready ? "Not ready" : "Ready"),
-      M.mode !== "ranked" ? el("button.btn.ghost", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave") : null,
-      creator && M.mode !== "ranked" ? el("a.btn.ghost", { href: `/new?edit=${code}` }, "Edit settings") : null);
+      M.mode !== "ranked" ? el("button.btn.ghost.big", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave") : null,
+      creator && M.mode !== "ranked" ? el("a.btn.ghost.big", { href: `/new?edit=${code}` }, "Edit settings") : null);
   }
 
-  return el("div.stack",
-    el("section.stack", el("div.section-title", "Players"), players, waiting),
-    M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
-    actions,
-    el("section.stack", el("div.section-title", "Settings"), settingsSummary(s)),
-    creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null,
-    el("p.small.muted", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it."));
+  return el("div.lobby-grid",
+    el("div.stack",
+      el("section.stack", el("h2.section-title", `Players ${M.players.length}/${maxPlayers}`), players, waiting),
+      M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
+      actions,
+      el("p.small.muted", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it.")),
+    el("div.stack",
+      el("section.panel", el("div.panel-head", el("h2", "Settings")), el("div.panel-body", settingsSummary(s))),
+      creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null));
 }
 
 function handicapEditor() {
@@ -230,7 +232,7 @@ function handicapEditor() {
     const lo = el("select", { "aria-label": `${p.handle} from` }, ratingOpts(def[0]));
     const hi = el("select", { "aria-label": `${p.handle} to` }, ratingOpts(def[1]));
     ranges[p.user_id] = [lo, hi];
-    return el("div.row", el("span", { style: "min-width:120px" }, handleEl(p.handle, p.cf_rating, { link: false })), lo, el("span.muted", "–"), hi);
+    return el("div.row.range-row", el("span.who", handleEl(p.handle, p.cf_rating, { link: false })), lo, el("span.muted", "–"), hi);
   });
   const body = el("div.stack");
   const draw = () => {
@@ -239,7 +241,7 @@ function handicapEditor() {
       t === "penalty" || t === "extra_time"
         ? el("div.grid-2",
           el("div.field", el("label", { for: "h-player" }, "Player"), playerSel),
-          el("div.field", { style: "margin-top:0" }, el("label", { for: "h-min" }, t === "penalty" ? "Starts at minus (minutes)" : "Extra minutes"), minutes))
+          el("div.field", el("label", { for: "h-min" }, t === "penalty" ? "Starts at minus (minutes)" : "Extra minutes"), minutes))
         : t === "per_player_range" ? el("div.stack", rangeRows) : el("span"));
   };
   typeSel.addEventListener("change", draw);
@@ -257,11 +259,12 @@ function handicapEditor() {
       toast("Handicap saved");
     } catch (e) { toast(e.message, true); }
   };
-  return el("section.stack.narrow-section",
-    el("div.section-title", "Handicap"),
-    el("div.field", el("label", { for: "h-type" }, "Type"), typeSel),
-    body,
-    el("button.btn.small", { type: "button", onclick: save }, "Save handicap"));
+  return el("section.panel",
+    el("div.panel-head", el("h2", "Handicap")),
+    el("div.panel-body.stack",
+      el("div.field", el("label", { for: "h-type" }, "Type"), typeSel),
+      body,
+      el("div", el("button.btn", { type: "button", onclick: save }, "Save handicap"))));
 }
 
 function defaultRange(r) {
@@ -271,23 +274,24 @@ function defaultRange(r) {
 
 function countdown() {
   return el("div", { "aria-live": "assertive" }, el("div.countdown", { id: "countdown" }, "3"),
-    el("p.muted", { style: "text-align:center" }, "Problems coming up. Open Codeforces in another tab."));
+    el("p.muted.center", "Problems coming up. Open Codeforces in another tab."));
 }
 
 function live() {
   const parts = [];
   const end = myEnd();
   parts.push(el("div.timer-wrap",
+    el("div.timer-label", "Time left"),
     el("div.timer", { id: "timer", role: "timer", "aria-label": "Time left" }, fmtDuration(end - serverNow())),
-    el("div.timer-sub", { id: "timer-sub" }, M.me && M.me.end_time !== M.end_time ? "Your time (includes extra time)" : "")));
+    el("div.timer-sub", { id: "timer-sub" }, M.me && M.me.end_time !== M.end_time ? "Your time (includes extra time)" : ""),
+    el("div.timer-bar", { "aria-hidden": "true" }, el("span", { id: "timer-bar" }))));
   if (M.frozen) parts.push(el("div.banner.freeze", "Scoreboard frozen. You see your own results; others are hidden until the end."));
   if (M.me && M.me.forfeited) parts.push(el("div.banner.bad", "You forfeited this match."));
-  parts.push(problemCards());
-  parts.push(el("div.actions",
+  parts.push(el("div.stack", problemCards(), el("div.actions",
     isPlayer() && !M.me.forfeited ? el("button.btn.primary", { type: "button", onclick: submitted, title: "Shortcut: S" }, "I submitted") : null,
-    el("button.btn.ghost.small", { type: "button", onclick: toggleTags, "aria-pressed": String(showTags), title: "Shortcut: T" }, showTags ? "Hide tags" : "Show tags"),
-    isPlayer() && !M.me.forfeited ? el("button.btn.ghost.danger.small", { type: "button", onclick: confirmForfeit }, "Forfeit") : null));
-  parts.push(el("section.stack", el("div.section-title", "Standings"),
+    el("button.btn.ghost", { type: "button", onclick: toggleTags, "aria-pressed": String(showTags), title: "Shortcut: T" }, showTags ? "Hide tags" : "Show tags"),
+    isPlayer() && !M.me.forfeited ? el("button.btn.ghost.danger", { type: "button", onclick: confirmForfeit }, "Forfeit") : null)));
+  parts.push(el("section.stack", el("h2.section-title", "Standings"),
     el("div", { id: "standings-box" }, standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }))));
   parts.push(el("p.small.muted", "Verdicts can take a while to appear when many people are playing. Press “I submitted” (or S) after you submit and we'll check right away. Times always come from Codeforces."));
   return parts;
@@ -343,8 +347,8 @@ function resultTitle() {
 function ratingChanges() {
   const rows = M.players.filter((p) => p.rating_before !== null && p.rating_after !== null);
   if (!rows.length) return null;
-  return el("section.stack", el("div.section-title", "Duel rating"),
-    el("div.row", rows.map((p) => {
+  return el("section.stack", el("h2.section-title", "Duel rating"),
+    el("div.rating-cards", rows.map((p) => {
       const d = p.rating_after - p.rating_before;
       return el("div.card",
         handleEl(p.handle, p.cf_rating),
@@ -360,7 +364,7 @@ function ended() {
     isPlayer() && M.mode !== "ranked" ? el("button.btn.primary", { type: "button", onclick: rematch }, M.rematch_code ? "Join rematch" : "Rematch") : null,
     isPlayer() && M.mode === "ranked" ? el("a.btn.primary", { href: "/queue" }, "Queue again") : null,
     el("a.btn.ghost", { href: "/" }, "Home")));
-  parts.push(el("section.stack", el("div.section-title", "Final standings"),
+  parts.push(el("section.stack", el("h2.section-title", "Final standings"),
     el("div", { id: "standings-box" }, standingsTable({ rows: M.standings, labels: labelsFor(), rules: M.rules, myId }))));
   parts.push(problemList());
   parts.push(timelineSection());
@@ -373,7 +377,7 @@ async function rematch() {
 }
 
 function problemList() {
-  return el("section.stack", el("div.section-title", "Problems"),
+  return el("section.stack", el("h2.section-title", "Problems"),
     el("div.table-wrap", el("table",
       el("thead", el("tr", el("th", ""), el("th", "Problem"), el("th.num", "Rating"), el("th", "Links"))),
       el("tbody", M.problems.map((p) => el("tr",
@@ -385,7 +389,7 @@ function problemList() {
 }
 
 function timelineSection() {
-  const box = el("section.stack", { id: "timeline" }, el("div.section-title", "Timeline"));
+  const box = el("section.stack", { id: "timeline" }, el("h2.section-title", "Timeline"));
   if (M.result_status !== "final") { box.append(el("p.muted.small", "The timeline appears once the result is confirmed.")); return box; }
   if (timeline === null) {
     timeline = "loading";
@@ -394,7 +398,7 @@ function timelineSection() {
     return box;
   }
   if (timeline === "loading") { box.append(el("p.muted.small", "Loading…")); return box; }
-  if (!timeline.items.length) { box.append(el("p.empty", "No submissions.")); return box; }
+  if (!timeline.items.length) { box.append(el("div.empty-state.boxed", el("p", "Nobody submitted during this match."))); return box; }
   box.append(el("div.timeline", timeline.items.map((it) => {
     const cls = it.verdict === "OK" ? "ok" : it.verdict === "COMPILATION_ERROR" || it.verdict === "TESTING" ? "neutral" : "bad";
     return el("div.tl-item",
@@ -450,6 +454,8 @@ function tick() {
   if (!t) return;
   const left = myEnd() - now;
   t.textContent = fmtDuration(left);
+  const bar = $("#timer-bar");
+  if (bar) bar.style.width = `${Math.max(0, Math.min(100, (left / Math.max(1, myEnd() - M.start_time)) * 100))}%`;
   t.classList.toggle("low", left > 0 && left <= 300);
   t.classList.toggle("done", left <= 0);
   if (left <= 0) $("#timer-sub").textContent = "Time's up — waiting for the others to finish";

@@ -1,4 +1,4 @@
-import { $, api, el, getMe, handleEl, mountTopbar, toast } from "./api.js";
+import { $, api, el, emptyState, getMe, handleEl, mountTopbar, toast } from "./api.js";
 import { connect, on } from "./ws.js";
 
 mountTopbar("/friends");
@@ -35,29 +35,35 @@ async function invite(handle) {
 
 function render() {
   const record = (h) => `${h.win} W – ${h.loss} L${h.draw ? ` – ${h.draw} D` : ""}`;
-  app.replaceChildren(el("div.stack",
-    el("h1", "Friends"),
-    el("form.row", { onsubmit: add },
-      el("label", { for: "friend-handle", style: "position:absolute;left:-9999px" }, "Handle"),
-      el("input.mono", { id: "friend-handle", type: "text", placeholder: "Add by handle", style: "max-width: 260px", autocomplete: "off" }),
-      el("button.btn", { type: "submit" }, "Add")),
+  const online = friends.filter((f) => f.online).length;
+  app.replaceChildren(el("div.page",
+    el("div.page-head",
+      el("div", el("h1", "Friends"), el("p.lede", "See who's online, challenge them, and compare duel ratings.")),
+      el("form.inline-form", { onsubmit: add },
+        el("label.sr-only", { for: "friend-handle" }, "Codeforces handle"),
+        el("input.mono", { id: "friend-handle", type: "text", placeholder: "Add by handle", autocomplete: "off", spellcheck: "false" }),
+        el("button.btn", { type: "submit" }, "Add friend"))),
     el("div.grid-2",
-      el("section.stack", el("div.section-title", "Your friends"),
+      el("section.panel",
+        el("div.panel-head", el("h2", "Your friends"), friends.length ? el("span.small.muted", `${online} of ${friends.length} online`) : null),
         friends.length
-          ? el("div.lobby-players", friends.map((f) => el("div.lobby-player",
+          ? el("ul.panel-list", friends.map((f) => el("li",
             el("span", el("span", { class: "online-dot" + (f.online ? " on" : ""), title: f.online ? "Online" : "Offline", dataset: { handle: f.handle } }),
               handleEl(f.handle, f.cf_rating)),
-            el("span.row", { style: "gap: var(--s3)" },
-              el("span.small.muted.mono", { title: "Your head-to-head record" }, `You ${record(f.h2h)}`),
+            el("span.row",
+              el("span.meta.mono", { title: "Your head-to-head record" }, record(f.h2h)),
               el("button.btn.small", { type: "button", onclick: () => invite(f.handle) }, "Duel")))))
-          : el("p.muted.small", "Add friends by their Codeforces handle once they've joined.")),
-      el("section.stack", el("div.section-title", "Leaderboard · duel rating"),
-        el("div.table-wrap", el("table",
+          : emptyState({ iconName: "userPlus", title: "No friends yet",
+            text: "Add friends by their Codeforces handle once they've logged in here. Or send them a duel link to get them started.",
+            action: el("a.btn.small", { href: "/new" }, "Create a duel link") })),
+      el("section.panel",
+        el("div.panel-head", el("h2", "Leaderboard"), el("span.small.muted", "Duel rating")),
+        el("table",
           el("tbody", board.map((u, i) => el("tr", { class: u.is_me ? "me" : null },
-            el("td.num", { style: "width:40px" }, String(i + 1)),
+            el("td.num.rank", String(i + 1)),
             el("td", handleEl(u.handle, u.cf_rating), u.is_me ? el("span.muted.small", "  you") : null),
-            el("td.num", String(u.duel_rating))))))))),
-  ));
+            el("td.num", String(u.duel_rating)))))),
+        board.length < 2 ? el("p.small.muted.panel-body", "Add friends to see how you stack up.") : null))));
 }
 
 render();

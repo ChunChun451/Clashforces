@@ -3,9 +3,9 @@ import { api, el, fmtDuration } from "./api.js";
 
 // startPath: "/api/auth/start" or "/api/me/handle/start". onDone(view) is called once verified.
 export function verifyWidget({ startPath, buttonLabel, onDone }) {
-  const input = el("input.mono", { type: "text", id: "handle", autocomplete: "username", spellcheck: "false", placeholder: "tourist", required: true });
+  const input = el("input.mono.lg", { type: "text", id: "handle", autocomplete: "username", spellcheck: "false", placeholder: "tourist", required: true });
   const err = el("div.error-box", { hidden: true, role: "alert" });
-  const submit = el("button.btn.primary.big", { type: "submit" }, buttonLabel);
+  const submit = el("button.btn.primary.big.block", { type: "submit" }, buttonLabel);
   const form = el("form.stack", { onsubmit: start },
     el("div.field", el("label", { for: "handle" }, "Codeforces handle"), input),
     err, submit);
@@ -35,7 +35,7 @@ export function verifyWidget({ startPath, buttonLabel, onDone }) {
     box.replaceChildren(el("div.stack",
       el("p", "To prove you own ", el("strong.mono", task.handle), ", submit any code that ",
         el("strong", "fails to compile"), " on this problem within 2 minutes:"),
-      el("div.card.stack",
+      el("div.verify-task.stack",
         el("div.spread",
           el("a.mono", { href: task.problem.url, target: "_blank", rel: "noopener" }, `${task.problem.key} · ${task.problem.name}`),
           left),

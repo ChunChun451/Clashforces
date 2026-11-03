@@ -1,4 +1,5 @@
 // Shared helpers: fetch wrapper, DOM builder, rating colors, top bar, toasts.
+import { brandMark, icon } from "./icons.js";
 
 export async function api(path, { method = "GET", body } = {}) {
   const opts = { method, headers: { "X-Requested-With": "fetch" }, credentials: "same-origin" };
@@ -95,17 +96,21 @@ export async function mountTopbar(current) {
   const nav = el("nav.nav", { "aria-label": "Main" },
     links.map(([href, label]) => el("a", { href, "aria-current": current === href ? "page" : null }, label)));
   const right = el("div.topbar-right");
-  const themeBtn = el("button.btn.ghost.small", { type: "button", "aria-label": "Toggle theme", onclick: toggleTheme },
-    document.documentElement.dataset.theme === "light" ? "Dark" : "Light");
+  const light = document.documentElement.dataset.theme === "light";
+  const themeBtn = el("button.btn.ghost.icon", { type: "button", onclick: toggleTheme,
+    "aria-label": light ? "Switch to dark theme" : "Switch to light theme", title: light ? "Dark theme" : "Light theme" },
+  icon(light ? "moon" : "sun"));
   right.append(themeBtn);
-  bar.replaceChildren(el("a.brand", { href: "/" }, "clash", el("span", "forces")), nav, right);
+  bar.replaceChildren(el("a.brand", { href: "/", "aria-label": "Clashforces home" }, brandMark(), el("span.brand-word", "clash", el("span", "forces"))), nav, right);
   const me = await getMe();
   if (me.user) {
-    right.prepend(el("a.btn.ghost.small", { href: `/u/${encodeURIComponent(me.user.handle || "")}` },
-      handleEl(me.user.handle, me.user.cf_rating, { link: false })));
-    right.append(el("a.btn.ghost.small", { href: "/settings", "aria-label": "Settings" }, "Settings"));
-  } else {
-    right.append(el("a.btn.small", { href: "/login" }, "Log in"));
+    right.append(
+      el("a.btn.ghost.icon", { href: "/settings", "aria-label": "Settings", title: "Settings", "aria-current": current === "/settings" ? "page" : null }, icon("sliders")),
+      el("a.user-pill", { href: `/u/${encodeURIComponent(me.user.handle || "")}`, title: "Your profile" },
+        handleEl(me.user.handle, me.user.cf_rating, { link: false }),
+        el("span.rating", String(me.user.duel_rating))));
+  } else if (current !== "/login") {
+    right.append(el("a.btn.small.primary", { href: "/login" }, "Log in"));
   }
   if (me.user && !globalListeners) {
     globalListeners = true;
@@ -120,6 +125,15 @@ export async function mountTopbar(current) {
   if (me.user && me.user.needs_reverify) {
     toast("Your Codeforces handle changed. Re-verify it in Settings.", true);
   }
+}
+
+// A blank list is never just blank: say what goes here and how to fill it.
+export function emptyState({ iconName, title, text, action }) {
+  return el("div.empty-state",
+    iconName ? el("div.empty-icon", icon(iconName)) : null,
+    title ? el("strong", title) : null,
+    text ? el("p", text) : null,
+    action || null);
 }
 
 export function toggleTheme() {

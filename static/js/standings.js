@@ -39,7 +39,7 @@ export function standingsTable({ rows, labels, rules, myId }) {
     el("th.col-who", "Player"),
     rules === "lockout" ? el("th.col-num", "Points") : [el("th.col-num", "Solved"), el("th.col-num", "Penalty")],
     labels.map((l) => el("th.col-cell", { scope: "col" }, l.label,
-      rules === "lockout" && l.points ? el("div.t.muted", { style: "font-size:11px;font-weight:400" }, fmtPts(l.points)) : null)));
+      rules === "lockout" && l.points ? el("div.pts-head", fmtPts(l.points)) : null)));
 
   const body = rows.map((r) => el("tr", {
     class: [r.user_id === myId ? "me" : "", r.forfeited ? "out" : ""].join(" ").trim() || null,

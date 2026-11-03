@@ -29,3 +29,8 @@ PAGES = {
 
 for path, name in PAGES.items():
     router.add_api_route(path, _page(name), methods=["GET", "HEAD"], include_in_schema=False)
+
+
+@router.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(STATIC / "favicon.svg", media_type="image/svg+xml")
