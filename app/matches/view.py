@@ -13,6 +13,8 @@ from app.models import Row
 def freeze_start(match, s: dict) -> int | None:
     if match["rules"] != "icpc" or not s.get("freeze_min") or match["end_time"] is None:
         return None
+    if s.get("freeze_at") is not None:
+        return s["freeze_at"]  # contests: fixed at the start, and kept when the host extends time
     return match["end_time"] - s["freeze_min"] * 60
 
 
@@ -79,6 +81,7 @@ def team_rows_json(match, rows: list[Row], player_rows, problem_rows, member_sub
     """
     info = {p["user_id"]: p for p in player_rows}
     members = store.team_of(player_rows)
+    names = store.team_names(match)
     ends = store.member_end(match, player_rows)
     labels = sorted(((pb["problem_key"], pb["label"]) for pb in problem_rows if pb["user_id"] is None),
                     key=lambda kv: kv[1])
@@ -119,7 +122,7 @@ def team_rows_json(match, rows: list[Row], player_rows, problem_rows, member_sub
             "key": f"t{t}",
             "user_id": f"t{t}",
             "team": t,
-            "name": team_core.TEAM_NAMES[t],
+            "name": names[t] if t < len(names) else team_core.default_name(t),
             "place": row.place,
             "solved": row.solved,
             "penalty": row.penalty,
@@ -135,9 +138,15 @@ def lobby_blocker(match, s: dict, player_rows) -> str | None:
     """Why the match can't start yet (team mode), or None."""
     if not store.is_team(match):
         return None
-    return team_core.can_start(store.team_of(player_rows) | {p["user_id"]: -1 for p in player_rows
-                                                             if p["team"] not in (0, 1)},
-                               s.get("team_size", 2))
+    from app.matches import service
+    return service.start_blocker(match, player_rows)
+
+
+def teams_json(match, player_rows) -> list[dict]:
+    captains = {t["idx"]: t["captain_id"] for t in store.teams(match["id"])}
+    return [{"team": t, "name": name, "captain_id": captains.get(t),
+             "user_ids": [p["user_id"] for p in player_rows if p["team"] == t]}
+            for t, name in enumerate(store.team_names(match))]
 
 
 def problem_json(pb, show_tags: bool = True) -> dict:
@@ -201,12 +210,22 @@ def build(match, viewer: int | None) -> dict:
         "problems": [problem_json(x) for x in pb] if revealed else [],
         "standings": [],
         "rematch_code": rematch_code(match),
+        "is_host": viewer is not None and viewer == match["creator_id"],
     }
+    if match["mode"] == "contest":
+        from app.matches import contest
+        state["contest"] = contest.public_info(match)
+        state["announcements"] = contest.announcements(match["id"])
+        if state["is_host"]:
+            # problems and warnings: the host's eyes only
+            state["host"] = contest.host_view(match)
     if store.is_team(match):
         state["team_size"] = s.get("team_size", 2)
-        state["teams"] = [{"team": t, "name": team_core.TEAM_NAMES[t],
-                           "user_ids": [p["user_id"] for p in pr if p["team"] == t]} for t in (0, 1)]
+        state["team_count"] = s.get("team_count", 2)
+        state["teams"] = teams_json(match, pr)
         state["my_team"] = me["team"] if me else None
+        from app.matches import draft
+        state["draft"] = draft.state(match)
         if match["status"] in ("lobby", "starting"):
             state["start_blocked"] = lobby_blocker(match, s, pr)
     if not revealed:
@@ -237,7 +256,8 @@ def build(match, viewer: int | None) -> dict:
 # Only these settings are sent to browsers. An allow-list, so private keys stored by
 # older versions (or added later) never leak.
 PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive",
-                       "custom_problems", "duration_min", "freeze_min", "handicap", "team_size")
+                       "custom_problems", "duration_min", "freeze_min", "handicap", "team_size", "team_count",
+                       "fill", "uneven_ok", "title", "format", "max_players", "description")
 
 
 def public_settings(s: dict) -> dict:
@@ -293,7 +313,8 @@ def _team_result_payload(match, s: dict, pr, pb) -> dict:
         return payload
     visible, hidden = freeze.split_visible(all_subs, None, fs)
     keys = store.player_problem_keys(pb, -1)
-    steps = freeze.reveal_steps(score_team_subs, {0: keys, 1: keys}, to_team(all_subs), fs)
+    order = {t: keys for t in store.team_inputs(match, pr, pb)}
+    steps = freeze.reveal_steps(score_team_subs, order, to_team(all_subs), fs)
     if not steps:
         return payload
     members = store.team_of(pr)

@@ -12,7 +12,7 @@ from pathlib import Path
 from app import config
 
 SCHEMA = Path(__file__).with_name("schema.sql")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _conn: sqlite3.Connection | None = None
 
@@ -40,6 +40,18 @@ def _migrate(conn: sqlite3.Connection) -> None:
     cols = {r[1] for r in conn.execute("PRAGMA table_info(match_players)")}
     if "team" not in cols:
         conn.execute("ALTER TABLE match_players ADD COLUMN team INTEGER")
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(matches)")}
+    if "scheduled_at" not in cols:
+        conn.execute("ALTER TABLE matches ADD COLUMN scheduled_at INTEGER")
+    if "visibility" not in cols:
+        conn.execute("ALTER TABLE matches ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'")
+    conn.execute("CREATE INDEX IF NOT EXISTS matches_schedule ON matches(mode, status, scheduled_at)")
+    # Team duels from before match_teams existed: give them their two default names.
+    conn.execute(
+        "INSERT OR IGNORE INTO match_teams(match_id, idx, name)"
+        " SELECT m.id, t.idx, CASE t.idx WHEN 0 THEN 'Team A' ELSE 'Team B' END"
+        " FROM matches m JOIN (SELECT 0 AS idx UNION ALL SELECT 1) t WHERE m.mode = 'team'"
+        " AND NOT EXISTS (SELECT 1 FROM match_teams x WHERE x.match_id = m.id)")
 
 
 def conn() -> sqlite3.Connection:

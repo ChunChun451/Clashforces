@@ -30,13 +30,14 @@ def finalize(match_id: int) -> bool:
         if team:
             # Every member gets the team's place and totals: a team win is a win for each of them.
             members = store.team_of(pr)
+            names = store.team_names(match)
             by_team = {r.player: r for r in rows}
             for uid, t in members.items():
                 r = by_team[t]
                 db.execute(
                     "UPDATE match_players SET place = ?, solved = ?, penalty = ?, points = ? WHERE match_id = ? AND user_id = ?",
                     (r.place, r.solved, r.penalty, r.points, match_id, uid))
-            summary = [{"team": r.player, "place": r.place, "solved": r.solved, "penalty": r.penalty,
+            summary = [{"team": r.player, "name": names[r.player], "place": r.place, "solved": r.solved, "penalty": r.penalty,
                         "points": r.points, "forfeited": r.forfeited,
                         "user_ids": [u for u, t in members.items() if t == r.player]} for r in rows]
             # Upsolve goes by what each member solved personally.

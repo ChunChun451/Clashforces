@@ -55,17 +55,25 @@ export function standingsTable({ rows, labels, rules, myId }) {
     return el("td.col-cell", cellNode(c, rules));
   })));
 
-  return el("div.table-wrap.standings", { tabindex: "0", "aria-label": "Standings" },
+  return el(`div.table-wrap.standings${rows.length > 14 ? ".tall" : ""}`, { tabindex: "0", "aria-label": "Standings" },
     el("table", el("thead", head), el("tbody", body)));
 }
 
 // ---------- team duels ----------
 
-export const TEAM_LETTER = ["A", "B"];
+export const TEAM_LETTER = ["A", "B", "C", "D", "E", "F"];
+export const teamClass = (t) => `team-${TEAM_LETTER[t].toLowerCase()}`;
 
 export function teamBadge(team, name) {
-  return el("span", { class: `team-badge team-${TEAM_LETTER[team].toLowerCase()}`, title: name || `Team ${TEAM_LETTER[team]}` },
+  return el("span", { class: `team-badge ${teamClass(team)}`, title: name || `Team ${TEAM_LETTER[team]}` },
     TEAM_LETTER[team]);
+}
+
+// Which teams show their members. With 3+ teams only your own team starts open; toggles survive re-renders.
+const expanded = new Map();
+function isOpen(team, myTeam, collapsible) {
+  if (!collapsible) return true;
+  return expanded.has(team) ? expanded.get(team) : team === myTeam;
 }
 
 function teamCell(c, rules) {
@@ -92,6 +100,7 @@ function memberCell(c) {
 
 // rows: team rows from the server, each with .members. Members are listed under their team.
 export function teamStandingsTable({ rows, labels, rules, myTeam, myId }) {
+  const collapsible = rows.length > 2;
   const head = el("tr",
     el("th.col-place", "#"),
     el("th.col-who", "Team"),
@@ -100,30 +109,51 @@ export function teamStandingsTable({ rows, labels, rules, myTeam, myId }) {
       rules === "lockout" && l.points ? el("div.pts-head", fmtPts(l.points)) : null)));
   const numCols = rules === "lockout" ? 1 : 2;
 
-  const body = rows.flatMap((r) => [
+  let visible = 0;
+  const body = rows.flatMap((r) => {
+    const open = isOpen(r.team, myTeam, collapsible);
+    visible += 1 + (open ? r.members.length : 0);
+    const toggle = collapsible ? el("button.team-toggle", {
+      type: "button", "aria-expanded": String(open), title: open ? "Hide members" : "Show members",
+      "aria-label": `${open ? "Hide" : "Show"} ${r.name} members`,
+      onclick: (e) => {
+        const now = !isOpen(r.team, myTeam, collapsible);
+        expanded.set(r.team, now);
+        const table = e.currentTarget.closest("table");
+        const btn = e.currentTarget;
+        btn.setAttribute("aria-expanded", String(now));
+        btn.title = now ? "Hide members" : "Show members";
+        btn.setAttribute("aria-label", `${now ? "Hide" : "Show"} ${r.name} members`);
+        btn.closest("tr").classList.toggle("collapsed", !now);
+        for (const tr of table.querySelectorAll(`tr[data-team-of="${r.team}"]`)) tr.hidden = !now;
+      },
+    }, el("span.chev", { "aria-hidden": "true" }), el("span.count", String(r.members.length))) : null;
+    return [
     el("tr", {
-      class: ["team-row", `team-${TEAM_LETTER[r.team].toLowerCase()}`, r.team === myTeam ? "me" : "", r.forfeited ? "out" : ""].join(" ").trim(),
+      class: ["team-row", teamClass(r.team), r.team === myTeam ? "me" : "", r.forfeited ? "out" : "", open ? "" : "collapsed"].join(" ").trim(),
       dataset: { user: r.user_id },
     },
     el("td.col-place", String(r.place)),
-    el("td.col-who", el("span.team-name", teamBadge(r.team, r.name), el("span", r.name)),
+    el("td.col-who", el("span.team-name", teamBadge(r.team, r.name), el("span.tname", r.name)),
       r.team === myTeam ? el("span.chip.you", "you") : null,
-      r.forfeited ? el("span.muted.small", " · forfeit") : null),
+      r.forfeited ? el("span.muted.small", " · forfeit") : null, toggle),
     rules === "lockout"
       ? el("td.col-num", fmtPts(r.points))
       : [el("td.col-num", String(r.solved)), el("td.col-num", String(r.penalty))],
     labels.map((l) => el("td.col-cell", teamCell(r.cells.find((x) => x.label === l.label) || { label: l.label, state: "none" }, rules)))),
     ...r.members.map((m) => el("tr", {
-      class: ["member-row", `team-${TEAM_LETTER[r.team].toLowerCase()}`, m.user_id === myId ? "self" : "", m.forfeited ? "out" : ""].join(" ").trim(),
-      dataset: { member: String(m.user_id) },
+      class: ["member-row", teamClass(r.team), m.user_id === myId ? "self" : "", m.forfeited ? "out" : ""].join(" ").trim(),
+      dataset: { member: String(m.user_id), teamOf: String(r.team) }, hidden: !open,
     },
     el("td.col-place"),
     el("td.col-who", handleEl(m.handle, m.cf_rating), m.forfeited ? el("span.muted.small", " · forfeit") : null),
     el("td.col-num.member-solved", { colspan: numCols }, m.solved ? `${m.solved} solved` : ""),
     labels.map((l) => el("td.col-cell", memberCell(m.cells.find((x) => x.label === l.label) || { label: l.label, state: "none" }))))),
-  ]);
+    ];
+  });
 
-  return el("div.table-wrap.standings.team-standings", { tabindex: "0", "aria-label": "Team standings" },
+  // Big boards scroll inside their box, so the problem headers can stay in view.
+  return el(`div.table-wrap.standings.team-standings${visible > 14 ? ".tall" : ""}`, { tabindex: "0", "aria-label": "Team standings" },
     el("table", el("thead", head), el("tbody", body)));
 }
 

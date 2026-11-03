@@ -5,7 +5,7 @@ from app import db
 from app.auth import session
 from app.cf import cache
 from app.core import custom_list, selection
-from app.matches import service, store, view
+from app.matches import contest, draft, service, store, view
 from app.matches import settings as settings_mod
 from app.matches.service import MatchError
 from app.poller import ingest
@@ -36,9 +36,47 @@ class ArrangeIn(BaseModel):
     how: str  # shuffle | balance
 
 
+class JoinIn(BaseModel):
+    team: int | None = None  # 0-based; per-team invite links (/m/CODE?team=2) are 1-based in the URL
+
+
+class MoveIn(BaseModel):
+    user_id: int
+    team: int | None = None  # None = back to the draft pool
+
+
+class RenameIn(BaseModel):
+    name: str = ""
+
+
 class ValidateIn(BaseModel):
     text: str
     match_code: str | None = None
+
+
+class CaptainIn(BaseModel):
+    team: int
+    user_id: int | None = None
+
+
+class PickIn(BaseModel):
+    user_id: int
+
+
+class StartIn(BaseModel):
+    force: bool = False
+
+
+class ExtendIn(BaseModel):
+    minutes: int
+
+
+class AnnounceIn(BaseModel):
+    body: str
+
+
+class PlayerIn(BaseModel):
+    user_id: int
 
 
 def _run(fn, *args):
@@ -57,7 +95,7 @@ def _match_or_404(code: str):
 
 @router.post("/matches")
 async def create(body: CreateIn, user=Depends(session.require_user)):
-    return {"code": _run(service.create, user, body.mode, body.rules, body.settings)}
+    return {"code": _run(service.create, user, body.mode, body.rules, body.settings)}  # contests: POST /contests
 
 
 @router.get("/matches/{code}")
@@ -67,8 +105,8 @@ async def get_match(code: str, user=Depends(session.current_user)):
 
 
 @router.post("/matches/{code}/join")
-async def join(code: str, user=Depends(session.require_user)):
-    _run(service.join, user, code)
+async def join(code: str, body: JoinIn | None = None, user=Depends(session.require_user)):
+    _run(service.join, user, code, body.team if body else None)
     return {"ok": True}
 
 
@@ -103,6 +141,98 @@ async def switch_team(code: str, body: TeamIn, user=Depends(session.require_user
 async def arrange_teams(code: str, body: ArrangeIn, user=Depends(session.require_user)):
     _run(service.arrange_teams, user, code, body.how)
     return {"ok": True}
+
+
+@router.post("/matches/{code}/move")
+async def move_player(code: str, body: MoveIn, user=Depends(session.require_user)):
+    _run(service.move_player, user, code, body.user_id, body.team)
+    return {"ok": True}
+
+
+@router.put("/matches/{code}/teams/{idx}/name")
+async def rename_team(code: str, idx: int, body: RenameIn, user=Depends(session.require_user)):
+    return {"name": _run(service.rename_team, user, code, idx, body.name)}
+
+
+@router.post("/matches/{code}/captain")
+async def set_captain(code: str, body: CaptainIn, user=Depends(session.require_user)):
+    _run(draft.set_captain, user, code, body.team, body.user_id)
+    return {"ok": True}
+
+
+@router.post("/matches/{code}/draft/start")
+async def start_draft(code: str, user=Depends(session.require_user)):
+    _run(draft.start, user, code)
+    return {"ok": True}
+
+
+@router.post("/matches/{code}/draft/pick")
+async def draft_pick(code: str, body: PickIn, user=Depends(session.require_user)):
+    _run(draft.pick, user, code, body.user_id)
+    return {"ok": True}
+
+
+# ---------- hosted contests ----------
+
+@router.post("/contests")
+async def create_contest(body: dict, user=Depends(session.require_user)):
+    return {"code": _run(contest.create, user, body)}
+
+
+@router.get("/contests/{code}/edit")
+async def contest_edit_form(code: str, user=Depends(session.require_user)):
+    return _run(contest.editable, user, code)
+
+
+@router.patch("/contests/{code}")
+async def update_contest(code: str, body: dict, user=Depends(session.require_user)):
+    _run(contest.update, user, code, body)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/start")
+async def start_contest(code: str, body: StartIn | None = None, user=Depends(session.require_user)):
+    _run(contest.start_now, user, code, bool(body and body.force))
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/extend")
+async def extend_contest(code: str, body: ExtendIn, user=Depends(session.require_user)):
+    return {"end_time": _run(contest.extend, user, code, body.minutes)}
+
+
+@router.post("/contests/{code}/end")
+async def end_contest(code: str, user=Depends(session.require_user)):
+    _run(contest.end_early, user, code)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/cancel")
+async def cancel_contest(code: str, user=Depends(session.require_user)):
+    _run(contest.cancel, user, code)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/announcements")
+async def announce(code: str, body: AnnounceIn, user=Depends(session.require_user)):
+    return _run(contest.announce, user, code, body.body)
+
+
+@router.post("/contests/{code}/kick")
+async def kick(code: str, body: PlayerIn, user=Depends(session.require_user)):
+    _run(contest.kick, user, code, body.user_id)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/allow")
+async def allow(code: str, body: PlayerIn, user=Depends(session.require_user)):
+    _run(contest.allow, user, code, body.user_id)
+    return {"ok": True}
+
+
+@router.get("/events")
+async def events_listing(user=Depends(session.current_user)):
+    return contest.listing(user["id"] if user else None)
 
 
 @router.post("/matches/{code}/submitted")
@@ -142,6 +272,7 @@ async def timeline(code: str, user=Depends(session.current_user)):
         labels[(p["user_id"], p["problem_key"])] = p["label"]
     names = {p["user_id"]: (p["handle"], p["cf_rating"]) for p in pr}
     team = store.team_of(pr) if store.is_team(match) else {}
+    team_names = store.team_names(match) if team else []
     items = []
     for s in store.subs(match, pr, pb):
         label = labels.get((s.player, s.problem)) or labels.get((None, s.problem))
@@ -153,6 +284,7 @@ async def timeline(code: str, user=Depends(session.current_user)):
             "id": s.id, "user_id": s.player, "handle": names[s.player][0], "cf_rating": names[s.player][1],
             "label": label, "problem_key": s.problem, "verdict": s.verdict, "time": s.time,
             "minute": (s.time - match["start_time"]) // 60, "team": team.get(s.player),
+            "team_name": team_names[team[s.player]] if s.player in team else None,
             "url": f"https://codeforces.com/contest/{p.contest_id}/submission/{s.id}" if p else None,
         })
     return {"start_time": match["start_time"], "items": items}
@@ -188,6 +320,9 @@ async def validate(body: ValidateIn, user=Depends(session.current_user)):
     touched = {}
     if body.match_code:
         match = store.match_by_code(body.match_code)
+        if match and match["mode"] == "contest" and not (user and match["creator_id"] == user["id"]):
+            # who has tried what would hint at a contest's hidden problems
+            raise HTTPException(403, "Only the host can check problems for this contest.")
         if match:
             for p in store.players(match["id"]):
                 touched[p["handle"] or p["current_handle"]] = ingest.touched_groups(p["user_id"])

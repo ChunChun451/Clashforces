@@ -1,0 +1,79 @@
+/* Events tab and the contest form. Built from the shared tokens and components only. */
+
+/* ---------- event cards ---------- */
+/* --cols is picked by the page from the card count, so the last row is never one lonely card. */
+.event-grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--s4); }
+.event-card { display: grid; grid-template-rows: auto auto auto 1fr auto; gap: var(--s2); padding: var(--s4); min-width: 0; }
+.event-top { display: flex; align-items: center; justify-content: space-between; gap: var(--s2); min-height: 22px; margin-bottom: var(--s1); }
+.event-when { display: inline-flex; align-items: center; gap: var(--s2); font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.event-when .icon { color: var(--muted); }
+.event-card h2 { font-size: 16px; min-width: 0; }
+.event-card h2 a { border-bottom-color: transparent; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-card h2 a:hover { color: var(--accent); }
+.event-format { font-size: 12px; color: var(--text); }
+.event-facts { display: grid; grid-template-columns: 1fr auto; gap: var(--s4); margin: var(--s2) 0 0; align-content: start; font-size: 13px; }
+.event-facts dt { color: var(--muted); font-size: 12px; margin-bottom: 2px; }
+.event-facts dd { margin: 0; color: var(--text-strong); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-facts > div:last-child { text-align: right; }
+.event-card .go { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); margin-top: var(--s2); padding-top: var(--s3); border-top: 1px solid var(--line); }
+.event-clock { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.empty-state.compact { padding: var(--s5); }
+
+@media (max-width: 1000px) {
+  .event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .event-grid[style*="--cols: 1"] { grid-template-columns: minmax(0, 1fr); }
+  .event-grid.odd > :last-child { grid-column: 1 / -1; }
+}
+@media (max-width: 720px) {
+  .event-grid { grid-template-columns: minmax(0, 1fr); gap: var(--s3); }
+  .event-grid.odd > :last-child { grid-column: auto; }
+}
+
+/* ---------- past / mine lists ---------- */
+.events-pair > .panel { display: flex; flex-direction: column; }
+.events-pair .panel-fill:has(> .panel-list) { align-content: start; }
+.event-link {
+  display: inline-flex; align-items: center; min-height: var(--h-md); padding: 0 var(--s2); margin-right: calc(-1 * var(--s2));
+  font: 12px var(--font-mono); color: var(--muted); border-bottom-color: transparent; white-space: nowrap;
+}
+.event-link:hover { color: var(--text-strong); }
+.event-list > li { gap: var(--s4); }
+.event-row-main { display: grid; gap: 2px; min-width: 0; }
+.event-row-title { font-weight: 500; color: var(--text-strong); border-bottom-color: transparent; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-row-title:hover { color: var(--accent); }
+.event-row-main .meta { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.event-row-side { display: flex; align-items: center; gap: var(--s3); flex: none; max-width: 50%; }
+.event-winner { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+@media (max-width: 720px) {
+  .event-list > li { flex-wrap: wrap; row-gap: var(--s1); padding-top: var(--s2); padding-bottom: var(--s2); }
+  .event-row-main { flex: 1 1 100%; }
+  .event-row-side { max-width: 100%; justify-content: space-between; flex: 1 1 100%; }
+}
+
+/* ---------- the contest form ---------- */
+.problem-rows { display: grid; border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.problem-row { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto auto; align-items: center; gap: var(--s3); min-height: 52px; padding: var(--s2) var(--s3); border-bottom: 1px solid var(--line); background: var(--surface); }
+.problem-row:last-child { border-bottom: 0; }
+.problem-row .letter {
+  display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--r);
+  background: var(--surface-2); border: 1px solid var(--line); font: 600 14px var(--font-mono); color: var(--text-strong);
+}
+.problem-row .what { min-width: 0; display: grid; }
+.problem-row .what .n { color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.problem-row .what .m { font: 12px var(--font-mono); color: var(--muted); }
+.problem-row .pts { width: 88px; height: var(--h-sm); }
+.problem-row .moves { display: inline-flex; gap: 2px; }
+.problem-row .moves .btn { width: var(--h-sm); padding: 0; }
+.team-names { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--s3); }
+.team-names .field { margin: 0; }
+.team-names .row { flex-wrap: nowrap; }
+.team-names .row > input { flex: 1 1 auto; width: auto; min-width: 0; }
+.align-end { align-self: end; }
+.form-pair > .panel { display: flex; flex-direction: column; }
+.form-pair > .panel > .panel-body { flex: 1; }
+input[type="datetime-local"] { font-family: var(--font-mono); font-size: 13px; }
+@media (max-width: 720px) {
+  .team-names { grid-template-columns: minmax(0, 1fr); }
+  .problem-row { grid-template-columns: 32px minmax(0, 1fr) auto; }
+  .problem-row .pts-cell { grid-column: 2 / -1; }
+}

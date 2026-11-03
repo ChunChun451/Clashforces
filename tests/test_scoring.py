@@ -336,7 +336,7 @@ def test_team_balance_shuffle_and_can_start():
     t6 = balance(six, 3)
     assert sorted(t6.values()) == [0, 0, 0, 1, 1, 1] and gap(six, t6) == 200  # best possible split
     three = balance({"x": 1500, "y": 1600, "z": 1400}, 2)
-    assert sorted(three.values()) == [0, 0, 1]
+    assert sorted(list(three.values()).count(t) for t in (0, 1)) == [1, 2]  # sizes as even as possible
     sh = shuffle(list(ratings), 2, random.Random(3))
     assert sorted(sh.values()) == [0, 0, 1, 1]
     assert can_start({"a": 0, "b": 0, "c": 1, "d": 1}, 2) is None

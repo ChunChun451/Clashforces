@@ -171,8 +171,10 @@ async def test_balance_and_shuffle(world):
 
 async def test_team_settings_validation(world):
     w = world
-    with pytest.raises(service.MatchError, match="2 or 3"):
-        service.create(w.u["alice"], "team", "icpc", {"team_size": 4})
+    with pytest.raises(service.MatchError, match="2–6 players"):
+        service.create(w.u["alice"], "team", "icpc", {"team_size": 7})
+    with pytest.raises(service.MatchError, match="2–6 teams"):
+        service.create(w.u["alice"], "team", "icpc", {"team_count": 7})
     with pytest.raises(service.MatchError, match="handicap"):
         service.create(w.u["alice"], "team", "icpc", {"handicap": {"type": "extra_time", "user_id": 1, "minutes": 5}})
 

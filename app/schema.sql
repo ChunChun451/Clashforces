@@ -73,7 +73,7 @@ CREATE INDEX IF NOT EXISTS submissions_user_time ON submissions(user_id, creatio
 CREATE TABLE IF NOT EXISTS matches (
   id            INTEGER PRIMARY KEY,
   code          TEXT NOT NULL UNIQUE,            -- 6 chars, share link /m/{code}
-  mode          TEXT NOT NULL,                   -- friend | group | ranked | team   (V2: practice | ghost | tournament)
+  mode          TEXT NOT NULL,                   -- friend | group | ranked | team | contest
   rules         TEXT NOT NULL,                   -- icpc | lockout
   status        TEXT NOT NULL,                   -- lobby | starting | running | ended | cancelled
   result_status TEXT NOT NULL DEFAULT 'none',    -- none | pending | final
@@ -85,7 +85,9 @@ CREATE TABLE IF NOT EXISTS matches (
   end_time      INTEGER,                         -- base end (start + duration)
   ended_at      INTEGER,
   end_reason    TEXT,                            -- time | clinched | forfeit | cancelled
-  result        TEXT                             -- JSON standings snapshot once final
+  result        TEXT,                            -- JSON standings snapshot once final
+  scheduled_at  INTEGER,                         -- contest: planned start (auto-start time)
+  visibility    TEXT NOT NULL DEFAULT 'private'  -- contest: public (listed under Events) | unlisted
 );
 CREATE INDEX IF NOT EXISTS matches_status ON matches(status);
 
@@ -96,7 +98,7 @@ CREATE TABLE IF NOT EXISTS match_players (
   cf_rating       INTEGER,                       -- at start
   joined_at       INTEGER NOT NULL,
   ready           INTEGER NOT NULL DEFAULT 0,
-  team            INTEGER,                       -- team mode: 0 = Team A, 1 = Team B
+  team            INTEGER,                       -- team index (0 = Team A ... 5 = Team F); NULL = not placed
   end_time        INTEGER,                       -- per player (extra-time handicap)
   penalty_bonus   INTEGER NOT NULL DEFAULT 0,    -- minutes, e.g. -40
   rating_min      INTEGER,                       -- per-player range handicap
@@ -115,6 +117,33 @@ CREATE TABLE IF NOT EXISTS match_problems (
   label       TEXT NOT NULL,                     -- A, B, C...
   problem_key TEXT NOT NULL,
   points      INTEGER NOT NULL DEFAULT 0         -- lockout
+);
+
+-- teams of a team match: names and captains (idx matches match_players.team)
+CREATE TABLE IF NOT EXISTS match_teams (
+  match_id    INTEGER NOT NULL REFERENCES matches(id),
+  idx         INTEGER NOT NULL,                  -- 0..5
+  name        TEXT NOT NULL,                     -- unique per match (case-insensitive), <= 24 chars
+  captain_id  INTEGER REFERENCES users(id),      -- captains' draft
+  PRIMARY KEY (match_id, idx)
+);
+
+-- hosted contests: messages from the host, shown live to everyone watching
+CREATE TABLE IF NOT EXISTS announcements (
+  id          INTEGER PRIMARY KEY,
+  match_id    INTEGER NOT NULL REFERENCES matches(id),
+  author_id   INTEGER REFERENCES users(id),
+  body        TEXT NOT NULL,
+  created_at  INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS announcements_match ON announcements(match_id, id);
+
+-- hosted contests: players the host removed; they can't rejoin until the host allows it
+CREATE TABLE IF NOT EXISTS match_kicks (
+  match_id    INTEGER NOT NULL REFERENCES matches(id),
+  user_id     INTEGER NOT NULL REFERENCES users(id),
+  created_at  INTEGER NOT NULL,
+  PRIMARY KEY (match_id, user_id)
 );
 
 -- one active lobby/match/queue entry per user (the insert fails if one exists)

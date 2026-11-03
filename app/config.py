@@ -63,10 +63,25 @@ COUNTDOWN_S = 5
 WARNING_MINUTES_LEFT = 5
 LOBBY_IDLE_S = 2 * 3600
 ROOM_MIN_PLAYERS, ROOM_MAX_PLAYERS = 3, 10
-TEAM_SIZES = (2, 3)               # team duels: 2v2 or 3v3
+TEAM_SIZE_MIN, TEAM_SIZE_MAX = 2, 6     # players per team
+TEAM_COUNT_MIN, TEAM_COUNT_MAX = 2, 6   # teams per match
+TEAM_NAME_MAX = 24
+DRAFT_PICK_S = 45                 # captains' draft: seconds per pick before an auto-pick
 CODE_LENGTH = 6
 PER_PLAYER_RANGE_BELOW, PER_PLAYER_RANGE_ABOVE = 100, 200  # 1300 -> 1200-1500
 ICPC_WRONG_PENALTY = 20
+
+# ---------- hosted contests ----------
+CONTEST_MAX_PLAYERS = 40          # solo contests
+CONTEST_PROBLEMS_MAX = 15
+CONTEST_TITLE_MAX = 60
+CONTEST_SCHEDULE_MAX_DAYS = 60    # how far ahead a start can be scheduled
+CONTEST_PREFETCH_S = 5 * 60       # re-sync missing histories this long before the start
+CONTEST_RETRY_START_S = 30        # auto-start retry when Codeforces isn't answering
+CONTEST_STALE_S = 2 * 3600        # a lobby this long past its start time is cancelled
+CONTEST_UNSCHEDULED_IDLE_S = 7 * 24 * 3600
+EXTEND_MAX_MIN = 120
+ANNOUNCEMENT_MAX = 500
 
 # ---------- ranked ----------
 RANKED_COUNT = 3
