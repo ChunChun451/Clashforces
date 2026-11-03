@@ -5,7 +5,7 @@ from app import db
 from app.auth import session
 from app.cf import cache
 from app.core import custom_list, selection
-from app.matches import contest, draft, service, store, view
+from app.matches import contest, draft, reveal, service, store, view
 from app.matches import settings as settings_mod
 from app.matches.service import MatchError
 from app.poller import ingest
@@ -230,6 +230,15 @@ async def allow(code: str, body: PlayerIn, user=Depends(session.require_user)):
     return {"ok": True}
 
 
+class RevealIn(BaseModel):
+    action: str  # start | next | auto | pause | skip
+
+
+@router.post("/contests/{code}/reveal")
+async def reveal_control(code: str, body: RevealIn, user=Depends(session.require_user)):
+    return _run(reveal.control, user, code, body.action)
+
+
 @router.get("/events")
 async def events_listing(user=Depends(session.current_user)):
     return contest.listing(user["id"] if user else None)
@@ -257,6 +266,8 @@ async def result(code: str):
     match = _match_or_404(code)
     if match["result_status"] != "final":
         raise HTTPException(409, "The result is not final yet.")
+    if reveal.locked(match):
+        raise HTTPException(409, "The host reveals the final results first.")
     return view.result_payload(match)
 
 
@@ -265,6 +276,8 @@ async def timeline(code: str, user=Depends(session.current_user)):
     match = _match_or_404(code)
     if match["status"] != "ended" or match["result_status"] != "final":
         raise HTTPException(409, "The timeline appears once the result is confirmed.")
+    if reveal.locked(match):
+        raise HTTPException(409, "The timeline appears once the host has revealed the results.")
     pr = store.players(match["id"])
     pb = store.problems(match["id"])
     labels = {}

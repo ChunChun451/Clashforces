@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 from app import clock, config
 from app.auth import session, users
 from app.cf.client import get_client
-from app.matches import service, store, view
+from app.matches import chat, service, store, view
 from app.poller.poller import poller
 from app.ws.hub import Conn, hub
 
@@ -37,7 +37,8 @@ async def ws_endpoint(ws: WebSocket):
     await ws.accept()
     user = session.user_from_session(ws.scope.get("session") or {})
     uid = user["id"] if user else None
-    conn = Conn(ws, uid)
+    # /ws?view=screen: the big screen, which always gets the spectator view
+    conn = Conn(ws, uid, screen=ws.query_params.get("view") == "screen")
     hub.add(conn)
     try:
         await ws.send_json({"type": "hello", "data": {
@@ -68,7 +69,9 @@ async def handle(conn: Conn, user, type_: str, data: dict) -> None:
             await conn.send({"type": "error", "data": {"message": "No match with that code."}})
             return
         hub.subscribe(conn, match["code"])
-        await conn.send({"type": "match.state", "data": view.build(match, conn.user_id)})
+        await conn.send({"type": "match.state", "data": view.build(match, conn.viewer)})
+        if chat.my_team(match, conn.viewer) is not None:
+            await conn.send({"type": "chat.history", "data": chat.history(match, conn.viewer)})
     elif type_ == "unsubscribe":
         hub.unsubscribe(conn, code)
     elif type_ == "submitted" and user:
@@ -77,6 +80,17 @@ async def handle(conn: Conn, user, type_: str, data: dict) -> None:
             await conn.send({"type": "hint.ack", "data": {"queued": queued}})
         except service.MatchError as e:
             await conn.send({"type": "error", "data": {"message": str(e)}})
+    elif type_ in ("chat.send", "chat.history") and user and not conn.screen:
+        match = store.match_by_code(code)
+        try:
+            if match is None:
+                raise service.MatchError("No match with that code.")
+            if type_ == "chat.history":
+                await conn.send({"type": "chat.history", "data": chat.history(match, user["id"])})
+            else:
+                chat.post(match, user, data.get("body"))
+        except service.MatchError as e:
+            await conn.send({"type": "chat.error", "data": {"code": code, "message": str(e)}})
     elif type_ == "focus" and user:
         try:
             poller.soft_hint(user["id"], float(data.get("away_s", 0)))

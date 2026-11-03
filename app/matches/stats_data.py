@@ -4,13 +4,13 @@ import json
 
 from app import db
 from app.core import stats
-from app.matches import store
+from app.matches import reveal, store
 
 
 def finished_matches(user_id: int):
     return db.all(
         "SELECT m.*, mp.place AS my_place, mp.team AS my_team FROM matches m JOIN match_players mp ON mp.match_id = m.id"
-        " WHERE mp.user_id = ? AND m.result_status = 'final' ORDER BY m.ended_at", (user_id,))
+        " WHERE mp.user_id = ? AND m.result_status = 'final' AND " + reveal.UNLOCKED_SQL + " ORDER BY m.ended_at", (user_id,))
 
 
 def outcomes_and_solves(user_id: int) -> tuple[list, list]:
@@ -114,7 +114,7 @@ def opposing_team_places(a: int, b: int) -> tuple[dict[int, int], dict[int, int]
         "SELECT pa.match_id, pa.place AS pa, pb.place AS pb FROM match_players pa"
         " JOIN match_players pb ON pb.match_id = pa.match_id AND pb.user_id = ?"
         " JOIN matches m ON m.id = pa.match_id"
-        " WHERE pa.user_id = ? AND m.mode IN ('team', 'contest') AND m.result_status = 'final'"
+        " WHERE pa.user_id = ? AND m.mode IN ('team', 'contest') AND m.result_status = 'final' AND " + reveal.UNLOCKED_SQL +
         " AND pa.team IS NOT NULL AND pb.team IS NOT NULL AND pa.team != pb.team",
         (b, a))
     return {r["match_id"]: r["pa"] for r in rows}, {r["match_id"]: r["pb"] for r in rows}

@@ -13,10 +13,16 @@ log = logging.getLogger("hub")
 
 
 class Conn:
-    def __init__(self, ws, user_id: int | None):
+    def __init__(self, ws, user_id: int | None, screen: bool = False):
         self.ws = ws
         self.user_id = user_id
+        self.screen = screen  # big screen: always the spectator view, even when a player is logged in
         self.matches: set[str] = set()
+
+    @property
+    def viewer(self) -> int | None:
+        """Whose view of a match this socket gets (None = spectator)."""
+        return None if self.screen else self.user_id
 
     async def send(self, msg: dict) -> None:
         try:
@@ -97,9 +103,9 @@ class Hub:
         cache: dict = {}
         for conn in list(self.by_match.get(code, ())):
             if callable(data):
-                if conn.user_id not in cache:
-                    cache[conn.user_id] = data(conn.user_id)
-                payload = cache[conn.user_id]
+                if conn.viewer not in cache:
+                    cache[conn.viewer] = data(conn.viewer)
+                payload = cache[conn.viewer]
             else:
                 payload = data
             if payload is not None:

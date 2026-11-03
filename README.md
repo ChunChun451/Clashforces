@@ -8,6 +8,8 @@ Codeforces API, and computes the results.
 - **Hosted contests** for events: a host who doesn't play, hidden problems, a scheduled start, announcements,
   solo (up to 40) or teams, listed under **Events**
 - **ICPC** or **Lockout** rules, scoreboard freeze (ICPC), handicaps (1v1 and rooms)
+- For event nights: a **big-screen scoreboard** for a projector, an **ICPC-style freeze reveal** run by the
+  host, and a private **team chat**
 - Live scoreboard over WebSockets, spectator links, timelines, upsolve list, stats, friends
 
 The design is in [PLAN.md](PLAN.md).
@@ -81,6 +83,40 @@ doesn't play: they're never on the scoreboard and never polled.
 - A contest lobby can be open for days, so joining one doesn't block you from
   other matches. The one-match-at-a-time lock is taken at the start (a lobby or
   queue you're in elsewhere is left automatically).
+
+### Event night: big screen, freeze reveal, team chat
+
+- **Big screen** (`/m/CODE/screen`): a full-window scoreboard for a 1080p
+  projector, readable from across the room. No login: anyone with the code can
+  open it, like the match page. It is always the spectator view, even on a
+  player's laptop (`/ws?view=screen`), so it never shows a team's own live
+  results during the freeze. It shows the title, a big clock ("Starts in",
+  "Time left", a **Frozen** badge), problem columns with tries and a dot on each
+  first solve, team rows in their colours (or players in solo contests), the
+  latest announcement, and a short "First solve" toast. Problems appear only at
+  the start. Up to 6 teams fill the screen; solo contests with more than 20
+  players use two columns, and boards that still don't fit page every 12 s.
+  `?theme=light` for bright rooms; `F` toggles full screen; the cursor and the
+  host buttons hide when the mouse rests. The host gets **Open big screen** on
+  the match page, spectators a small **Big screen** link.
+- **Freeze reveal** (ICPC contests with a freeze): when the contest is over and
+  confirmed, the final results stay frozen until the host runs the reveal from
+  the match page or the big screen (**Start reveal**, then **Next**, `Space` or
+  `→`; **Auto-play** at 1.5 s a step; **Skip to final**). From the last place up,
+  each frozen cell turns green or red and the rows slide to their new places.
+  The server drives it, so every screen (big screen, players, spectators) shows
+  the same step, and a reconnecting screen picks up where it is. Until it's
+  done, the result API, the timeline, the Events winner and profile history
+  stay hidden. A contest whose freeze hid nothing (or without a freeze, or
+  Lockout) shows its results right away. Other matches keep the old behaviour
+  (the reveal plays by itself on the match page).
+- **Team chat** (team duels and team contests): a drawer on the match page
+  that only your team can read (not the host, spectators or big screens). Plain
+  text up to 500 characters, at most one message a second and 20 a minute.
+  The last 200 messages load when you open the page or reconnect; an unread dot
+  shows while it's closed. Open in the lobby and during the match, read-only
+  after it ends. A player moved to another team sees that team's chat from
+  then on.
 
 ## Run locally
 
@@ -173,6 +209,16 @@ transport for the client, and a stub client for services. They cover:
   auto-start through the ticker (one batched `user.info`, no history calls at the start), blocked and
   retried starts, renamed handles, extend time, announcements, kick / allow / move, solo scoring
   without the host, the Events listing and visibility, idle rules, and migrating an old database.
+- **Big screen** (`tests/test_bigscreen.py`): the page is static and public, a screen socket is a
+  spectator even with a player's cookie, no problems before the start (also during the countdown), live
+  updates during the freeze carry no hidden results, solo boards, any match is watchable by code.
+- **Freeze reveal** (`tests/test_reveal.py`): the order (last place first, leftmost cell) and that the
+  last step is the true final ranking in ICPC and Lockout, the lock on result / timeline / Events winner /
+  profile history, host-only controls, one shared board per step, auto-play, pause, skip, reconnecting
+  mid-reveal, and no lock without frozen submissions or in Lockout.
+- **Team chat** (`tests/test_team_chat.py`): only the team receives and reads it (not the host,
+  spectators, big screens or other teams; over the API and the WebSocket), length and rate limits, the
+  200-message history, moved players, read-only after the end, and migrating an old database.
 - **Other:** freeze and reveal, Elo, matchmaking, stats.
 
 ## How the poller works

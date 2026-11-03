@@ -566,7 +566,8 @@ def _format_line(m, s: dict, players: int) -> dict:
 
 
 def _winner(m) -> dict | None:
-    if m["result_status"] != "final" or not m["result"]:
+    from app.matches import reveal
+    if m["result_status"] != "final" or not m["result"] or reveal.locked(m):
         return None
     summary = json.loads(m["result"])
     top = [r for r in summary if r.get("place") == 1]

@@ -23,6 +23,7 @@ PAGES = {
     "/events": "events",
     "/events/new": "event-new",
     "/m/{code}": "match",
+    "/m/{code}/screen": "screen",
     "/queue": "queue",
     "/upsolve": "upsolve",
     "/friends": "friends",
