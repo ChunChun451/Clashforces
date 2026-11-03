@@ -255,7 +255,8 @@ function renderBoard({ animate = false, toasts: wantToasts = false } = {}) {
     tables.push(t);
   }
   board.className = `sc-board${twoCols ? " two" : ""}`;
-  board.replaceChildren(...tables, !started && M.status !== "cancelled" ? el("p.sc-note", "Problems appear when the contest starts.") : null);
+  board.replaceChildren(...tables);
+  if (!started && M.status !== "cancelled") board.append(el("p.sc-note", "Problems appear when the contest starts."));
   if (pages > 1) board.append(el("p.sc-note", `Page ${page + 1} of ${pages}`));
 
   // the cell just revealed: green flips in, red flashes

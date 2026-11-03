@@ -42,7 +42,7 @@
 @keyframes banner-in { 0% { border-color: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); } }
 
 /* ---------- board ---------- */
-.sc-board { min-height: 0; display: grid; gap: var(--s5); position: relative; }
+.sc-board { min-height: 0; display: grid; align-content: start; gap: var(--s5); position: relative; }
 .sc-board.two { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
 .sc-table {
   --row-h: 96px;
