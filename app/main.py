@@ -4,11 +4,16 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
+from starlette.middleware.sessions import SessionMiddleware
 
 from app import config, db
 from app.cf import cache
 from app.cf.client import get_client
+from app.routes import auth as auth_routes
+from app.routes import pages
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
 
@@ -28,6 +33,28 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="Clashforces", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def csrf_guard(request: Request, call_next):
+    """Writes to the API must come from our own JS (which sets this header)."""
+    if (request.url.path.startswith("/api/") and request.method in ("POST", "PATCH", "PUT", "DELETE")
+            and request.headers.get("x-requested-with") != "fetch"):
+        return JSONResponse({"detail": "Missing X-Requested-With header."}, status_code=403)
+    return await call_next(request)
+
+
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=config.SECRET_KEY,
+    session_cookie="cf_session",
+    max_age=config.SESSION_MAX_AGE_S,
+    same_site="lax",
+    https_only=config.COOKIE_SECURE,
+)
+app.include_router(auth_routes.router)
+app.include_router(pages.router)
+app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 
 
 @app.get("/api/health")

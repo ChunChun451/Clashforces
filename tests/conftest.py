@@ -62,3 +62,73 @@ def fresh_db(tmp_path):
     yield conn
     conn.close()
     db._conn = None
+
+
+class StubCF:
+    """Stands in for CFClient in service tests. Handlers map method -> fn(params)."""
+
+    def __init__(self):
+        self.handlers = {}
+        self.calls = []
+        self.down = False
+
+    def on(self, method, fn):
+        self.handlers[method] = fn
+
+    async def call(self, method, params=None, lane=None, timeout=None, prepare=None):
+        if prepare is not None:
+            params = prepare()
+            if params is None:
+                return None
+        self.calls.append((method, params, lane))
+        result = self.handlers[method](params or {})
+        if isinstance(result, Exception):
+            raise result
+        return result
+
+    def queue_depths(self):
+        return {}
+
+
+@pytest.fixture
+def stub_cf():
+    from app.cf.client import set_client
+    stub = StubCF()
+    set_client(stub)
+    yield stub
+    set_client(None)
+
+
+@pytest.fixture
+def frozen_now(monkeypatch):
+    """Control app.clock.now(): set frozen_now.t = ..."""
+    from app import clock
+
+    class Now:
+        t = 1_750_000_000
+
+    monkeypatch.setattr(clock, "now", lambda: Now.t)
+    return Now
+
+
+@pytest.fixture
+def cache_filled(fresh_db):
+    from app.cf import cache
+    from app.cf.parse import parse_contests, parse_problems
+    cache.store_contests(parse_contests(load("contest_list.json")["result"]))
+    cache.store_problems(parse_problems(load("problemset.json")["result"]))
+    return cache
+
+
+@pytest.fixture
+def client(tmp_path, monkeypatch, stub_cf):
+    """A TestClient with no background tasks and a temp database."""
+    from fastapi.testclient import TestClient
+
+    from app import config
+    monkeypatch.setattr(config, "BACKGROUND_TASKS", False)
+    monkeypatch.setattr(config, "DB_PATH", str(tmp_path / "api.db"))
+    from app.main import app
+    with TestClient(app, headers={"X-Requested-With": "fetch"}) as c:
+        yield c
+    db._conn = None

@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS verifications (
   problem_key      TEXT NOT NULL,                -- e.g. "4A"
   issued_at        INTEGER NOT NULL,
   expires_at       INTEGER NOT NULL,             -- issued_at + 120
+  cf_rating        INTEGER NOT NULL DEFAULT 0,   -- from user.info when the task was issued
+  cf_max_rating    INTEGER NOT NULL DEFAULT 0,
   status           TEXT NOT NULL,                -- pending | verified | expired
   last_checked_at  INTEGER
 );
