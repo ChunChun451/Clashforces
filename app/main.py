@@ -83,4 +83,6 @@ app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 async def health():
     cf = get_client()
     return {"cf_api": "down" if cf.down else "ok", "lanes": cf.queue_depths(),
-            "active_players": len(poller.watches)}
+            "active_players": len(poller.watches),
+            # The VM's auto-deploy skips restarts while this is above 0.
+            "running_matches": db.scalar("SELECT COUNT(*) FROM matches WHERE status IN ('starting', 'running')")}
