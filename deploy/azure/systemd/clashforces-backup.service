@@ -1,0 +1,8 @@
+[Unit]
+Description=Clashforces: back up the SQLite database
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/opt/clashforces/backup-now.sh

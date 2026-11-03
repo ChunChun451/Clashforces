@@ -1,0 +1,11 @@
+[Unit]
+Description=Clashforces: deploy origin/main if it moved and no match is live
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/opt/clashforces/autodeploy.sh
+# A build on the 1 GB VM takes a few minutes; don't let a stuck one block the timer forever.
+TimeoutStartSec=30min
