@@ -23,6 +23,8 @@ PAGES = {
     "/m/{code}": "match",
     "/queue": "queue",
     "/upsolve": "upsolve",
+    "/friends": "friends",
+    "/u/{handle}": "profile",
 }
 
 for path, name in PAGES.items():

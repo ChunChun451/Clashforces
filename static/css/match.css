@@ -68,10 +68,6 @@
 @keyframes rowflash { from { background: var(--accent-soft); } }
 
 /* ---------- lobby ---------- */
-.lobby-players { display: grid; gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
-.lobby-player { display: flex; justify-content: space-between; align-items: center; padding: var(--s3) var(--s4); background: var(--surface); gap: var(--s3); }
-.ready-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; margin-right: var(--s2); }
-.ready-dot.on { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
 .share { display: flex; gap: var(--s2); align-items: center; flex-wrap: wrap; }
 .share input { max-width: 340px; font-family: var(--font-mono); font-size: 13px; }
 .settings-list { display: grid; grid-template-columns: max-content 1fr; gap: var(--s2) var(--s5); font-size: 14px; }

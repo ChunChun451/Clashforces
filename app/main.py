@@ -19,6 +19,7 @@ from app.poller.poller import poller
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
 from app.routes import queue as queue_routes
+from app.routes import users as user_routes
 from app.routes import ws as ws_routes
 from app.ws.hub import hub
 from app.routes import pages
@@ -71,6 +72,7 @@ app.add_middleware(
 app.include_router(auth_routes.router)
 app.include_router(match_routes.router)
 app.include_router(queue_routes.router)
+app.include_router(user_routes.router)
 app.include_router(ws_routes.router)
 app.include_router(pages.router)
 app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")

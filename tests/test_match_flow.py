@@ -384,3 +384,18 @@ async def test_ranked_ready_timeout_requeues(world):
     assert store.match_by_id(match["id"])["status"] == "cancelled"
     assert db.scalar("SELECT user_id FROM queue") == w.a["id"]
     assert locks.current(w.b["id"]) is None
+
+
+async def test_stats_after_matches(world):
+    from app.matches import stats_data
+    w = world
+    match = await start_duel(w)
+    probs = store.problems(match["id"])
+    w.subs["alice"].append(raw(1, probs[0]["problem_key"], "OK", match["start_time"] + 31 * 60))
+    w.now.t = match["end_time"] + 30
+    await finish(w, match)
+    s = stats_data.user_stats(w.a["id"])
+    assert s["record"]["overall"] == {"win": 1, "loss": 0, "draw": 0}
+    assert any(x["avg_minutes"] == 31 for x in s["solve_times"])
+    assert stats_data.h2h(w.a["id"], w.b["id"])["win"] == 1
+    assert stats_data.h2h(w.b["id"], w.a["id"])["loss"] == 1

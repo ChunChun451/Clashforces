@@ -91,3 +91,19 @@ td.num, th.num { text-align: right; font-family: var(--font-mono); }
 
 .row > select, .row > input { width: auto; flex: 0 0 auto; min-width: 96px; }
 .narrow-section { max-width: 560px; }
+
+/* ---------- chart ---------- */
+.chart-tip {
+  position: absolute; transform: translateX(-50%); pointer-events: none;
+  background: var(--surface-2); color: var(--text-strong); border-radius: 6px;
+  padding: 4px 8px; font: 12px var(--font-mono); white-space: nowrap;
+}
+.online-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; margin-right: 8px; }
+.online-dot.on { background: var(--accent); }
+.table-wrap tr.me td { background: var(--accent-soft); }
+
+/* ---------- player lists ---------- */
+.lobby-players { display: grid; gap: 1px; background: var(--line); border-radius: var(--r); overflow: hidden; }
+.lobby-player { display: flex; justify-content: space-between; align-items: center; padding: var(--s3) var(--s4); background: var(--surface); gap: var(--s3); }
+.ready-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); display: inline-block; margin-right: var(--s2); }
+.ready-dot.on { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }

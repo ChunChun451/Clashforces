@@ -75,5 +75,4 @@ QUEUE_MAX_WINDOW = 400
 RANKED_READY_TIMEOUT_S = 60
 
 # ---------- misc ----------
-ONLINE_GRACE_S = 120
 DISCORD_PREFIX = "https://discord.com/api/webhooks/"
