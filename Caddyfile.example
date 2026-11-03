@@ -1,0 +1,6 @@
+# Example Caddy config. Caddy gets a TLS certificate automatically and
+# passes WebSocket upgrades (/ws) through without extra settings.
+duel.example.com {
+	encode zstd gzip
+	reverse_proxy 127.0.0.1:8000
+}

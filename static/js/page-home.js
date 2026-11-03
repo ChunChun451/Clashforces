@@ -1,6 +1,4 @@
-import { $, api, el, getMe, mountTopbar, toast } from "./api.js";
-import { connect, on } from "./ws.js";
-import { notify } from "./notify.js";
+import { $, el, getMe, mountTopbar } from "./api.js";
 
 mountTopbar("/");
 const app = $("#app");
@@ -43,8 +41,3 @@ function render() {
 }
 
 render();
-connect();
-on("invite", (d) => {
-  toast(`${d.from} invited you to a match — ${d.code}`);
-  notify(`${d.from} invited you to a duel`, "invite", { always: true });
-});

@@ -75,4 +75,5 @@ QUEUE_MAX_WINDOW = 400
 RANKED_READY_TIMEOUT_S = 60
 
 # ---------- misc ----------
+PUBLIC_URL = os.environ.get("PUBLIC_URL", "http://localhost:8000")  # used in Discord messages
 DISCORD_PREFIX = "https://discord.com/api/webhooks/"

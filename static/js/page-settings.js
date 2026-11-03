@@ -1,5 +1,6 @@
 import { $, api, el, getMe, handleEl, mountTopbar, toast } from "./api.js";
 import { verifyWidget } from "./verify-widget.js";
+import * as notifications from "./notify.js";
 
 mountTopbar("/settings");
 const app = $("#app");
@@ -34,6 +35,16 @@ function render() {
           toast("Saved");
         } catch (e) { toast(e.message, true); }
       } }, "Save")),
+    el("hr"),
+    el("section.stack",
+      el("div.section-title", "Browser notifications"),
+      el("p.muted.small", "Duel invites, an opponent solving a problem, 5 minutes left, and match end. Shown while this site is open in a background tab."),
+      el("label.check", el("input", { type: "checkbox", checked: notifications.enabled(), onchange: async (e) => {
+        if (e.target.checked) {
+          const ok = await notifications.enable();
+          if (!ok) { e.target.checked = false; toast("Notifications are blocked in your browser settings.", true); }
+        } else notifications.disable();
+      } }), "Enable notifications")),
     el("hr"),
     el("section.row",
       el("button.btn.ghost", { type: "button", onclick: () => logout(false) }, "Log out"),

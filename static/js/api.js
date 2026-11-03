@@ -85,6 +85,8 @@ export function getMe() {
   return mePromise;
 }
 
+let globalListeners = false;
+
 // Top bar shared by every page.
 export async function mountTopbar(current) {
   const bar = $("#topbar");
@@ -104,6 +106,16 @@ export async function mountTopbar(current) {
     right.append(el("a.btn.ghost.small", { href: "/settings", "aria-label": "Settings" }, "Settings"));
   } else {
     right.append(el("a.btn.small", { href: "/login" }, "Log in"));
+  }
+  if (me.user && !globalListeners) {
+    globalListeners = true;
+    // Invites reach you on any page.
+    const [ws, nt] = await Promise.all([import("./ws.js"), import("./notify.js")]);
+    ws.on("invite", (d) => {
+      toast(`${d.from} invited you to a match: ${location.origin}/m/${d.code}`);
+      nt.notify(`${d.from} invited you to a duel`, "invite", { always: true });
+    });
+    ws.connect();
   }
   if (me.user && me.user.needs_reverify) {
     toast("Your Codeforces handle changed. Re-verify it in Settings.", true);
