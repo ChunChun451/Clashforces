@@ -12,7 +12,10 @@ from starlette.middleware.sessions import SessionMiddleware
 from app import config, db
 from app.cf import cache
 from app.cf.client import get_client
+from app.matches import lifecycle
+from app.poller.poller import poller
 from app.routes import auth as auth_routes
+from app.routes import matches as match_routes
 from app.routes import pages
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname)s %(message)s")
@@ -26,6 +29,10 @@ async def lifespan(app: FastAPI):
         cf = get_client()
         tasks.append(asyncio.create_task(cf.run(), name="cf-worker"))
         tasks.append(asyncio.create_task(cache.refresh_loop(cf), name="cache-refresh"))
+        tasks.append(asyncio.create_task(poller.run(), name="poller"))
+        tasks.append(asyncio.create_task(lifecycle.run(), name="lifecycle"))
+    else:
+        lifecycle.setup()
     yield
     for t in tasks:
         t.cancel()
@@ -53,6 +60,7 @@ app.add_middleware(
     https_only=config.COOKIE_SECURE,
 )
 app.include_router(auth_routes.router)
+app.include_router(match_routes.router)
 app.include_router(pages.router)
 app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 
@@ -60,4 +68,5 @@ app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 @app.get("/api/health")
 def health():
     cf = get_client()
-    return {"cf_api": "down" if cf.down else "ok", "lanes": cf.queue_depths()}
+    return {"cf_api": "down" if cf.down else "ok", "lanes": cf.queue_depths(),
+            "active_players": len(poller.watches)}
