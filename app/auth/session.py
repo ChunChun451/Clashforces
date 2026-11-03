@@ -28,7 +28,7 @@ def user_from_session(session: dict):
     if not uid:
         return None
     row = users.by_id(uid)
-    if row is None or row["session_version"] != session.get("sv"):
+    if row is None or row["session_version"] != session.get("sv") or row["banned_at"]:
         return None
     return row
 

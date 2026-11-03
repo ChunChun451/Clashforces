@@ -1,0 +1,46 @@
+/* Admin page. Layout only: built from the shared tokens and components. */
+
+/* ---------- overview: 10 numbers, 5 per row (2 per row on phones), so every row is full ---------- */
+.admin-stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.admin-stat { padding: var(--s4) var(--s5); min-width: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.admin-stat:nth-child(5n) { border-right: 0; }
+.admin-stat:nth-last-child(-n + 5) { border-bottom: 0; }
+.admin-stat .kpi { font-size: 24px; }
+.admin-stat .kpi-label, .admin-stat .sub { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.admin-stat .sub { font: 12px var(--font-mono); color: var(--muted); margin-top: 2px; min-height: 18px; }
+.cf-state { display: inline-flex; align-items: center; gap: var(--s2); font: 12px var(--font-mono); color: var(--muted); }
+
+/* ---------- tables ---------- */
+.admin-tools { display: flex; gap: var(--s2); flex-wrap: wrap; align-items: center; }
+.admin-tools input[type="text"] { width: 220px; }
+.admin-tools select { width: auto; min-width: 132px; }
+.admin-table td .online-dot { margin-right: var(--s2); }
+.admin-table td.act { text-align: right; width: 1%; }
+.admin-table td.act .btn { margin: -6px 0; }
+.admin-table .when { font: 13px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.admin-table .cf-link { margin-left: var(--s2); font: 12px var(--font-mono); color: var(--muted); border-bottom-color: transparent; }
+.admin-table .cf-link:hover { color: var(--text-strong); }
+.admin-table tr.banned td { background: color-mix(in srgb, var(--danger-soft) 50%, transparent); }
+.chip.bad { background: var(--danger-soft); color: var(--danger); }
+.pager { display: flex; justify-content: space-between; align-items: center; gap: var(--s3); font-size: 13px; color: var(--muted); }
+.pager .actions { gap: var(--s2); }
+
+/* ---------- activity ---------- */
+.activity-list > li { justify-content: flex-start; gap: var(--s4); }
+.activity-list .when { flex: none; width: 72px; font: 12px var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.activity-list .what { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.activity-list .what a.mono { font-size: 13px; }
+
+@media (max-width: 720px) {
+  .admin-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-stat { padding: var(--s3) var(--s4); }
+  .admin-stat:nth-child(5n) { border-right: 1px solid var(--line); }
+  .admin-stat:nth-child(2n) { border-right: 0; }
+  .admin-stat:nth-last-child(-n + 5) { border-bottom: 1px solid var(--line); }
+  .admin-stat:nth-last-child(-n + 2) { border-bottom: 0; }
+  .admin-tools { width: 100%; }
+  .admin-tools input[type="text"] { flex: 1 1 100%; width: 100%; }
+  .admin-tools select { flex: 1 1 0; min-width: 0; }
+  .activity-list .when { width: 56px; }
+}
+@media (max-width: 720px) { .hide-sm { display: none; } }

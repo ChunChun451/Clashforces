@@ -132,6 +132,18 @@ widening) is in [`app/config.py`](app/config.py). These come from environment va
 | `COOKIE_SECURE` | `0` | Set `1` behind HTTPS |
 | `ALLOWED_ORIGINS` | unset | Comma-separated origins allowed to open the WebSocket (e.g. `https://duel.example.com`). Unset: only the page's own host. |
 | `CF_API_BASE` | `https://codeforces.com/api` | Point at the fake API for offline work |
+| `ADMIN_HANDLES` | `GandalfTheGay` | Comma-separated Codeforces handles (any case) that can open `/admin`. Set it to an empty value to turn the admin page off. |
+
+### Admin page
+
+`/admin` shows the site owner who has signed up and what is happening: live
+numbers (users, new sign-ups, who is active, open sockets, lobbies, running
+and finished matches, the Codeforces API queue), a searchable users table, a
+filterable matches table and a recent-activity feed. Admins can cancel a lobby
+or a running match and ban or unban an account (banned accounts are signed out
+and can't log in, join or create matches). Everyone who isn't an admin gets a
+plain 404 on the page and on every `/api/admin/*` route. The page is linked
+from the shield icon in the top bar (and from Settings on phones).
 
 ## Tests
 

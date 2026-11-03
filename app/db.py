@@ -12,7 +12,7 @@ from pathlib import Path
 from app import config
 
 SCHEMA = Path(__file__).with_name("schema.sql")
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 _conn: sqlite3.Connection | None = None
 
@@ -46,6 +46,11 @@ def _migrate(conn: sqlite3.Connection) -> None:
     if "visibility" not in cols:
         conn.execute("ALTER TABLE matches ADD COLUMN visibility TEXT NOT NULL DEFAULT 'private'")
     conn.execute("CREATE INDEX IF NOT EXISTS matches_schedule ON matches(mode, status, scheduled_at)")
+    # v3: admins can ban accounts; the admin page lists matches newest first
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+    if "banned_at" not in cols:
+        conn.execute("ALTER TABLE users ADD COLUMN banned_at INTEGER")
+    conn.execute("CREATE INDEX IF NOT EXISTS matches_created ON matches(created_at)")
     # Team duels from before match_teams existed: give them their two default names.
     conn.execute(
         "INSERT OR IGNORE INTO match_teams(match_id, idx, name)"

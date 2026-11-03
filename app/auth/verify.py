@@ -24,6 +24,9 @@ class VerifyError(Exception):
     pass
 
 
+BANNED = "This account has been banned."
+
+
 def found_ce(subs: list[Submission], problem_key: str, issued_at: int, expires_at: int) -> bool:
     return any(
         s.problem_key == problem_key and s.verdict == COMPILATION_ERROR and issued_at <= s.time <= expires_at
@@ -48,6 +51,9 @@ async def start(handle: str, user_id: int | None = None) -> dict:
     handle = handle.strip()
     if not HANDLE_RE.match(handle):
         raise VerifyError("That doesn't look like a Codeforces handle.")
+    known = users.by_handle(handle)
+    if known is not None and known["banned_at"]:
+        raise VerifyError(BANNED)
     if user_id is not None and locks.current(user_id):
         raise VerifyError("You can't change your handle while in a match or queue.")
     try:

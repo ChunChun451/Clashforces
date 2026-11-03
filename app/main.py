@@ -16,6 +16,7 @@ from app.matches import lifecycle
 from app.matches import queue as ranked_queue
 from app.poller import upsolve
 from app.poller.poller import poller
+from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
 from app.routes import queue as queue_routes
@@ -76,6 +77,7 @@ app.include_router(queue_routes.router)
 app.include_router(user_routes.router)
 app.include_router(ws_routes.router)
 app.include_router(pages.router)
+app.include_router(admin_routes.router)
 app.mount("/static", StaticFiles(directory=pages.STATIC), name="static")
 
 

@@ -104,6 +104,7 @@ export async function mountTopbar(current) {
   bar.replaceChildren(el("a.brand", { href: "/", "aria-label": "Clashforces home" }, brandMark(), el("span.brand-word", "clash", el("span", "forces"))), nav, right);
   const me = await getMe();
   if (me.user) {
+    if (me.is_admin) right.append(el("a.btn.ghost.icon.admin-link", { href: "/admin", "aria-label": "Admin", title: "Admin", "aria-current": current === "/admin" ? "page" : null }, icon("shield")));
     right.append(
       el("a.btn.ghost.icon", { href: "/settings", "aria-label": "Settings", title: "Settings", "aria-current": current === "/settings" ? "page" : null }, icon("sliders")),
       el("a.user-pill", { href: `/u/${encodeURIComponent(me.user.handle || "")}`, title: "Your profile" },
