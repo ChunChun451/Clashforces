@@ -385,6 +385,7 @@ function problemList() {
 
 function timelineSection() {
   const box = el("section.stack", { id: "timeline" }, el("div.section-title", "Timeline"));
+  if (M.result_status !== "final") { box.append(el("p.muted.small", "The timeline appears once the result is confirmed.")); return box; }
   if (timeline === null) {
     timeline = "loading";
     api(`/api/matches/${code}/timeline`).then((t) => { timeline = t; if (!revealing) render(); }).catch(() => { timeline = { items: [] }; });

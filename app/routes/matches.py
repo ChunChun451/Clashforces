@@ -113,8 +113,8 @@ async def result(code: str):
 @router.get("/matches/{code}/timeline")
 async def timeline(code: str, user=Depends(session.current_user)):
     match = _match_or_404(code)
-    if match["status"] != "ended":
-        raise HTTPException(409, "The timeline is shown after the match.")
+    if match["status"] != "ended" or match["result_status"] != "final":
+        raise HTTPException(409, "The timeline appears once the result is confirmed.")
     pr = store.players(match["id"])
     pb = store.problems(match["id"])
     labels = {}

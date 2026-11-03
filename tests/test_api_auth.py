@@ -34,3 +34,12 @@ def test_login_flow_sets_cookie(client, stub_cf, frozen_now):
 def test_pages_served(client):
     assert client.get("/login").status_code == 200
     assert client.get("/static/css/tokens.css").status_code == 200
+
+
+def test_match_pages_and_timeline_hidden_until_final(client):
+    from app import db
+    db.execute("INSERT INTO matches(id, code, mode, rules, status, result_status, settings, created_at, start_time, end_time)"
+               " VALUES (1,'QQQQQQ','friend','icpc','ended','pending','{}',0,0,10)")
+    assert client.get("/m/QQQQQQ").status_code == 200
+    assert client.get("/api/matches/QQQQQQ/timeline").status_code == 409
+    assert client.get("/api/matches/NOPE00").status_code == 404

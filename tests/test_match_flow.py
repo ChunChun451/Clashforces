@@ -252,3 +252,43 @@ async def test_stuck_testing_gives_up_after_an_hour(world):
     assert (await finish(w, match))["result_status"] == "pending"
     w.now.t = match["end_time"] + 3700
     assert (await finish(w, match))["result_status"] == "final"
+
+
+async def test_penalty_handicap_applied(world):
+    w = world
+    match = await start_duel(w, settings={"handicap": {"type": "penalty", "user_id": w.b["id"], "minutes": 40}})
+    probs = store.problems(match["id"])
+    start = match["start_time"]
+    w.subs["alice"].append(raw(1, probs[0]["problem_key"], "OK", start + 10 * 60))
+    w.subs["Bob_77"].append(raw(2, probs[0]["problem_key"], "OK", start + 45 * 60))
+    w.now.t = match["end_time"] + 30
+    await finish(w, match)
+    pr = {p["user_id"]: p for p in store.players(match["id"])}
+    assert pr[w.b["id"]]["penalty"] == 5 and pr[w.b["id"]]["place"] == 1
+
+
+async def test_per_player_range_handicap(world):
+    w = world
+    h = {"type": "per_player_range", "ranges": {str(w.a["id"]): [1800, 2100], str(w.b["id"]): [1300, 1500]}}
+    match = await start_duel(w, settings={"count": 2, "handicap": h})
+    probs = store.problems(match["id"])
+    a_r = [p["rating"] for p in probs if p["user_id"] == w.a["id"]]
+    b_r = [p["rating"] for p in probs if p["user_id"] == w.b["id"]]
+    assert len(a_r) == 2 and all(1800 <= r <= 2100 for r in a_r)
+    assert len(b_r) == 2 and all(1300 <= r <= 1500 for r in b_r)
+    # each player only scores on their own set
+    start = match["start_time"]
+    a_key = next(p["problem_key"] for p in probs if p["user_id"] == w.a["id"])
+    w.subs["Bob_77"].append(raw(3, a_key, "OK", start + 60))
+    w.now.t = start + 120
+    await poller.check(w.b["id"])
+    rows = {r["user_id"]: r for r in view.build(store.match_by_id(match["id"]), None)["standings"]}
+    assert rows[w.b["id"]]["solved"] == 0
+
+
+async def test_handicap_rules_validation(world):
+    w = world
+    with pytest.raises(service.MatchError):
+        service.create(w.a, "friend", "lockout", {"handicap": {"type": "penalty", "user_id": w.b["id"], "minutes": 40}})
+    with pytest.raises(service.MatchError):
+        service.create(w.a, "friend", "lockout", {"handicap": {"type": "per_player_range", "ranges": {}}})
