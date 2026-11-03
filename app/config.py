@@ -3,10 +3,14 @@
 import os
 
 # ---------- server ----------
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+DEFAULT_SECRET_KEY = "dev-secret-change-me"
+SECRET_KEY = os.environ.get("SECRET_KEY", DEFAULT_SECRET_KEY)
 DB_PATH = os.environ.get("DB_PATH", "clashforces.db")
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "0") == "1"
 SESSION_MAX_AGE_S = 30 * 24 * 3600
+# Comma-separated origins allowed to open /ws, e.g. "https://duel.example.com".
+# Unset: only the request's own host is accepted.
+ALLOWED_ORIGINS = [o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGINS", "").split(",") if o.strip()]
 BACKGROUND_TASKS = os.environ.get("BACKGROUND_TASKS", "1") == "1"  # tests turn this off
 
 # ---------- Codeforces API client ----------
@@ -77,3 +81,12 @@ RANKED_READY_TIMEOUT_S = 60
 # ---------- misc ----------
 PUBLIC_URL = os.environ.get("PUBLIC_URL", "http://localhost:8000")  # used in Discord messages
 DISCORD_PREFIX = "https://discord.com/api/webhooks/"
+
+
+def check_production_settings() -> None:
+    """Refuse to run with secure cookies (i.e. in production) and the default secret key."""
+    if COOKIE_SECURE and SECRET_KEY == DEFAULT_SECRET_KEY:
+        raise RuntimeError(
+            "SECRET_KEY is still the default value but COOKIE_SECURE=1. Set SECRET_KEY to a long "
+            "random string (e.g. `python -c 'import secrets; print(secrets.token_urlsafe(48))'`)."
+        )

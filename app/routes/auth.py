@@ -13,10 +13,18 @@ from app.poller import upsolve
 router = APIRouter(prefix="/api")
 
 _starts: dict[str, deque] = defaultdict(deque)  # ip -> recent start times
+_SWEEP_EVERY_S = 600
+_last_sweep = 0.0
 
 
 def _rate_limit(ip: str, limit: int = 10, window: int = 600) -> None:
+    global _last_sweep
     now = time.time()
+    if now - _last_sweep > _SWEEP_EVERY_S:
+        # Forget IPs whose attempts have all expired, so the dict doesn't grow forever.
+        _last_sweep = now
+        for key in [k for k, q in _starts.items() if not q or now - q[-1] > window]:
+            del _starts[key]
     q = _starts[ip]
     while q and now - q[0] > window:
         q.popleft()

@@ -55,9 +55,10 @@ widening) is in [`app/config.py`](app/config.py). These come from environment va
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SECRET_KEY` | dev value | Signs session cookies. **Set it in production.** |
+| `SECRET_KEY` | dev value | Signs session cookies. **Set it in production**: the app refuses to start with the default key when `COOKIE_SECURE=1`. |
 | `DB_PATH` | `clashforces.db` | SQLite file (WAL mode) |
 | `COOKIE_SECURE` | `0` | Set `1` behind HTTPS |
+| `ALLOWED_ORIGINS` | unset | Comma-separated origins allowed to open the WebSocket (e.g. `https://duel.example.com`). Unset: only the page's own host. |
 | `PUBLIC_URL` | `http://localhost:8000` | Used in Discord messages |
 | `CF_API_BASE` | `https://codeforces.com/api` | Point at the fake API for offline work |
 

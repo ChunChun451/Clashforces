@@ -28,4 +28,4 @@ PAGES = {
 }
 
 for path, name in PAGES.items():
-    router.add_api_route(path, _page(name), include_in_schema=False)
+    router.add_api_route(path, _page(name), methods=["GET", "HEAD"], include_in_schema=False)

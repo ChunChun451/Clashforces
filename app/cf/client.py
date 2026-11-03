@@ -184,9 +184,15 @@ class CFClient:
                 delay = delays[job.attempts - 1] if job.attempts <= len(delays) else config.CF_BACKOFF_CAP_S
                 job.ready_at = self._clock() + min(delay, config.CF_BACKOFF_CAP_S)
                 self._lanes[lane].appendleft(job)
+        except Exception as e:
+            # A bug while handling the response must not leave the caller waiting forever.
+            log.exception("cf %s: unexpected error", job.method)
+            if not job.future.done():
+                job.future.set_exception(CFError(f"{job.method}: unexpected error ({type(e).__name__})"))
         else:
             self._mark_success()
-            job.future.set_result(result)
+            if not job.future.done():
+                job.future.set_result(result)
         finally:
             self._next_allowed = self._clock() + config.CF_MIN_INTERVAL_S
 

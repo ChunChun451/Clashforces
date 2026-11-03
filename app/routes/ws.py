@@ -4,7 +4,9 @@ import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app import clock
+from urllib.parse import urlsplit
+
+from app import clock, config
 from app.auth import session, users
 from app.cf.client import get_client
 from app.matches import service, store, view
@@ -15,8 +17,23 @@ router = APIRouter()
 log = logging.getLogger("ws")
 
 
+def origin_allowed(origin: str | None, host: str | None) -> bool:
+    """ALLOWED_ORIGINS set: Origin must be one of them. Unset: Origin's host must equal the Host header.
+    Non-browser clients send no Origin; they can't carry a victim's cookies, so they're allowed."""
+    if not origin:
+        return True
+    origin = origin.rstrip("/")
+    if config.ALLOWED_ORIGINS:
+        return origin in config.ALLOWED_ORIGINS
+    return bool(host) and urlsplit(origin).netloc.lower() == host.lower()
+
+
 @router.websocket("/ws")
 async def ws_endpoint(ws: WebSocket):
+    if not origin_allowed(ws.headers.get("origin"), ws.headers.get("host")):
+        log.warning("rejected websocket from origin %s", ws.headers.get("origin"))
+        await ws.close(code=1008)
+        return
     await ws.accept()
     user = session.user_from_session(ws.scope.get("session") or {})
     uid = user["id"] if user else None

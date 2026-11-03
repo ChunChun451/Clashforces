@@ -124,8 +124,8 @@ async def timeline(code: str, user=Depends(session.current_user)):
     items = []
     for s in store.subs(match, pr, pb):
         label = labels.get((s.player, s.problem)) or labels.get((None, s.problem))
-        end = next(p["end_time"] for p in pr if p["user_id"] == s.player)
-        if s.time >= end or label is None:
+        end = next((p["end_time"] for p in pr if p["user_id"] == s.player), None)
+        if end is None or s.player not in names or s.time >= end or label is None:
             continue
         p = cache.get(s.problem)
         items.append({

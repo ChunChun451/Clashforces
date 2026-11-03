@@ -35,11 +35,21 @@ def new_code() -> str:
             return code
 
 
+def _log_task_error(task: asyncio.Task) -> None:
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        log.error("background task %s failed", task.get_name(), exc_info=exc)
+
+
 def _spawn(coro) -> None:
     try:
-        asyncio.get_running_loop().create_task(coro)
+        task = asyncio.get_running_loop().create_task(coro)
     except RuntimeError:
         coro.close()
+        return
+    task.add_done_callback(_log_task_error)
 
 
 async def _sync_quietly(user_id: int) -> None:
@@ -196,6 +206,20 @@ async def start(match_id: int, rng: random.Random | None = None) -> bool:
     if cur.rowcount != 1:
         return False
     match = store.match_by_id(match_id)
+    try:
+        return await _start(match, rng)
+    except Exception:
+        # Anything unexpected must not leave the match stuck in 'starting'.
+        log.exception("starting match %s failed", match_id)
+        try:
+            _back_to_lobby(match, "Something went wrong starting the match. Try again.")
+        except Exception:
+            log.exception("could not put match %s back in the lobby", match_id)
+        return False
+
+
+async def _start(match, rng: random.Random | None) -> bool:
+    match_id = match["id"]
     events.state(match_id)
     players = store.players(match_id)
     ids = [p["user_id"] for p in players]
