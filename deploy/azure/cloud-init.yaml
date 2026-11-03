@@ -1,0 +1,20 @@
+#cloud-config
+# First-boot setup for the Clashforces VM. create-vm.sh fills in __DEPLOY_ENV_B64__ and __REF__.
+# Everything else is done by deploy/azure/apply.sh, the same script that updates an existing VM.
+package_update: true
+packages:
+  - docker.io
+  - git
+  - curl
+write_files:
+  - path: /opt/clashforces/deploy.env
+    encoding: b64
+    content: __DEPLOY_ENV_B64__
+runcmd:
+  - - bash
+    - -c
+    - >-
+      git clone -q https://github.com/ChunChun451/Clashforces.git /opt/clashforces/src &&
+      git -C /opt/clashforces/src fetch -q origin __REF__ &&
+      git -C /opt/clashforces/src show FETCH_HEAD:deploy/azure/apply.sh > /tmp/apply.sh &&
+      bash /tmp/apply.sh > /var/log/clashforces-apply.log 2>&1

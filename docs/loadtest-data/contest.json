@@ -1,0 +1,2129 @@
+[
+  {
+    "players": 30,
+    "config_overrides": {},
+    "matches": [
+      {
+        "mode": "contest",
+        "rules": "icpc",
+        "size": 30,
+        "end_to_final_s": 83.2,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "layout": "contest",
+    "phases_s": {
+      "logged_in": 157.1,
+      "running": 167.3,
+      "play_done": 1065.0,
+      "all_final": 1148.2
+    },
+    "submissions": 87,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 33,
+          "p50": 16.7,
+          "p90": 29.4,
+          "max": 92.3,
+          "mean": 20.4
+        },
+        "from_verdict_ready_s": {
+          "n": 33,
+          "p50": 6.8,
+          "p90": 12.4,
+          "max": 19.5,
+          "mean": 6.9
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 23,
+          "p50": 28.6,
+          "p90": 70.8,
+          "max": 78.7,
+          "mean": 36.2
+        },
+        "from_verdict_ready_s": {
+          "n": 23,
+          "p50": 14.3,
+          "p90": 59.4,
+          "max": 67.8,
+          "mean": 21.0
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 31,
+          "p50": 54.8,
+          "p90": 123.4,
+          "max": 144.3,
+          "mean": 66.5
+        },
+        "from_verdict_ready_s": {
+          "n": 31,
+          "p50": 42.4,
+          "p90": 109.7,
+          "max": 129.7,
+          "mean": 54.8
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 87,
+          "p50": 26.7,
+          "p90": 96.5,
+          "max": 144.3,
+          "mean": 41.0
+        },
+        "from_verdict_ready_s": {
+          "n": 87,
+          "p50": 12.1,
+          "p90": 82.1,
+          "max": 129.7,
+          "mean": 27.7
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 456,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 32,
+        "user.status": 422
+      },
+      "min_gap_s": 2.304,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 25,
+        "mean": 22.8
+      },
+      "max_in_any_60s": 25
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 489,
+        "p50": 0.5,
+        "p90": 3.0,
+        "max": 5.0,
+        "mean": 1.1
+      },
+      "rss_mb": {
+        "n": 572,
+        "p50": 68.1,
+        "p90": 68.5,
+        "max": 68.8,
+        "mean": 67.7
+      }
+    },
+    "ws": {
+      "clients": 31,
+      "messages_received": 4195,
+      "broadcasts": 127,
+      "receivers_per_broadcast": {
+        "n": 127,
+        "p50": 31.0,
+        "p90": 31.0,
+        "max": 1230,
+        "mean": 30.8
+      },
+      "fanout_spread_ms": {
+        "n": 86,
+        "p50": 7.4,
+        "p90": 10.8,
+        "max": 357312.4,
+        "mean": 4162.8
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 489,
+      "p50": 1.0,
+      "p90": 4.2,
+      "max": 28,
+      "mean": 2.4
+    },
+    "errors": [],
+    "subs": [
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.7,
+        "creation_to_ws_s": 37.4,
+        "ready_to_ws_s": 19.5,
+        "first_seen_s": 37.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 4.0,
+        "creation_to_ws_s": 12.9,
+        "ready_to_ws_s": 8.6,
+        "first_seen_s": 12.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 4.3,
+        "creation_to_ws_s": 65.5,
+        "ready_to_ws_s": 60.2,
+        "first_seen_s": 65.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.8,
+        "creation_to_ws_s": 78.7,
+        "ready_to_ws_s": 64.3,
+        "first_seen_s": 78.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 13.0,
+        "creation_to_ws_s": 22.9,
+        "ready_to_ws_s": 9.2,
+        "first_seen_s": 10.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 17.3,
+        "creation_to_ws_s": 34.1,
+        "ready_to_ws_s": 16.5,
+        "first_seen_s": 34.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 6.4,
+        "creation_to_ws_s": 8.2,
+        "ready_to_ws_s": 1.2,
+        "first_seen_s": 8.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.2,
+        "creation_to_ws_s": 17.5,
+        "ready_to_ws_s": 1.5,
+        "first_seen_s": 17.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.4,
+        "creation_to_ws_s": 14.5,
+        "ready_to_ws_s": 4.9,
+        "first_seen_s": 14.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 19.4,
+        "creation_to_ws_s": 30.6,
+        "ready_to_ws_s": 10.6,
+        "first_seen_s": 17.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 5.8,
+        "creation_to_ws_s": 16.5,
+        "ready_to_ws_s": 10.6,
+        "first_seen_s": 16.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.0,
+        "creation_to_ws_s": 9.0,
+        "ready_to_ws_s": 1.9,
+        "first_seen_s": 9.0
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.9,
+        "creation_to_ws_s": 16.8,
+        "ready_to_ws_s": 8.6,
+        "first_seen_s": 16.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 8.8,
+        "creation_to_ws_s": 84.1,
+        "ready_to_ws_s": 74.5,
+        "first_seen_s": 84.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 98.0,
+        "ready_to_ws_s": 82.4,
+        "first_seen_s": 98.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 5.9,
+        "creation_to_ws_s": 19.0,
+        "ready_to_ws_s": 12.3,
+        "first_seen_s": 6.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.6,
+        "creation_to_ws_s": 30.5,
+        "ready_to_ws_s": 27.8,
+        "first_seen_s": 30.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.0,
+        "creation_to_ws_s": 23.7,
+        "ready_to_ws_s": 9.6,
+        "first_seen_s": 23.7
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.3,
+        "creation_to_ws_s": 9.0,
+        "ready_to_ws_s": 1.8,
+        "first_seen_s": 9.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 4.8,
+        "creation_to_ws_s": 19.5,
+        "ready_to_ws_s": 14.3,
+        "first_seen_s": 19.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 6.1,
+        "creation_to_ws_s": 10.4,
+        "ready_to_ws_s": 3.8,
+        "first_seen_s": 10.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.1,
+        "creation_to_ws_s": 12.3,
+        "ready_to_ws_s": 7.6,
+        "first_seen_s": 12.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 12.8,
+        "creation_to_ws_s": 123.4,
+        "ready_to_ws_s": 109.7,
+        "first_seen_s": 123.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.9,
+        "creation_to_ws_s": 12.9,
+        "ready_to_ws_s": 0.7,
+        "first_seen_s": 12.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.5,
+        "creation_to_ws_s": 29.6,
+        "ready_to_ws_s": 9.5,
+        "first_seen_s": 17.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 16.8,
+        "creation_to_ws_s": 25.3,
+        "ready_to_ws_s": 8.1,
+        "first_seen_s": 12.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 69.5,
+        "creation_to_ws_s": 70.8,
+        "ready_to_ws_s": 0.9,
+        "first_seen_s": 70.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.5,
+        "creation_to_ws_s": 28.6,
+        "ready_to_ws_s": 14.6,
+        "first_seen_s": 28.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 13.7,
+        "creation_to_ws_s": 40.8,
+        "ready_to_ws_s": 26.1,
+        "first_seen_s": 40.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 23.1,
+        "ready_to_ws_s": 7.5,
+        "first_seen_s": 23.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 3.3,
+        "creation_to_ws_s": 11.0,
+        "ready_to_ws_s": 6.8,
+        "first_seen_s": 11.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 12.7,
+        "creation_to_ws_s": 95.6,
+        "ready_to_ws_s": 81.9,
+        "first_seen_s": 95.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 14.3,
+        "creation_to_ws_s": 26.7,
+        "ready_to_ws_s": 12.1,
+        "first_seen_s": 14.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.3,
+        "creation_to_ws_s": 26.8,
+        "ready_to_ws_s": 8.4,
+        "first_seen_s": 14.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.7,
+        "creation_to_ws_s": 85.3,
+        "ready_to_ws_s": 79.7,
+        "first_seen_s": 85.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.0,
+        "creation_to_ws_s": 14.4,
+        "ready_to_ws_s": 0.9,
+        "first_seen_s": 14.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 17.6,
+        "creation_to_ws_s": 18.7,
+        "ready_to_ws_s": 0.9,
+        "first_seen_s": 18.7
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 12.6,
+        "creation_to_ws_s": 15.1,
+        "ready_to_ws_s": 1.6,
+        "first_seen_s": 15.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.4,
+        "creation_to_ws_s": 144.3,
+        "ready_to_ws_s": 127.9,
+        "first_seen_s": 144.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.3,
+        "creation_to_ws_s": 21.7,
+        "ready_to_ws_s": 14.5,
+        "first_seen_s": 21.7
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 12.7,
+        "creation_to_ws_s": 17.0,
+        "ready_to_ws_s": 3.3,
+        "first_seen_s": 17.0
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.3,
+        "creation_to_ws_s": 16.7,
+        "ready_to_ws_s": 10.6,
+        "first_seen_s": 16.7
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.3,
+        "creation_to_ws_s": 8.8,
+        "ready_to_ws_s": 4.8,
+        "first_seen_s": 8.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.9,
+        "creation_to_ws_s": 45.0,
+        "ready_to_ws_s": 25.7,
+        "first_seen_s": 45.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.0,
+        "creation_to_ws_s": 23.9,
+        "ready_to_ws_s": 20.1,
+        "first_seen_s": 23.9
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.9,
+        "creation_to_ws_s": 16.8,
+        "ready_to_ws_s": 1.3,
+        "first_seen_s": 16.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 2.5,
+        "creation_to_ws_s": 21.4,
+        "ready_to_ws_s": 18.9,
+        "first_seen_s": 21.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 39.8,
+        "ready_to_ws_s": 33.7,
+        "first_seen_s": 39.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 7.8,
+        "creation_to_ws_s": 76.1,
+        "ready_to_ws_s": 67.8,
+        "first_seen_s": 76.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 5.1,
+        "creation_to_ws_s": 70.5,
+        "ready_to_ws_s": 64.8,
+        "first_seen_s": 70.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.0,
+        "creation_to_ws_s": 12.2,
+        "ready_to_ws_s": 5.4,
+        "first_seen_s": 12.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.2,
+        "creation_to_ws_s": 15.1,
+        "ready_to_ws_s": 3.6,
+        "first_seen_s": 15.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.8,
+        "creation_to_ws_s": 26.7,
+        "ready_to_ws_s": 12.5,
+        "first_seen_s": 14.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 2.5,
+        "creation_to_ws_s": 37.4,
+        "ready_to_ws_s": 34.7,
+        "first_seen_s": 37.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 6.9,
+        "creation_to_ws_s": 136.9,
+        "ready_to_ws_s": 129.7,
+        "first_seen_s": 136.9
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 78.3,
+        "creation_to_ws_s": 92.3,
+        "ready_to_ws_s": 13.5,
+        "first_seen_s": 16.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 8.9,
+        "creation_to_ws_s": 31.6,
+        "ready_to_ws_s": 22.5,
+        "first_seen_s": 31.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.5,
+        "creation_to_ws_s": 54.8,
+        "ready_to_ws_s": 42.4,
+        "first_seen_s": 54.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 14.4,
+        "creation_to_ws_s": 16.3,
+        "ready_to_ws_s": 1.5,
+        "first_seen_s": 16.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 12.2,
+        "creation_to_ws_s": 120.0,
+        "ready_to_ws_s": 107.8,
+        "first_seen_s": 120.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.4,
+        "creation_to_ws_s": 45.2,
+        "ready_to_ws_s": 39.6,
+        "first_seen_s": 45.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 10.7,
+        "creation_to_ws_s": 22.1,
+        "ready_to_ws_s": 11.2,
+        "first_seen_s": 9.2
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.5,
+        "creation_to_ws_s": 38.7,
+        "ready_to_ws_s": 21.9,
+        "first_seen_s": 38.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.9,
+        "creation_to_ws_s": 100.3,
+        "ready_to_ws_s": 89.8,
+        "first_seen_s": 100.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.9,
+        "creation_to_ws_s": 10.2,
+        "ready_to_ws_s": 5.9,
+        "first_seen_s": 10.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 3.2,
+        "creation_to_ws_s": 12.6,
+        "ready_to_ws_s": 9.4,
+        "first_seen_s": 12.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 20.0,
+        "creation_to_ws_s": 49.0,
+        "ready_to_ws_s": 28.4,
+        "first_seen_s": 49.0
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 27.9,
+        "ready_to_ws_s": 11.7,
+        "first_seen_s": 15.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 16.3,
+        "creation_to_ws_s": 54.7,
+        "ready_to_ws_s": 38.2,
+        "first_seen_s": 54.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.7,
+        "creation_to_ws_s": 14.3,
+        "ready_to_ws_s": 4.7,
+        "first_seen_s": 14.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.6,
+        "creation_to_ws_s": 29.7,
+        "ready_to_ws_s": 11.7,
+        "first_seen_s": 17.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.9,
+        "creation_to_ws_s": 16.7,
+        "ready_to_ws_s": 11.3,
+        "first_seen_s": 16.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.2,
+        "creation_to_ws_s": 20.6,
+        "ready_to_ws_s": 2.6,
+        "first_seen_s": 20.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 18.3,
+        "creation_to_ws_s": 31.4,
+        "ready_to_ws_s": 12.8,
+        "first_seen_s": 10.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 17.1,
+        "creation_to_ws_s": 40.6,
+        "ready_to_ws_s": 23.4,
+        "first_seen_s": 40.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 18.2,
+        "creation_to_ws_s": 51.3,
+        "ready_to_ws_s": 32.8,
+        "first_seen_s": 51.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 17.8,
+        "creation_to_ws_s": 112.2,
+        "ready_to_ws_s": 93.8,
+        "first_seen_s": 112.2
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 18.1,
+        "creation_to_ws_s": 70.4,
+        "ready_to_ws_s": 51.9,
+        "first_seen_s": 70.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 19.3,
+        "creation_to_ws_s": 27.1,
+        "ready_to_ws_s": 7.5,
+        "first_seen_s": 17.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 17.3,
+        "creation_to_ws_s": 135.0,
+        "ready_to_ws_s": 117.4,
+        "first_seen_s": 135.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 8.2,
+        "creation_to_ws_s": 23.3,
+        "ready_to_ws_s": 14.4,
+        "first_seen_s": 23.3
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 18.2,
+        "creation_to_ws_s": 25.8,
+        "ready_to_ws_s": 7.5,
+        "first_seen_s": 5.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.5,
+        "creation_to_ws_s": 77.4,
+        "ready_to_ws_s": 65.3,
+        "first_seen_s": 77.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.7,
+        "creation_to_ws_s": 16.9,
+        "ready_to_ws_s": 5.7,
+        "first_seen_s": 16.9
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 14.3,
+        "creation_to_ws_s": 25.0,
+        "ready_to_ws_s": 9.8,
+        "first_seen_s": 12.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "OK",
+        "judge_s": 6.9,
+        "creation_to_ws_s": 99.6,
+        "ready_to_ws_s": 91.8,
+        "first_seen_s": 99.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-30",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 18.3,
+        "creation_to_ws_s": 21.5,
+        "ready_to_ws_s": 2.8,
+        "first_seen_s": 21.5
+      }
+    ]
+  },
+  {
+    "players": 40,
+    "config_overrides": {},
+    "matches": [
+      {
+        "mode": "contest",
+        "rules": "icpc",
+        "size": 40,
+        "end_to_final_s": 110.2,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "layout": "contest",
+    "phases_s": {
+      "logged_in": 208.5,
+      "running": 218.7,
+      "play_done": 1167.5,
+      "all_final": 1227.3
+    },
+    "submissions": 116,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 30,
+          "p50": 16.0,
+          "p90": 53.5,
+          "max": 75.6,
+          "mean": 24.3
+        },
+        "from_verdict_ready_s": {
+          "n": 30,
+          "p50": 6.6,
+          "p90": 25.8,
+          "max": 63.0,
+          "mean": 10.8
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 31,
+          "p50": 39.0,
+          "p90": 91.6,
+          "max": 142.5,
+          "mean": 50.6
+        },
+        "from_verdict_ready_s": {
+          "n": 31,
+          "p50": 24.0,
+          "p90": 72.9,
+          "max": 92.0,
+          "mean": 36.8
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 55,
+          "p50": 91.8,
+          "p90": 171.3,
+          "max": 210.2,
+          "mean": 93.2
+        },
+        "from_verdict_ready_s": {
+          "n": 55,
+          "p50": 78.4,
+          "p90": 157.8,
+          "max": 199.4,
+          "mean": 82.0
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 116,
+          "p50": 43.4,
+          "p90": 143.3,
+          "max": 210.2,
+          "mean": 64.0
+        },
+        "from_verdict_ready_s": {
+          "n": 116,
+          "p50": 29.8,
+          "p90": 126.3,
+          "max": 199.4,
+          "mean": 51.5
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 486,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 42,
+        "user.status": 442
+      },
+      "min_gap_s": 2.306,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 24,
+        "mean": 23.4
+      },
+      "max_in_any_60s": 25
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 503,
+        "p50": 0.5,
+        "p90": 4.0,
+        "max": 7.0,
+        "mean": 1.7
+      },
+      "rss_mb": {
+        "n": 611,
+        "p50": 71.1,
+        "p90": 71.1,
+        "max": 71.1,
+        "mean": 70.1
+      }
+    },
+    "ws": {
+      "clients": 41,
+      "messages_received": 7141,
+      "broadcasts": 167,
+      "receivers_per_broadcast": {
+        "n": 167,
+        "p50": 41.0,
+        "p90": 41.0,
+        "max": 2080,
+        "mean": 40.6
+      },
+      "fanout_spread_ms": {
+        "n": 115,
+        "p50": 12.0,
+        "p90": 17.9,
+        "max": 386450.1,
+        "mean": 3373.2
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 503,
+      "p50": 1.0,
+      "p90": 13.8,
+      "max": 39,
+      "mean": 3.7
+    },
+    "errors": [],
+    "subs": [
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.6,
+        "creation_to_ws_s": 75.6,
+        "ready_to_ws_s": 63.0,
+        "first_seen_s": 75.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 19.7,
+        "creation_to_ws_s": 70.1,
+        "ready_to_ws_s": 50.3,
+        "first_seen_s": 12.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.0,
+        "creation_to_ws_s": 31.8,
+        "ready_to_ws_s": 13.4,
+        "first_seen_s": 31.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 10.7,
+        "creation_to_ws_s": 89.8,
+        "ready_to_ws_s": 78.4,
+        "first_seen_s": 89.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.5,
+        "creation_to_ws_s": 156.0,
+        "ready_to_ws_s": 142.0,
+        "first_seen_s": 156.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 90.6,
+        "ready_to_ws_s": 74.2,
+        "first_seen_s": 90.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 10.4,
+        "creation_to_ws_s": 42.1,
+        "ready_to_ws_s": 31.2,
+        "first_seen_s": 9.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.2,
+        "creation_to_ws_s": 76.2,
+        "ready_to_ws_s": 73.9,
+        "first_seen_s": 76.2
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.2,
+        "creation_to_ws_s": 91.8,
+        "ready_to_ws_s": 77.3,
+        "first_seen_s": 91.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 12.0,
+        "creation_to_ws_s": 37.7,
+        "ready_to_ws_s": 25.2,
+        "first_seen_s": 10.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 19.3,
+        "creation_to_ws_s": 41.9,
+        "ready_to_ws_s": 22.0,
+        "first_seen_s": 16.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.7,
+        "creation_to_ws_s": 84.3,
+        "ready_to_ws_s": 69.6,
+        "first_seen_s": 84.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 32.4,
+        "ready_to_ws_s": 16.9,
+        "first_seen_s": 32.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.3,
+        "creation_to_ws_s": 72.1,
+        "ready_to_ws_s": 68.8,
+        "first_seen_s": 72.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.0,
+        "creation_to_ws_s": 16.6,
+        "ready_to_ws_s": 8.6,
+        "first_seen_s": 16.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.8,
+        "creation_to_ws_s": 81.7,
+        "ready_to_ws_s": 61.7,
+        "first_seen_s": 81.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 9.3,
+        "creation_to_ws_s": 188.5,
+        "ready_to_ws_s": 178.6,
+        "first_seen_s": 188.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 8.9,
+        "creation_to_ws_s": 11.8,
+        "ready_to_ws_s": 2.0,
+        "first_seen_s": 11.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 12.3,
+        "creation_to_ws_s": 25.2,
+        "ready_to_ws_s": 12.6,
+        "first_seen_s": 12.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 14.3,
+        "creation_to_ws_s": 71.0,
+        "ready_to_ws_s": 55.9,
+        "first_seen_s": 71.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.4,
+        "creation_to_ws_s": 31.0,
+        "ready_to_ws_s": 20.7,
+        "first_seen_s": 31.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.8,
+        "creation_to_ws_s": 11.1,
+        "ready_to_ws_s": 3.1,
+        "first_seen_s": 11.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.1,
+        "creation_to_ws_s": 12.1,
+        "ready_to_ws_s": 9.1,
+        "first_seen_s": 12.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.6,
+        "creation_to_ws_s": 107.4,
+        "ready_to_ws_s": 89.2,
+        "first_seen_s": 107.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 9.4,
+        "creation_to_ws_s": 15.3,
+        "ready_to_ws_s": 5.6,
+        "first_seen_s": 15.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 15.8,
+        "creation_to_ws_s": 123.3,
+        "ready_to_ws_s": 107.2,
+        "first_seen_s": 123.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.9,
+        "creation_to_ws_s": 27.2,
+        "ready_to_ws_s": 24.0,
+        "first_seen_s": 27.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 18.7,
+        "creation_to_ws_s": 21.2,
+        "ready_to_ws_s": 2.2,
+        "first_seen_s": 10.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.1,
+        "creation_to_ws_s": 10.9,
+        "ready_to_ws_s": 7.9,
+        "first_seen_s": 10.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.3,
+        "creation_to_ws_s": 157.9,
+        "ready_to_ws_s": 154.2,
+        "first_seen_s": 157.9
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 11.6,
+        "creation_to_ws_s": 17.7,
+        "ready_to_ws_s": 5.4,
+        "first_seen_s": 7.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.5,
+        "creation_to_ws_s": 7.4,
+        "ready_to_ws_s": 2.8,
+        "first_seen_s": 7.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 6.9,
+        "creation_to_ws_s": 15.5,
+        "ready_to_ws_s": 8.4,
+        "first_seen_s": 15.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 18.7,
+        "creation_to_ws_s": 44.9,
+        "ready_to_ws_s": 26.0,
+        "first_seen_s": 44.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.0,
+        "creation_to_ws_s": 104.4,
+        "ready_to_ws_s": 101.7,
+        "first_seen_s": 104.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.8,
+        "creation_to_ws_s": 10.6,
+        "ready_to_ws_s": 0.4,
+        "first_seen_s": 10.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 41.1,
+        "ready_to_ws_s": 24.2,
+        "first_seen_s": 41.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 12.2,
+        "creation_to_ws_s": 78.8,
+        "ready_to_ws_s": 65.6,
+        "first_seen_s": 78.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 18.7,
+        "creation_to_ws_s": 141.2,
+        "ready_to_ws_s": 121.7,
+        "first_seen_s": 141.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.1,
+        "creation_to_ws_s": 18.0,
+        "ready_to_ws_s": 4.6,
+        "first_seen_s": 8.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.9,
+        "creation_to_ws_s": 56.3,
+        "ready_to_ws_s": 51.1,
+        "first_seen_s": 56.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 12.5,
+        "creation_to_ws_s": 23.4,
+        "ready_to_ws_s": 10.2,
+        "first_seen_s": 23.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 4.8,
+        "creation_to_ws_s": 93.7,
+        "ready_to_ws_s": 88.2,
+        "first_seen_s": 93.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 9.4,
+        "creation_to_ws_s": 151.9,
+        "ready_to_ws_s": 142.1,
+        "first_seen_s": 151.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 18.9,
+        "creation_to_ws_s": 189.2,
+        "ready_to_ws_s": 169.7,
+        "first_seen_s": 189.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.3,
+        "creation_to_ws_s": 13.2,
+        "ready_to_ws_s": 2.1,
+        "first_seen_s": 13.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 19.7,
+        "creation_to_ws_s": 26.9,
+        "ready_to_ws_s": 7.0,
+        "first_seen_s": 1.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 11.1,
+        "creation_to_ws_s": 129.3,
+        "ready_to_ws_s": 118.0,
+        "first_seen_s": 129.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.4,
+        "creation_to_ws_s": 167.7,
+        "ready_to_ws_s": 149.7,
+        "first_seen_s": 167.7
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 12.9,
+        "creation_to_ws_s": 14.9,
+        "ready_to_ws_s": 1.8,
+        "first_seen_s": 9.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 19.6,
+        "creation_to_ws_s": 68.0,
+        "ready_to_ws_s": 47.5,
+        "first_seen_s": 68.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 8.4,
+        "creation_to_ws_s": 91.6,
+        "ready_to_ws_s": 82.5,
+        "first_seen_s": 91.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 19.1,
+        "creation_to_ws_s": 25.7,
+        "ready_to_ws_s": 6.0,
+        "first_seen_s": 8.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.5,
+        "creation_to_ws_s": 122.6,
+        "ready_to_ws_s": 118.6,
+        "first_seen_s": 122.6
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.4,
+        "creation_to_ws_s": 29.0,
+        "ready_to_ws_s": 9.0,
+        "first_seen_s": 9.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.5,
+        "creation_to_ws_s": 30.7,
+        "ready_to_ws_s": 14.0,
+        "first_seen_s": 30.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.0,
+        "creation_to_ws_s": 79.3,
+        "ready_to_ws_s": 72.9,
+        "first_seen_s": 79.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.7,
+        "creation_to_ws_s": 39.0,
+        "ready_to_ws_s": 22.3,
+        "first_seen_s": 39.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.5,
+        "creation_to_ws_s": 58.8,
+        "ready_to_ws_s": 48.3,
+        "first_seen_s": 58.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 11.5,
+        "creation_to_ws_s": 88.2,
+        "ready_to_ws_s": 76.6,
+        "first_seen_s": 88.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 40.8,
+        "creation_to_ws_s": 52.0,
+        "ready_to_ws_s": 10.5,
+        "first_seen_s": 15.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.4,
+        "creation_to_ws_s": 121.8,
+        "ready_to_ws_s": 113.5,
+        "first_seen_s": 121.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 11.5,
+        "creation_to_ws_s": 137.0,
+        "ready_to_ws_s": 124.7,
+        "first_seen_s": 137.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 7.5,
+        "creation_to_ws_s": 131.3,
+        "ready_to_ws_s": 123.5,
+        "first_seen_s": 131.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.3,
+        "creation_to_ws_s": 38.2,
+        "ready_to_ws_s": 32.8,
+        "first_seen_s": 38.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 16.0,
+        "creation_to_ws_s": 93.8,
+        "ready_to_ws_s": 77.4,
+        "first_seen_s": 93.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.7,
+        "creation_to_ws_s": 144.5,
+        "ready_to_ws_s": 127.9,
+        "first_seen_s": 144.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 12.0,
+        "creation_to_ws_s": 15.4,
+        "ready_to_ws_s": 2.4,
+        "first_seen_s": 2.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.6,
+        "creation_to_ws_s": 12.5,
+        "ready_to_ws_s": 9.3,
+        "first_seen_s": 12.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.4,
+        "creation_to_ws_s": 14.4,
+        "ready_to_ws_s": 4.7,
+        "first_seen_s": 14.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 3.1,
+        "creation_to_ws_s": 4.8,
+        "ready_to_ws_s": 1.7,
+        "first_seen_s": 4.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.3,
+        "creation_to_ws_s": 25.5,
+        "ready_to_ws_s": 22.3,
+        "first_seen_s": 25.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 3.1,
+        "creation_to_ws_s": 10.8,
+        "ready_to_ws_s": 7.4,
+        "first_seen_s": 10.8
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 9.9,
+        "creation_to_ws_s": 210.2,
+        "ready_to_ws_s": 199.4,
+        "first_seen_s": 210.2
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 5.4,
+        "creation_to_ws_s": 60.7,
+        "ready_to_ws_s": 54.4,
+        "first_seen_s": 60.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.6,
+        "creation_to_ws_s": 30.3,
+        "ready_to_ws_s": 19.4,
+        "first_seen_s": 30.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 12.4,
+        "creation_to_ws_s": 92.9,
+        "ready_to_ws_s": 80.2,
+        "first_seen_s": 92.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.8,
+        "creation_to_ws_s": 65.0,
+        "ready_to_ws_s": 53.4,
+        "first_seen_s": 65.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 17.1,
+        "creation_to_ws_s": 109.9,
+        "ready_to_ws_s": 92.0,
+        "first_seen_s": 109.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.5,
+        "creation_to_ws_s": 12.3,
+        "ready_to_ws_s": 9.4,
+        "first_seen_s": 2.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 11.2,
+        "creation_to_ws_s": 14.9,
+        "ready_to_ws_s": 2.9,
+        "first_seen_s": 4.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 11.0,
+        "creation_to_ws_s": 57.6,
+        "ready_to_ws_s": 46.0,
+        "first_seen_s": 57.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 32.7,
+        "ready_to_ws_s": 16.5,
+        "first_seen_s": 32.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 40.5,
+        "ready_to_ws_s": 24.7,
+        "first_seen_s": 40.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.0,
+        "creation_to_ws_s": 173.7,
+        "ready_to_ws_s": 160.2,
+        "first_seen_s": 173.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.7,
+        "creation_to_ws_s": 180.2,
+        "ready_to_ws_s": 164.4,
+        "first_seen_s": 180.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.2,
+        "creation_to_ws_s": 12.1,
+        "ready_to_ws_s": 6.1,
+        "first_seen_s": 4.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.0,
+        "creation_to_ws_s": 195.5,
+        "ready_to_ws_s": 180.0,
+        "first_seen_s": 195.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.8,
+        "creation_to_ws_s": 18.2,
+        "ready_to_ws_s": 2.1,
+        "first_seen_s": 10.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 13.6,
+        "creation_to_ws_s": 26.0,
+        "ready_to_ws_s": 12.1,
+        "first_seen_s": 13.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.0,
+        "creation_to_ws_s": 6.9,
+        "ready_to_ws_s": 3.4,
+        "first_seen_s": 6.9
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.8,
+        "creation_to_ws_s": 18.3,
+        "ready_to_ws_s": 2.2,
+        "first_seen_s": 3.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 5.0,
+        "creation_to_ws_s": 47.4,
+        "ready_to_ws_s": 42.3,
+        "first_seen_s": 47.4
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 57.5,
+        "creation_to_ws_s": 67.4,
+        "ready_to_ws_s": 9.6,
+        "first_seen_s": 17.9
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 5.9,
+        "creation_to_ws_s": 49.3,
+        "ready_to_ws_s": 43.4,
+        "first_seen_s": 49.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 131.1,
+        "ready_to_ws_s": 114.6,
+        "first_seen_s": 131.1
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 19.8,
+        "creation_to_ws_s": 31.1,
+        "ready_to_ws_s": 11.1,
+        "first_seen_s": 11.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 5.6,
+        "creation_to_ws_s": 40.4,
+        "ready_to_ws_s": 34.3,
+        "first_seen_s": 40.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.1,
+        "creation_to_ws_s": 15.7,
+        "ready_to_ws_s": 5.5,
+        "first_seen_s": 15.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 8.4,
+        "creation_to_ws_s": 32.1,
+        "ready_to_ws_s": 22.8,
+        "first_seen_s": 32.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 2.5,
+        "creation_to_ws_s": 41.7,
+        "ready_to_ws_s": 39.0,
+        "first_seen_s": 41.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.0,
+        "creation_to_ws_s": 56.7,
+        "ready_to_ws_s": 50.5,
+        "first_seen_s": 56.7
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 44.8,
+        "ready_to_ws_s": 28.5,
+        "first_seen_s": 44.8
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 3.7,
+        "creation_to_ws_s": 15.3,
+        "ready_to_ws_s": 10.9,
+        "first_seen_s": 15.3
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 2.1,
+        "creation_to_ws_s": 144.1,
+        "ready_to_ws_s": 141.9,
+        "first_seen_s": 144.1
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 4.6,
+        "creation_to_ws_s": 121.6,
+        "ready_to_ws_s": 116.6,
+        "first_seen_s": 121.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 17.0,
+        "creation_to_ws_s": 50.6,
+        "ready_to_ws_s": 33.3,
+        "first_seen_s": 50.6
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 6.9,
+        "creation_to_ws_s": 129.4,
+        "ready_to_ws_s": 122.3,
+        "first_seen_s": 129.4
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 6.2,
+        "creation_to_ws_s": 11.2,
+        "ready_to_ws_s": 4.7,
+        "first_seen_s": 11.2
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.1,
+        "creation_to_ws_s": 14.0,
+        "ready_to_ws_s": 7.1,
+        "first_seen_s": 14.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 10.5,
+        "creation_to_ws_s": 104.5,
+        "ready_to_ws_s": 93.5,
+        "first_seen_s": 104.5
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.7,
+        "creation_to_ws_s": 38.1,
+        "ready_to_ws_s": 19.4,
+        "first_seen_s": 38.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.8,
+        "creation_to_ws_s": 24.5,
+        "ready_to_ws_s": 16.7,
+        "first_seen_s": 24.5
+      },
+      {
+        "behaviour": "button",
+        "match": "contest-icpc-40",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.9,
+        "creation_to_ws_s": 17.0,
+        "ready_to_ws_s": 9.7,
+        "first_seen_s": 17.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 82.5,
+        "creation_to_ws_s": 142.5,
+        "ready_to_ws_s": 59.1,
+        "first_seen_s": 45.0
+      },
+      {
+        "behaviour": "none",
+        "match": "contest-icpc-40",
+        "verdict": "OK",
+        "judge_s": 7.1,
+        "creation_to_ws_s": 10.7,
+        "ready_to_ws_s": 2.8,
+        "first_seen_s": 10.7
+      }
+    ]
+  }
+]

@@ -1,0 +1,566 @@
+[
+  {
+    "players": 20,
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 22.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": -338.6,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 22.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": -386.6,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 20.0,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 82.1,
+      "running": 152.8,
+      "play_done": 1049.8,
+      "all_final": 1069.8
+    },
+    "submissions": 47,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 16,
+          "p50": 14.4,
+          "p90": 29.2,
+          "max": 92.3,
+          "mean": 21.4
+        },
+        "from_verdict_ready_s": {
+          "n": 16,
+          "p50": 4.3,
+          "p90": 17.7,
+          "max": 23.3,
+          "mean": 7.0
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 9,
+          "p50": 19.0,
+          "p90": 35.4,
+          "max": 70.6,
+          "mean": 23.3
+        },
+        "from_verdict_ready_s": {
+          "n": 9,
+          "p50": 8.0,
+          "p90": 12.5,
+          "max": 17.5,
+          "mean": 7.4
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 22,
+          "p50": 26.3,
+          "p90": 63.2,
+          "max": 75.3,
+          "mean": 32.3
+        },
+        "from_verdict_ready_s": {
+          "n": 22,
+          "p50": 19.0,
+          "p90": 51.8,
+          "max": 58.1,
+          "mean": 20.3
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 47,
+          "p50": 20.5,
+          "p90": 54.2,
+          "max": 92.3,
+          "mean": 26.9
+        },
+        "from_verdict_ready_s": {
+          "n": 47,
+          "p50": 8.7,
+          "p90": 27.1,
+          "max": 58.1,
+          "mean": 13.3
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 529,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 25,
+        "user.status": 502
+      },
+      "min_gap_s": 2.002,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 30,
+        "mean": 28.2
+      },
+      "max_in_any_60s": 30
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 457,
+        "p50": 0.5,
+        "p90": 1.0,
+        "max": 3.8,
+        "mean": 0.5
+      },
+      "rss_mb": {
+        "n": 533,
+        "p50": 65.5,
+        "p90": 65.5,
+        "max": 65.5,
+        "mean": 65.1
+      }
+    },
+    "ws": {
+      "clients": 25,
+      "messages_received": 614,
+      "broadcasts": 76,
+      "receivers_per_broadcast": {
+        "n": 76,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 5.8
+      },
+      "fanout_spread_ms": {
+        "n": 76,
+        "p50": 0.5,
+        "p90": 0.7,
+        "max": 4.8,
+        "mean": 0.5
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 457,
+      "p50": 1.0,
+      "p90": 1.0,
+      "max": 5,
+      "mean": 0.9
+    },
+    "errors": []
+  },
+  {
+    "players": 30,
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 22.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": -377.3,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 24.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": -400.4,
+        "ended_early": true
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 30.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": -120.7,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 28.0,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 122.2,
+      "running": 221.3,
+      "play_done": 1118.9,
+      "all_final": 1146.9
+    },
+    "submissions": 69,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 22,
+          "p50": 17.2,
+          "p90": 29.3,
+          "max": 94.9,
+          "mean": 25.0
+        },
+        "from_verdict_ready_s": {
+          "n": 22,
+          "p50": 4.6,
+          "p90": 11.1,
+          "max": 11.9,
+          "mean": 5.1
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 28,
+          "p50": 23.8,
+          "p90": 45.1,
+          "max": 63.6,
+          "mean": 27.3
+        },
+        "from_verdict_ready_s": {
+          "n": 28,
+          "p50": 13.1,
+          "p90": 29.5,
+          "max": 48.1,
+          "mean": 15.3
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 19,
+          "p50": 35.1,
+          "p90": 97.4,
+          "max": 117.6,
+          "mean": 51.9
+        },
+        "from_verdict_ready_s": {
+          "n": 19,
+          "p50": 23.7,
+          "p90": 82.5,
+          "max": 91.1,
+          "mean": 36.0
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 69,
+          "p50": 23.3,
+          "p90": 77.4,
+          "max": 117.6,
+          "mean": 33.3
+        },
+        "from_verdict_ready_s": {
+          "n": 69,
+          "p50": 9.7,
+          "p90": 50.1,
+          "max": 91.1,
+          "mean": 17.7
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 573,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 37,
+        "user.status": 534
+      },
+      "min_gap_s": 2.003,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 30,
+        "mean": 28.9
+      },
+      "max_in_any_60s": 30
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 461,
+        "p50": 0.5,
+        "p90": 1.0,
+        "max": 3.5,
+        "mean": 0.6
+      },
+      "rss_mb": {
+        "n": 571,
+        "p50": 66.5,
+        "p90": 66.6,
+        "max": 66.6,
+        "mean": 66.0
+      }
+    },
+    "ws": {
+      "clients": 37,
+      "messages_received": 957,
+      "broadcasts": 117,
+      "receivers_per_broadcast": {
+        "n": 117,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 5.9
+      },
+      "fanout_spread_ms": {
+        "n": 117,
+        "p50": 0.5,
+        "p90": 0.8,
+        "max": 1.5,
+        "mean": 0.5
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 461,
+      "p50": 1.0,
+      "p90": 1.0,
+      "max": 3,
+      "mean": 1.1
+    },
+    "errors": []
+  },
+  {
+    "players": 40,
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 26.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": -394.9,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 26.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 34.1,
+        "ended_early": false
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 44.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": -252.5,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 42.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 50.1,
+        "ended_early": false
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 4,
+        "end_to_final_s": 56.1,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 162.2,
+      "running": 292.1,
+      "play_done": 1189.1,
+      "all_final": 1245.2
+    },
+    "submissions": 108,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 40,
+          "p50": 18.5,
+          "p90": 40.5,
+          "max": 268.1,
+          "mean": 29.0
+        },
+        "from_verdict_ready_s": {
+          "n": 40,
+          "p50": 7.5,
+          "p90": 14.4,
+          "max": 221.2,
+          "mean": 14.1
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 34,
+          "p50": 27.7,
+          "p90": 63.5,
+          "max": 344.1,
+          "mean": 41.2
+        },
+        "from_verdict_ready_s": {
+          "n": 34,
+          "p50": 12.4,
+          "p90": 51.2,
+          "max": 272.7,
+          "mean": 26.9
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 34,
+          "p50": 59.3,
+          "p90": 133.5,
+          "max": 260.1,
+          "mean": 73.6
+        },
+        "from_verdict_ready_s": {
+          "n": 34,
+          "p50": 35.9,
+          "p90": 119.9,
+          "max": 244.3,
+          "mean": 56.0
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 108,
+          "p50": 26.6,
+          "p90": 103.9,
+          "max": 344.1,
+          "mean": 46.9
+        },
+        "from_verdict_ready_s": {
+          "n": 108,
+          "p50": 11.3,
+          "p90": 86.9,
+          "max": 272.7,
+          "mean": 31.3
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 622,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 49,
+        "user.status": 571
+      },
+      "min_gap_s": 2.003,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 30,
+        "mean": 29.8
+      },
+      "max_in_any_60s": 30
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 475,
+        "p50": 0.5,
+        "p90": 1.0,
+        "max": 5.5,
+        "mean": 0.7
+      },
+      "rss_mb": {
+        "n": 620,
+        "p50": 68.0,
+        "p90": 68.1,
+        "max": 68.1,
+        "mean": 67.1
+      }
+    },
+    "ws": {
+      "clients": 49,
+      "messages_received": 1436,
+      "broadcasts": 176,
+      "receivers_per_broadcast": {
+        "n": 176,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 6.1
+      },
+      "fanout_spread_ms": {
+        "n": 176,
+        "p50": 0.6,
+        "p90": 0.8,
+        "max": 4.5,
+        "mean": 0.6
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 475,
+      "p50": 1.0,
+      "p90": 2.0,
+      "max": 4,
+      "mean": 1.2
+    },
+    "errors": []
+  }
+]

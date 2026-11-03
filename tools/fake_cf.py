@@ -9,18 +9,44 @@ handles starting with "ghost". Add submissions with:
     curl -X POST 'http://127.0.0.1:9000/fake/submit?handle=alice&problem=2010D&verdict=OK'
 
 verdict can be OK, WRONG_ANSWER, COMPILATION_ERROR, TESTING, ...
+
+Every /api/ call is logged; GET /fake/calls returns the log (tools/loadtest.py
+uses it to check the one-call-per-2-seconds rule). FAKE_CF_LATENCY_MS="300-700"
+makes each API answer take a random 300-700 ms, like the real API.
 """
 
+import asyncio
 import json
+import os
+import random
 import time
 from pathlib import Path
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 
 FIX = Path(__file__).resolve().parents[1] / "tests" / "fixtures"
 app = FastAPI()
 subs: dict[str, list] = {}
 next_id = [1000]
+calls: list[dict] = []  # {"start", "end", "method"} for every /api/ request
+_lat = [float(x) / 1000 for x in (os.environ.get("FAKE_CF_LATENCY_MS") or "0").split("-")]
+LATENCY_S = (_lat[0], _lat[-1])
+
+
+@app.middleware("http")
+async def log_calls(request: Request, call_next):
+    start = time.time()
+    if request.url.path.startswith("/api/") and LATENCY_S[1] > 0:
+        await asyncio.sleep(random.uniform(*LATENCY_S))
+    response = await call_next(request)
+    if request.url.path.startswith("/api/"):
+        calls.append({"start": start, "end": time.time(), "method": request.url.path[5:]})
+    return response
+
+
+@app.get("/fake/calls")
+def get_calls():
+    return calls
 
 
 def ok(result):
@@ -65,7 +91,7 @@ def submit(handle: str, problem: str, verdict: str = "OK", ago: int = 0):
     if verdict != "TESTING":
         s["verdict"] = verdict
     subs.setdefault(handle.lower(), []).append(s)
-    return {"id": s["id"]}
+    return {"id": s["id"], "creationTimeSeconds": s["creationTimeSeconds"]}
 
 
 @app.post("/fake/verdict")
