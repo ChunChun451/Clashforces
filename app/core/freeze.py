@@ -14,11 +14,13 @@ from app.models import Row, Sub
 
 
 def split_visible(subs: list[Sub], viewer, freeze_start: int | None) -> tuple[list[Sub], list[Sub]]:
+    """viewer: one player id, or a set of ids (a team sees all of its members' submissions)."""
     if freeze_start is None:
         return list(subs), []
+    own = viewer if isinstance(viewer, (set, frozenset)) else {viewer}
     visible, hidden = [], []
     for s in subs:
-        (visible if s.player == viewer or s.time < freeze_start else hidden).append(s)
+        (visible if s.player in own or s.time < freeze_start else hidden).append(s)
     return visible, hidden
 
 

@@ -1,4 +1,4 @@
-// Create a friend duel or group room, or edit a lobby's settings (?edit=CODE).
+// Create a friend duel, team duel or group room, or edit a lobby's settings (?edit=CODE).
 import { $, api, el, getMe, mountTopbar } from "./api.js";
 
 mountTopbar("/");
@@ -12,14 +12,14 @@ const RATINGS = [];
 for (let r = 800; r <= 3500; r += 100) RATINGS.push(r);
 
 const state = {
-  mode: params.get("mode") === "group" ? "group" : "friend",
+  mode: ["group", "team"].includes(params.get("mode")) ? params.get("mode") : "friend",
+  team_size: 2,
   rules: "icpc",
   count: 3, rating_min: 1200, rating_max: 1600,
   tags_include: new Set(), tags_avoid: new Set(),
   avoid_interactive: true,
   use_custom: false, custom_problems: "",
   duration_min: 60, freeze_min: 0,
-  discord_webhook: "",
   handicap: null,
 };
 
@@ -31,9 +31,12 @@ if (editCode) {
     tags_include: new Set(s.tags_include), tags_avoid: new Set(s.tags_avoid),
     avoid_interactive: s.avoid_interactive, use_custom: !!s.custom_problems,
     custom_problems: s.custom_problems || "", duration_min: s.duration_min, freeze_min: s.freeze_min || 0,
-    handicap: s.handicap,
+    handicap: s.handicap, team_size: s.team_size || 2,
   });
 }
+
+const TITLES = { friend: "New friend duel", team: "New team duel", group: "New group room" };
+const CREATE = { friend: "Create duel", team: "Create team duel", group: "Create room" };
 
 let tags = [];
 try { tags = (await api("/api/tags")).tags; } catch { /* cache still loading */ }
@@ -91,7 +94,7 @@ async function validateCustom() {
     customResult.replaceChildren(
       ...r.problems.map((p) => el("div.mono", `${p.key} · ${p.name} · ${p.rating ?? "unrated"}`)),
       ...r.errors.map((e) => el("div.danger", e)),
-      ...r.warnings.map((w) => el("div", { style: "color: var(--warn)" }, `Warning: ${w}`)));
+      ...r.warnings.map((w) => el("div.warn", `Warning: ${w}`)));
   } catch (e) { customResult.replaceChildren(el("div.danger", e.message)); }
 }
 
@@ -107,8 +110,8 @@ function payload() {
       custom_problems: state.use_custom ? state.custom_problems : null,
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
-      ...(editCode ? {} : { discord_webhook: state.discord_webhook || null }),
-      handicap: state.handicap,
+      handicap: state.mode === "team" ? null : state.handicap,
+      ...(state.mode === "team" ? { team_size: state.team_size } : {}),
     },
   };
 }
@@ -143,8 +146,8 @@ function render() {
     el("div.grid-2",
       el("div.field", el("label", { for: "count" }, "Problems"), numberInput("count", state.count, 1, 10, (v) => state.count = v)),
       el("div.row",
-        el("div.field", { style: "flex:1" }, el("label", { for: "rmin" }, "Rating from"), ratingSelect("rmin", state.rating_min, (v) => state.rating_min = v)),
-        el("div.field", { style: "flex:1; margin-top:0" }, el("label", { for: "rmax" }, "to"), ratingSelect("rmax", state.rating_max, (v) => state.rating_max = v)))),
+        el("div.field.grow", el("label", { for: "rmin" }, "Rating from"), ratingSelect("rmin", state.rating_min, (v) => state.rating_min = v)),
+        el("div.field.grow", el("label", { for: "rmax" }, "to"), ratingSelect("rmax", state.rating_max, (v) => state.rating_max = v)))),
     el("div",
       el("label", "Tags — click once to require, twice to avoid"),
       tags.length ? tagPicker() : el("p.small.muted", "Tags appear once the problem list has loaded.")),
@@ -159,39 +162,47 @@ function render() {
     el("button.btn.small", { type: "button", onclick: validateCustom }, "Check list"),
     customResult);
 
-  app.replaceChildren(el("form.stack", { onsubmit: submit, novalidate: true },
-    el("h1", editCode ? "Match settings" : state.mode === "group" ? "New group room" : "New friend duel"),
-    editCode ? null : segmented([["friend", "Friend duel"], ["group", "Group room (3–10)"]], state.mode, (v) => state.mode = v, "Mode"),
-    el("section.stack",
-      el("div.section-title", "Rules"),
-      segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
-        state.rules = v;
-        if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
-      }, "Rules"),
-      el("p.small.muted", state.rules === "icpc"
-        ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
-        : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.")),
-    el("section.stack",
-      el("div.spread", el("div.section-title", "Problems"),
-        segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source")),
-      state.use_custom ? customFields : randomFields),
-    el("section.stack",
-      el("div.section-title", "Time"),
-      el("div.grid-2",
-        el("div.field", el("label", { for: "dur" }, "Duration (minutes)"), numberInput("dur", state.duration_min, 15, 300, (v) => state.duration_min = v)),
-        state.rules === "icpc"
-          ? el("div.field", { style: "margin-top:0" }, el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
-          : null)),
-    editCode ? null : el("section.stack",
-      el("div.section-title", "Discord (optional)"),
-      el("div.field", el("label", { for: "hook" }, "Post the final result to this webhook"),
-        el("input", { type: "url", id: "hook", placeholder: "https://discord.com/api/webhooks/…", value: state.discord_webhook,
-          oninput: (e) => { state.discord_webhook = e.target.value; } }))),
-    el("p.small.muted", "Handicaps are set in the lobby once your friend has joined."),
-    err,
-    el("div.actions",
-      el("button.btn.primary.big", { type: "submit" }, editCode ? "Save" : "Create"),
-      editCode ? el("a.btn.ghost", { href: `/m/${editCode}` }, "Cancel") : null)));
+  const panel = (title, aside, ...body) => el("section.panel",
+    el("div.panel-head", el("h2", title), aside || null),
+    el("div.panel-body.stack", body));
+  app.replaceChildren(el("form.page", { onsubmit: submit, novalidate: true },
+    el("div.page-head",
+      el("div",
+        el("h1", editCode ? "Match settings" : TITLES[state.mode]),
+        el("p.lede", editCode ? "Changes reset everyone's Ready." : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
+      editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => state.mode = v, "Mode")),
+    el("div.stack",
+      (() => {
+        const rules = panel("Rules", null,
+          segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
+            state.rules = v;
+            if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
+          }, "Rules"),
+          el("p.small.muted", state.rules === "icpc"
+            ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
+            : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught."));
+        if (state.mode !== "team") return rules;
+        const teams = panel("Teams", null,
+          segmented([[2, "2 vs 2"], [3, "3 vs 3"]], state.team_size, (v) => state.team_size = v, "Team size"),
+          el("p.small.muted", `${state.team_size * 2} players. A problem counts for a team when any member solves it. `
+            + "Pick sides in the lobby, or shuffle / balance by rating there. Unrated."));
+        return el("div.grid-2.equal", teams, rules);
+      })(),
+      panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
+        state.use_custom ? customFields : randomFields),
+      panel("Time", null,
+        el("div.grid-2",
+          el("div.field", el("label", { for: "dur" }, "Duration (minutes)"), numberInput("dur", state.duration_min, 15, 300, (v) => state.duration_min = v)),
+          state.rules === "icpc"
+            ? el("div.field", el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
+            : null)),
+      el("p.small.muted", state.mode === "team" ? "Team duels have no handicaps."
+        : state.mode === "group" ? "Handicaps are set in the lobby once players have joined."
+          : "Handicaps are set in the lobby once your friend has joined."),
+      err,
+      el("div.actions",
+        el("button.btn.primary.big", { type: "submit" }, editCode ? "Save settings" : CREATE[state.mode]),
+        editCode ? el("a.btn.ghost.big", { href: `/m/${editCode}` }, "Cancel") : null))));
   refreshPreview();
 }
 

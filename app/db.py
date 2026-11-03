@@ -29,9 +29,17 @@ def connect(path: str | None = None) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=5000")
     conn.executescript(SCHEMA.read_text())
+    _migrate(conn)
     conn.execute(f"PRAGMA user_version={SCHEMA_VERSION}")
     _conn = conn
     return conn
+
+
+def _migrate(conn: sqlite3.Connection) -> None:
+    """Small additive changes for databases created by older versions."""
+    cols = {r[1] for r in conn.execute("PRAGMA table_info(match_players)")}
+    if "team" not in cols:
+        conn.execute("ALTER TABLE match_players ADD COLUMN team INTEGER")
 
 
 def conn() -> sqlite3.Connection:

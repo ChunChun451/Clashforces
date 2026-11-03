@@ -4,11 +4,31 @@ Duel your friends on real Codeforces problems. Players submit on Codeforces as
 usual. Clashforces picks the problems, follows submissions through the official
 Codeforces API, and computes the results.
 
-- **Friend duels** (1v1), **group rooms** (3–10 players) and a **ranked queue** with Elo
-- **ICPC** or **Lockout** rules, scoreboard freeze (ICPC), handicaps
+- **Friend duels** (1v1), **team duels** (2v2 or 3v3), **group rooms** (3–10 players) and a **ranked queue** with Elo
+- **ICPC** or **Lockout** rules, scoreboard freeze (ICPC), handicaps (1v1 and rooms)
 - Live scoreboard over WebSockets, spectator links, timelines, upsolve list, stats, friends
 
 The design is in [PLAN.md](PLAN.md).
+
+### Team duels
+
+Create one from **New match → Team duel**. Pick 2v2 or 3v3, ICPC or Lockout,
+and the usual problem filters. Anyone with the link can join while there's
+room; players pick a side in the lobby, and the creator can **Shuffle** or
+**Balance by rating** (smallest gap in total Codeforces rating). The match
+starts when both teams are full and everyone is ready.
+
+- **ICPC:** a problem counts for the team when any member gets Accepted. Every
+  member's rejected tries before the team's first Accepted add 20 minutes.
+- **Lockout:** a problem goes to the team whose member solved it first; the
+  match ends early once one team can't be caught.
+- **Forfeit:** teammates keep playing when one member forfeits. A team with
+  every member out loses.
+- **Freeze:** each team is treated like one player: you see your own team live
+  and the other team frozen.
+- Team duels are unrated. In history and stats a team result counts as a win,
+  loss or draw for each member. Problems are picked so that nobody on either
+  team has tried them. Rematch keeps the same teams.
 
 ## Run locally
 
@@ -55,10 +75,10 @@ widening) is in [`app/config.py`](app/config.py). These come from environment va
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `SECRET_KEY` | dev value | Signs session cookies. **Set it in production.** |
+| `SECRET_KEY` | dev value | Signs session cookies. **Set it in production**: the app refuses to start with the default key when `COOKIE_SECURE=1`. |
 | `DB_PATH` | `clashforces.db` | SQLite file (WAL mode) |
 | `COOKIE_SECURE` | `0` | Set `1` behind HTTPS |
-| `PUBLIC_URL` | `http://localhost:8000` | Used in Discord messages |
+| `ALLOWED_ORIGINS` | unset | Comma-separated origins allowed to open the WebSocket (e.g. `https://duel.example.com`). Unset: only the page's own host. |
 | `CF_API_BASE` | `https://codeforces.com/api` | Point at the fake API for offline work |
 
 ## Tests
@@ -71,10 +91,14 @@ Tests never call the real Codeforces API. They use JSON fixtures in
 `tests/fixtures/` (shaped exactly like real API responses), a fake HTTP
 transport for the client, and a stub client for services. They cover:
 
-- **Scoring:** ICPC, Lockout, Team.
+- **Scoring:** ICPC, Lockout, team ICPC and team Lockout (claims, ties, clinch), team balance and shuffle.
 - **Problem selection:** including the Div.1/Div.2 duplicate case.
 - **Poller:** scheduling, burst paging, final checks.
 - **Match flows:** friend, group and ranked, including an API outage.
+- **Team duels** (`tests/test_team_flow.py`): lobby sides, switching, full
+  teams, balance and shuffle, start-blocked rules, a full 2v2 in ICPC and
+  Lockout (with clinch), partial forfeit, the freeze view per team, history
+  and rematch.
 - **Other:** freeze and reveal, Elo, matchmaking, stats.
 
 ## How the poller works
@@ -122,7 +146,7 @@ docker build -t clashforces .
 ```
 
 ```bash
-docker run -d --name clashforces -p 127.0.0.1:8000:8000 -v clashforces-data:/data -e SECRET_KEY=change-me -e PUBLIC_URL=https://duel.example.com clashforces
+docker run -d --name clashforces -p 127.0.0.1:8000:8000 -v clashforces-data:/data -e SECRET_KEY=change-me clashforces
 ```
 
 Then use `Caddyfile.example` as your Caddyfile. Run **one** worker only: the
@@ -139,8 +163,7 @@ app/
   poller/         submission poller, history sync, upsolve
   matches/        match service, lifecycle ticker, finalisation, ranked queue, views
   routes/         HTTP and WebSocket endpoints (all async, so SQLite stays on one thread)
-  notify/         Discord webhooks
-static/           HTML, CSS (tokens/base/components/match) and vanilla JS
+static/           HTML, CSS (tokens/base/components/home/match), vanilla JS, favicon.svg
 tests/            pytest suite and recorded-shape fixtures
 tools/fake_cf.py  fake Codeforces API for local development
 ```

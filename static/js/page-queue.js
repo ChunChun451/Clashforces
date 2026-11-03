@@ -15,16 +15,16 @@ function render() {
   const searching = st.in_queue;
   app.replaceChildren(el("div.stack.center",
     el("h1", "Ranked"),
-    el("p.muted", "3 problems · 60 minutes · ICPC rules. Problems near your average Codeforces rating."),
+    el("p.lede.queue-lede", "3 problems, 60 minutes, ICPC rules. Problems near your average Codeforces rating."),
     el("div", { class: `radar${searching ? "" : " idle"}`, "aria-hidden": "true" },
       el("div.radar-core", { id: "q-time" }, searching ? fmtDuration(baseWait) : String(me.user.duel_rating))),
     searching
-      ? el("div.stack",
+      ? el("div.card.stack.queue-card",
         el("p", { role: "status" }, "Looking for an opponent within ", el("span.mono.accent", { id: "q-win" }, `±${st.window}`), " duel rating"),
         el("p.small.muted", `Your duel rating ${st.duel_rating}. The range widens every 30 seconds.`),
         el("div", el("button.btn", { type: "button", onclick: leave }, "Cancel")))
-      : el("div.stack",
-        el("p.small.muted", `Your duel rating: ${me.user.duel_rating}`),
+      : el("div.card.stack.queue-card",
+        el("p.small.muted", `Your duel rating: ${me.user.duel_rating}. Wins against stronger players move it more.`),
         me.active && me.active.kind === "match" ? el("p.note", "Finish your current match first: ", el("a", { href: `/m/${me.active.code}` }, me.active.code))
           : el("div", el("button.btn.primary.big", { type: "button", onclick: join }, "Find a match")))));
 }

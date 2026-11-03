@@ -25,9 +25,14 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         "duration_min": int(raw.get("duration_min", 60)),
         "freeze_min": int(raw.get("freeze_min") or 0),
         "handicap": raw.get("handicap") or None,
-        "discord_webhook": (str(raw.get("discord_webhook") or "").strip() or None),
         "exclude": list(raw.get("exclude") or []),
     }
+    if mode == "team":
+        s["team_size"] = int(raw.get("team_size", 2))
+        if s["team_size"] not in config.TEAM_SIZES:
+            raise SettingsError("Teams have 2 or 3 players.")
+        if s["handicap"]:
+            raise SettingsError("Team duels have no handicaps.")
     if not config.DURATION_MIN <= s["duration_min"] <= config.DURATION_MAX:
         raise SettingsError(f"Duration must be {config.DURATION_MIN}–{config.DURATION_MAX} minutes.")
     if rules != "icpc":
@@ -38,8 +43,6 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         errors = filter_errors(filters(s))
         if errors:
             raise SettingsError(errors[0])
-    if s["discord_webhook"] and not s["discord_webhook"].startswith(config.DISCORD_PREFIX):
-        raise SettingsError("Discord webhook URLs start with " + config.DISCORD_PREFIX)
     s["handicap"] = clean_handicap(s["handicap"], rules, s, mode)
     return s
 

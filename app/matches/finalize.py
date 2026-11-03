@@ -11,7 +11,7 @@ log = logging.getLogger("finalize")
 
 # Called after the result is stored, before it is broadcast: fn(match_row, rows).
 before_broadcast: list[Callable] = []
-# Called after the broadcast (e.g. Discord): fn(match_id).
+# Called after the broadcast: fn(match_id).
 after_final: list[Callable] = []
 
 
@@ -23,16 +23,32 @@ def finalize(match_id: int) -> bool:
     if any(not p["final_checked"] for p in pr):
         return False
     pb = store.problems(match_id)
-    rows, _ = store.standings(match)
+    rows, all_subs = store.standings(match)
     now = clock.now()
+    team = store.is_team(match)
     with db.transaction():
-        for row in rows:
-            db.execute(
-                "UPDATE match_players SET place = ?, solved = ?, penalty = ?, points = ? WHERE match_id = ? AND user_id = ?",
-                (row.place, row.solved, row.penalty, row.points, match_id, row.player),
-            )
-        summary = [{"user_id": r.player, "place": r.place, "solved": r.solved, "penalty": r.penalty,
-                    "points": r.points, "forfeited": r.forfeited} for r in rows]
+        if team:
+            # Every member gets the team's place and totals: a team win is a win for each of them.
+            members = store.team_of(pr)
+            by_team = {r.player: r for r in rows}
+            for uid, t in members.items():
+                r = by_team[t]
+                db.execute(
+                    "UPDATE match_players SET place = ?, solved = ?, penalty = ?, points = ? WHERE match_id = ? AND user_id = ?",
+                    (r.place, r.solved, r.penalty, r.points, match_id, uid))
+            summary = [{"team": r.player, "place": r.place, "solved": r.solved, "penalty": r.penalty,
+                        "points": r.points, "forfeited": r.forfeited,
+                        "user_ids": [u for u, t in members.items() if t == r.player]} for r in rows]
+            # Upsolve goes by what each member solved personally.
+            rows = list(store.member_rows(match, pr, pb, all_subs).values())
+        else:
+            for row in rows:
+                db.execute(
+                    "UPDATE match_players SET place = ?, solved = ?, penalty = ?, points = ? WHERE match_id = ? AND user_id = ?",
+                    (row.place, row.solved, row.penalty, row.points, match_id, row.player),
+                )
+            summary = [{"user_id": r.player, "place": r.place, "solved": r.solved, "penalty": r.penalty,
+                        "points": r.points, "forfeited": r.forfeited} for r in rows]
         db.execute("UPDATE matches SET result_status = 'final', result = ? WHERE id = ?",
                    (json.dumps(summary), match_id))
         for row in rows:

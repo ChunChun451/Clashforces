@@ -7,7 +7,6 @@ CREATE TABLE IF NOT EXISTS users (
   duel_rating      INTEGER NOT NULL,             -- starts at CF rating (UNRATED_START if 0)
   needs_reverify   INTEGER NOT NULL DEFAULT 0,   -- handle vanished (renamed on CF)
   session_version  INTEGER NOT NULL DEFAULT 1,
-  discord_webhook  TEXT,
   history_synced   INTEGER NOT NULL DEFAULT 0,   -- full user.status import done
   last_sub_id      INTEGER NOT NULL DEFAULT 0,   -- newest CF submission id we have seen
   created_at       INTEGER NOT NULL,
@@ -74,7 +73,7 @@ CREATE INDEX IF NOT EXISTS submissions_user_time ON submissions(user_id, creatio
 CREATE TABLE IF NOT EXISTS matches (
   id            INTEGER PRIMARY KEY,
   code          TEXT NOT NULL UNIQUE,            -- 6 chars, share link /m/{code}
-  mode          TEXT NOT NULL,                   -- friend | group | ranked   (V2: team | practice | ghost | tournament)
+  mode          TEXT NOT NULL,                   -- friend | group | ranked | team   (V2: practice | ghost | tournament)
   rules         TEXT NOT NULL,                   -- icpc | lockout
   status        TEXT NOT NULL,                   -- lobby | starting | running | ended | cancelled
   result_status TEXT NOT NULL DEFAULT 'none',    -- none | pending | final
@@ -97,7 +96,7 @@ CREATE TABLE IF NOT EXISTS match_players (
   cf_rating       INTEGER,                       -- at start
   joined_at       INTEGER NOT NULL,
   ready           INTEGER NOT NULL DEFAULT 0,
-  team            INTEGER,                       -- V2
+  team            INTEGER,                       -- team mode: 0 = Team A, 1 = Team B
   end_time        INTEGER,                       -- per player (extra-time handicap)
   penalty_bonus   INTEGER NOT NULL DEFAULT 0,    -- minutes, e.g. -40
   rating_min      INTEGER,                       -- per-player range handicap

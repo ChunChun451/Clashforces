@@ -28,6 +28,14 @@ class SettingsIn(BaseModel):
     settings: dict
 
 
+class TeamIn(BaseModel):
+    team: int
+
+
+class ArrangeIn(BaseModel):
+    how: str  # shuffle | balance
+
+
 class ValidateIn(BaseModel):
     text: str
     match_code: str | None = None
@@ -85,6 +93,18 @@ async def ready(code: str, body: ReadyIn, user=Depends(session.require_user)):
     return {"ok": True}
 
 
+@router.post("/matches/{code}/team")
+async def switch_team(code: str, body: TeamIn, user=Depends(session.require_user)):
+    _run(service.switch_team, user, code, body.team)
+    return {"ok": True}
+
+
+@router.post("/matches/{code}/teams")
+async def arrange_teams(code: str, body: ArrangeIn, user=Depends(session.require_user)):
+    _run(service.arrange_teams, user, code, body.how)
+    return {"ok": True}
+
+
 @router.post("/matches/{code}/submitted")
 async def submitted(code: str, user=Depends(session.require_user)):
     queued = _run(service.hint, user, code)
@@ -121,17 +141,18 @@ async def timeline(code: str, user=Depends(session.current_user)):
     for p in pb:
         labels[(p["user_id"], p["problem_key"])] = p["label"]
     names = {p["user_id"]: (p["handle"], p["cf_rating"]) for p in pr}
+    team = store.team_of(pr) if store.is_team(match) else {}
     items = []
     for s in store.subs(match, pr, pb):
         label = labels.get((s.player, s.problem)) or labels.get((None, s.problem))
-        end = next(p["end_time"] for p in pr if p["user_id"] == s.player)
-        if s.time >= end or label is None:
+        end = next((p["end_time"] for p in pr if p["user_id"] == s.player), None)
+        if end is None or s.player not in names or s.time >= end or label is None:
             continue
         p = cache.get(s.problem)
         items.append({
             "id": s.id, "user_id": s.player, "handle": names[s.player][0], "cf_rating": names[s.player][1],
             "label": label, "problem_key": s.problem, "verdict": s.verdict, "time": s.time,
-            "minute": (s.time - match["start_time"]) // 60,
+            "minute": (s.time - match["start_time"]) // 60, "team": team.get(s.player),
             "url": f"https://codeforces.com/contest/{p.contest_id}/submission/{s.id}" if p else None,
         })
     return {"start_time": match["start_time"], "items": items}

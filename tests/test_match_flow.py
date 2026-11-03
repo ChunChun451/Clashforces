@@ -400,17 +400,3 @@ async def test_stats_after_matches(world):
     assert stats_data.h2h(w.a["id"], w.b["id"])["win"] == 1
     assert stats_data.h2h(w.b["id"], w.a["id"])["loss"] == 1
 
-
-async def test_discord_message_and_hooks(world):
-    from app.notify import discord
-    w = world
-    hook = "https://discord.com/api/webhooks/1/abc"
-    db.execute("UPDATE users SET discord_webhook = ? WHERE id = ?", (hook, w.a["id"]))
-    match = await start_duel(w, settings={"discord_webhook": hook})
-    k = store.problems(match["id"])[0]["problem_key"]
-    w.subs["Bob_77"].append(raw(1, k, "OK", match["start_time"] + 60))
-    w.now.t = match["end_time"] + 30
-    m = await finish(w, match)
-    msg = discord.message(m)
-    assert msg.startswith("**Bob_77** won") and "1. Bob_77 — 1 solved, 1 penalty" in msg
-    assert discord.webhooks(m) == [hook]  # de-duplicated

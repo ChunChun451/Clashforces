@@ -16,7 +16,7 @@ build order. Nothing is built until this plan is approved.
 |---|---|
 | Runtime | Python 3.12, FastAPI, Uvicorn, **one process, one worker**. The rate limiter, poller and WebSocket hub live in memory, so running more workers would break the 1-request-per-2s limit. |
 | Database | SQLite in WAL mode (`journal_mode=WAL`, `synchronous=NORMAL`, `foreign_keys=ON`, `busy_timeout=5000`). We use stdlib `sqlite3`. Queries are tiny and run on the event loop. The one large write (a user's first full history import) runs in `asyncio.to_thread`. |
-| HTTP client | `httpx.AsyncClient`, used only inside `cf/client.py` (and `notify/discord.py` for webhooks). |
+| HTTP client | `httpx.AsyncClient`, used only inside `cf/client.py`. |
 | Sessions | Starlette `SessionMiddleware` (cookie signed with itsdangerous). The cookie holds `user_id` and `session_version`. Raising `session_version` logs out every device. The cookie is `HttpOnly`, `Secure`, `SameSite=Lax`, and lasts 30 days. |
 | Time | Every time value is a unix second. Match windows are compared only with Codeforces `creationTimeSeconds`. The server clock must be NTP-synced (it is by default on AWS). |
 | Frontend | Static HTML pages, one CSS design system, and one small JS file per page. No build step. Pages fetch JSON from `/api/...` and open one WebSocket. All user text is rendered with `textContent` (no innerHTML with user data). |
@@ -67,15 +67,13 @@ Clashforces/
 │   ├── matches/
 │   │   ├── service.py       # create, join, leave, ready, start, forfeit, rematch
 │   │   ├── lifecycle.py     # 1s ticker: start, 5-min warning, freeze, ends, final checks
-│   │   ├── finalize.py      # final scoring, Elo, upsolve entries, webhooks; retries if API is down
+│   │   ├── finalize.py      # final scoring, Elo, upsolve entries; retries if API is down
 │   │   ├── view.py          # builds the scoreboard JSON for a viewer (uses core/freeze.py)
 │   │   ├── locks.py         # "one active thing per user" rule
 │   │   └── queue.py         # ranked queue worker (calls core/matchmaking.py)
 │   │
 │   ├── ws/
 │   │   └── hub.py           # sockets per match / per user, presence, broadcast
-│   ├── notify/
-│   │   └── discord.py       # post a final result to a webhook
 │   └── routes/
 │       ├── pages.py         # serves the HTML files
 │       ├── auth.py  matches.py  queue.py  users.py  friends.py  problems.py  ws.py
@@ -122,7 +120,6 @@ CREATE TABLE users (
   duel_rating      INTEGER NOT NULL,             -- starts at CF rating (UNRATED_START if 0)
   needs_reverify   INTEGER NOT NULL DEFAULT 0,   -- handle vanished (renamed on CF)
   session_version  INTEGER NOT NULL DEFAULT 1,
-  discord_webhook  TEXT,
   history_synced   INTEGER NOT NULL DEFAULT 0,   -- full user.status import done
   last_sub_id      INTEGER NOT NULL DEFAULT 0,   -- newest CF submission id we have seen
   created_at       INTEGER NOT NULL,
@@ -290,7 +287,6 @@ CREATE TABLE friends (                           -- one-directional "follow"
   "handicap": {"type": "penalty", "user_id": 7, "minutes": -40}
            // or {"type": "extra_time", "user_id": 7, "minutes": 15}
            // or {"type": "per_player_range"}   (ranges stored on match_players)
-  ,"discord_webhook": null
 }
 ```
 
@@ -548,10 +544,15 @@ penalty, last_ok_time, and a cell per problem (tries, solved_at_min, pending).
   and 0 + 699 < 801, so the match ends.
 - Default points: 100, 200, 300… in rating order (config `LOCKOUT_POINT_STEP`).
 
-### 7.3 Team (V2, `core/team.py`)
+### 7.3 Team (built, `core/team.py`)
 Merge all members' submissions under the team id, then run ICPC per team.
 Rejected tries from every member before the team's first OK count. Example:
 member 1 WA at 20 min, member 2 OK at 35 min → 35 + 20 = **55**.
+Lockout works the same way: the first member OK claims the problem for the
+team, and the clinch check runs per team. A member's submissions only count
+inside that member's own window, so after a forfeit the rest of the team plays
+on. Team matches are mode `team` with `team_size` 2 or 3, `match_players.team`
+0/1, no handicaps and no Elo.
 
 ### 7.4 Elo (`core/elo.py`)
 `expected = 1 / (1 + 10 ** ((Rb - Ra) / 400))`, `new = Ra + K * (score - expected)`
@@ -660,7 +661,6 @@ an `X-Requested-With` header against CSRF.
 | POST | `/api/auth/logout` | add `?everywhere=1` to bump `session_version` |
 | GET | `/api/me` | current user, active lock, `needs_reverify` |
 | POST | `/api/me/handle/start` | `{new_handle}`, then `/api/auth/check` |
-| PATCH | `/api/me/settings` | `{discord_webhook}` (must start with `https://discord.com/api/webhooks/`) |
 
 **Problems**
 
@@ -818,7 +818,7 @@ messages: `invite`, `standings` with an opponent's new OK, `match.warning`, and
 | 11 | Ranked queue + matchmaking + Elo | matchmaking widening tests, Elo tests |
 | 12 | Duel detail page (timeline, links) + upsolve list | |
 | 13 | Stats page + friends + online status + leaderboard + head-to-head | `core/stats.py` tests |
-| 14 | Browser notifications + Discord webhook; README, Dockerfile, Caddyfile.example | README covers local run, tests, how the poller works |
+| 14 | Browser notifications; README, Dockerfile, Caddyfile.example | README covers local run, tests, how the poller works |
 
 Version 2 (team, practice, ghost race, tournaments) waits for your approval
 after Version 1 works.

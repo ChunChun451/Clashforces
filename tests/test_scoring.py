@@ -261,3 +261,87 @@ def test_team_penalty_across_members():
     assert r["T1"].penalty == 55 and r["T1"].solved == 1
     assert r["T2"].penalty == 50
     assert r["T2"].place == 1
+
+
+def test_team_icpc_penalties_from_several_members():
+    from app.core.team import solvers
+    teams = {0: team_input(0, END, PROBS), 1: team_input(1, END, PROBS)}
+    members = {"a": 0, "b": 0, "c": 1, "d": 1}
+    subs = [
+        sub(1, "a", "A", "WRONG_ANSWER", t(18, 5)),
+        sub(2, "b", "A", "TIME_LIMIT_EXCEEDED", t(18, 8)),
+        sub(3, "b", "A", "COMPILATION_ERROR", t(18, 9)),   # never counts
+        sub(4, "a", "A", "OK", t(18, 30)),                 # team A: 30 + 2*20 = 70
+        sub(5, "b", "A", "OK", t(18, 31)),                 # later OK by a teammate: ignored
+        sub(6, "c", "B", "WRONG_ANSWER", t(18, 2)),
+        sub(7, "d", "B", "OK", t(18, 10)),                 # team B: 10 + 20 = 30
+        sub(8, "c", "C", "WRONG_ANSWER", t(18, 20)),       # unsolved: no penalty
+    ]
+    r = by_player(score_team(START, teams, members, subs))
+    assert (r[0].solved, r[0].penalty) == (1, 70)
+    assert (r[1].solved, r[1].penalty) == (1, 30)
+    assert r[1].place == 1 and r[0].place == 2
+    assert r[1].cells["C"].tries == 1 and not r[1].cells["C"].solved
+    who = solvers(subs, members)
+    assert who[(0, "A")] == "a" and who[(1, "B")] == "d"
+
+
+def test_team_member_window_after_forfeit():
+    """A member who forfeited stops counting; their teammate keeps playing."""
+    teams = {0: team_input(0, END, PROBS), 1: team_input(1, END, PROBS)}
+    members = {"a": 0, "b": 0, "c": 1, "d": 1}
+    ends = {"a": t(18, 10), "b": END, "c": END, "d": END}
+    subs = [sub(1, "a", "A", "OK", t(18, 20)),   # after a's forfeit: ignored
+            sub(2, "b", "B", "OK", t(18, 25))]
+    r = by_player(score_team(START, teams, members, subs, ends))
+    assert r[0].solved == 1 and r[0].cells["B"].solved and not r[0].cells["A"].solved
+
+
+def test_team_lockout_claim_tie_and_clinch():
+    from app.core.team import score_team_lockout
+    pts = {"A": 100, "B": 200, "C": 300}
+    teams = {0: team_input(0, END, PROBS), 1: team_input(1, END, PROBS)}
+    members = {"a": 0, "b": 0, "c": 1, "d": 1}
+    subs = [
+        sub(1, "b", "A", "OK", t(18, 5)),     # team 0 claims A
+        sub(2, "c", "A", "OK", t(18, 6)),     # too late
+        sub(3, "a", "B", "OK", t(18, 9)),     # same second as d: B is split
+        sub(4, "d", "B", "OK", t(18, 9)),
+        sub(5, "a", "B", "WRONG_ANSWER", t(18, 1)),  # wrong tries cost nothing
+    ]
+    rows = score_team_lockout(START, teams, members, pts, subs)
+    r = by_player(rows)
+    assert r[0].points == 200 and r[1].points == 100
+    assert r[0].cells["A"].first and not r[1].cells["A"].first
+    assert r[0].cells["B"].points == 100 and r[1].cells["B"].points == 100
+    # C (300) is still open: team 1 can reach 400 > 200, so not decided
+    assert not decided(rows, pts, {0, 1})
+    # team 1 can no longer score (all members out of time): decided for team 0
+    assert decided(rows, pts, {0})
+    # team 0 takes C: 500 vs 100 with nothing open
+    rows = score_team_lockout(START, teams, members, pts, subs + [sub(6, "b", "C", "OK", t(18, 20))])
+    assert decided(rows, pts, {0, 1}) and by_player(rows)[0].place == 1
+
+
+def test_team_balance_shuffle_and_can_start():
+    import random
+
+    from app.core.team import balance, can_start, gap, shuffle
+    ratings = {"a": 2400, "b": 1200, "c": 1900, "d": 1700}
+    teams = balance(ratings, 2)
+    assert sorted(teams.values()) == [0, 0, 1, 1]
+    assert gap(ratings, teams) == 0  # 2400+1200 vs 1900+1700
+    assert teams["a"] == teams["b"]
+    six = {"p1": 2100, "p2": 2000, "p3": 1500, "p4": 1400, "p5": 1300, "p6": 900}
+    t6 = balance(six, 3)
+    assert sorted(t6.values()) == [0, 0, 0, 1, 1, 1] and gap(six, t6) == 200  # best possible split
+    three = balance({"x": 1500, "y": 1600, "z": 1400}, 2)
+    assert sorted(three.values()) == [0, 0, 1]
+    sh = shuffle(list(ratings), 2, random.Random(3))
+    assert sorted(sh.values()) == [0, 0, 1, 1]
+    assert can_start({"a": 0, "b": 0, "c": 1, "d": 1}, 2) is None
+    assert "1 more player" in can_start({"a": 0, "b": 0, "c": 1}, 2)
+    msg = can_start({"a": 0, "b": 0, "c": 0, "d": 1}, 3)
+    assert "2 more players" in msg
+    msg = can_start({"a": 0, "b": 0, "c": 0, "d": 1}, 2)
+    assert "even" in msg

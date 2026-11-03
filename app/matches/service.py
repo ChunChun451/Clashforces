@@ -11,6 +11,7 @@ from app.auth import handles, users
 from app.cf import cache
 from app.cf.client import CFError
 from app.core import custom_list, selection
+from app.core import team as team_core
 from app.core.selection import SelectionError
 from app.matches import events, locks, store
 from app.matches import settings as settings_mod
@@ -24,6 +25,16 @@ MAX_PLAYERS = {"friend": 2, "group": config.ROOM_MAX_PLAYERS, "ranked": 2}
 MIN_PLAYERS = {"friend": 2, "group": config.ROOM_MIN_PLAYERS, "ranked": 2}
 
 
+def max_players(match) -> int:
+    if match["mode"] == "team":
+        return 2 * store.settings(match).get("team_size", 2)
+    return MAX_PLAYERS[match["mode"]]
+
+
+def min_players(match) -> int:
+    return max_players(match) if match["mode"] == "team" else MIN_PLAYERS[match["mode"]]
+
+
 class MatchError(Exception):
     pass
 
@@ -35,11 +46,21 @@ def new_code() -> str:
             return code
 
 
+def _log_task_error(task: asyncio.Task) -> None:
+    if task.cancelled():
+        return
+    exc = task.exception()
+    if exc is not None:
+        log.error("background task %s failed", task.get_name(), exc_info=exc)
+
+
 def _spawn(coro) -> None:
     try:
-        asyncio.get_running_loop().create_task(coro)
+        task = asyncio.get_running_loop().create_task(coro)
     except RuntimeError:
         coro.close()
+        return
+    task.add_done_callback(_log_task_error)
 
 
 async def _sync_quietly(user_id: int) -> None:
@@ -57,7 +78,7 @@ def _check_user(user) -> None:
 # ---------- lobby ----------
 
 def create(user, mode: str, rules: str, raw_settings: dict, rematch_of: int | None = None) -> str:
-    if mode not in ("friend", "group"):
+    if mode not in ("friend", "group", "team"):
         raise MatchError("Unknown mode.")
     _check_user(user)
     try:
@@ -83,8 +104,9 @@ def _insert_match(creator_id: int, mode: str, rules: str, s: dict, rematch_of: i
         match_id = cur.lastrowid
         for uid in (creator_id, *extra_players):
             locks.acquire(uid, "match", match_id)
-            db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at) VALUES (?,?,?,?)",
-                       (match_id, uid, users.by_id(uid)["handle"], now))
+            team = _previous_team(rematch_of, uid, 0) if mode == "team" else None
+            db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at, team) VALUES (?,?,?,?,?)",
+                       (match_id, uid, users.by_id(uid)["handle"], now, team))
     for uid in (creator_id, *extra_players):
         _spawn(_sync_quietly(uid))
     return code
@@ -101,15 +123,17 @@ def join(user, code: str) -> None:
         raise MatchError("This match has already started. You can still watch it.")
     if match["mode"] == "ranked":
         raise MatchError("Ranked matches can't be joined by link.")
-    if len(store.players(match["id"])) >= MAX_PLAYERS[match["mode"]]:
+    players = store.players(match["id"])
+    if len(players) >= max_players(match):
         raise MatchError("This match is full. You can still watch it.")
+    team = _join_side(match, players, user["id"]) if match["mode"] == "team" else None
     with db.transaction():
         try:
             locks.acquire(user["id"], "match", match["id"])
         except locks.LockError as e:
             raise MatchError(str(e))
-        db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at) VALUES (?,?,?,?)",
-                   (match["id"], user["id"], user["handle"], clock.now()))
+        db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at, team) VALUES (?,?,?,?,?)",
+                   (match["id"], user["id"], user["handle"], clock.now(), team))
     _spawn(_sync_quietly(user["id"]))
     events.state(match["id"])
 
@@ -135,6 +159,73 @@ def leave(user, code: str) -> None:
     events.state(match["id"])
 
 
+# ---------- teams ----------
+
+def _previous_team(rematch_of: int | None, user_id: int, default: int) -> int:
+    """A rematch keeps the same teams."""
+    if rematch_of is None:
+        return default
+    t = db.scalar("SELECT team FROM match_players WHERE match_id = ? AND user_id = ?", (rematch_of, user_id))
+    return t if t in (0, 1) else default
+
+
+def _join_side(match, players, user_id: int) -> int:
+    size = store.settings(match).get("team_size", 2)
+    counts = [sum(1 for p in players if p["team"] == t) for t in (0, 1)]
+    want = _previous_team(match["rematch_of"], user_id, -1)
+    if want in (0, 1) and counts[want] < size:
+        return want
+    return 0 if counts[0] <= counts[1] else 1
+
+
+def _set_teams(match, team_of: dict) -> None:
+    with db.transaction():
+        for uid, t in team_of.items():
+            db.execute("UPDATE match_players SET team = ? WHERE match_id = ? AND user_id = ?", (t, match["id"], uid))
+        db.execute("UPDATE match_players SET ready = 0 WHERE match_id = ?", (match["id"],))
+    events.state(match["id"])
+
+
+def switch_team(user, code: str, team: int) -> None:
+    """A player picks a side. Everyone's Ready resets, since the teams changed."""
+    match = _lobby_of(user, code)
+    if match["mode"] != "team":
+        raise MatchError("Only team duels have sides.")
+    if team not in (0, 1):
+        raise MatchError("Pick Team A or Team B.")
+    players = store.players(match["id"])
+    me = next(p for p in players if p["user_id"] == user["id"])
+    if me["team"] == team:
+        return
+    size = store.settings(match).get("team_size", 2)
+    if sum(1 for p in players if p["team"] == team) >= size:
+        raise MatchError(f"{team_core.TEAM_NAMES[team]} is full.")
+    _set_teams(match, {user["id"]: team})
+
+
+def arrange_teams(user, code: str, how: str, rng: random.Random | None = None) -> dict:
+    """The creator shuffles the sides at random or balances them by Codeforces rating."""
+    match = _lobby_of(user, code)
+    if match["mode"] != "team":
+        raise MatchError("Only team duels have sides.")
+    if match["creator_id"] != user["id"]:
+        raise MatchError("Only the creator can arrange the teams.")
+    players = store.players(match["id"])
+    size = store.settings(match).get("team_size", 2)
+    if how == "shuffle":
+        teams = team_core.shuffle([p["user_id"] for p in players], size, rng or random.Random())
+    elif how == "balance":
+        teams = team_core.balance({p["user_id"]: _team_rating(p) for p in players}, size)
+    else:
+        raise MatchError("Unknown arrangement.")
+    _set_teams(match, teams)
+    return teams
+
+
+def _team_rating(p) -> int:
+    return p["current_rating"] or config.UNRATED_START
+
+
 def _lobby_of(user, code: str):
     match = store.match_by_code(code)
     if match is None:
@@ -155,16 +246,21 @@ def update_settings(user, code: str, raw: dict) -> None:
     rules = raw.get("rules", match["rules"])
     old = store.settings(match)
     raw = {**raw, "exclude": old.get("exclude", [])}
-    if "discord_webhook" not in raw:
-        raw["discord_webhook"] = old.get("discord_webhook")
     try:
         s = settings_mod.clean(raw, rules, match["mode"])
     except settings_mod.SettingsError as e:
         raise MatchError(str(e))
     h = s.get("handicap")
-    ids = {p["user_id"] for p in store.players(match["id"])}
+    players = store.players(match["id"])
+    ids = {p["user_id"] for p in players}
     if h and h.get("user_id") is not None and h["user_id"] not in ids:
         raise MatchError("The handicap player is not in this lobby.")
+    if match["mode"] == "team":
+        for t in (0, 1):
+            n = sum(1 for p in players if p["team"] == t)
+            if n > s["team_size"]:
+                raise MatchError(f"{team_core.TEAM_NAMES[t]} already has {n} players. "
+                                 f"Someone has to leave before teams can be {s['team_size']}.")
     with db.transaction():
         db.execute("UPDATE matches SET settings = ?, rules = ? WHERE id = ?", (json.dumps(s), rules, match["id"]))
         db.execute("UPDATE match_players SET ready = 0 WHERE match_id = ?", (match["id"],))
@@ -177,8 +273,16 @@ def set_ready(user, code: str, ready: bool) -> None:
                (1 if ready else 0, match["id"], user["id"]))
     events.state(match["id"])
     players = store.players(match["id"])
-    if len(players) >= MIN_PLAYERS[match["mode"]] and all(p["ready"] for p in players):
+    if len(players) >= min_players(match) and all(p["ready"] for p in players) and not start_blocker(match, players):
         _spawn(start(match["id"]))
+
+
+def start_blocker(match, players) -> str | None:
+    """Why a lobby can't start even when everyone is ready (team duels: uneven teams)."""
+    if match["mode"] != "team":
+        return None
+    size = store.settings(match).get("team_size", 2)
+    return team_core.can_start({p["user_id"]: (p["team"] if p["team"] in (0, 1) else -1) for p in players}, size)
 
 
 # ---------- start ----------
@@ -196,8 +300,26 @@ async def start(match_id: int, rng: random.Random | None = None) -> bool:
     if cur.rowcount != 1:
         return False
     match = store.match_by_id(match_id)
+    try:
+        return await _start(match, rng)
+    except Exception:
+        # Anything unexpected must not leave the match stuck in 'starting'.
+        log.exception("starting match %s failed", match_id)
+        try:
+            _back_to_lobby(match, "Something went wrong starting the match. Try again.")
+        except Exception:
+            log.exception("could not put match %s back in the lobby", match_id)
+        return False
+
+
+async def _start(match, rng: random.Random | None) -> bool:
+    match_id = match["id"]
     events.state(match_id)
     players = store.players(match_id)
+    blocked = start_blocker(match, players)
+    if blocked:
+        _back_to_lobby(match, blocked)
+        return False
     ids = [p["user_id"] for p in players]
     try:
         missing = await handles.check_players(ids)
@@ -332,8 +454,13 @@ def forfeit(user, code: str) -> None:
     now = clock.now()
     db.execute("UPDATE match_players SET forfeited_at = ?, end_time = MIN(end_time, ?) WHERE match_id = ? AND user_id = ?",
                (now, max(now, match["start_time"]), match["id"], user["id"]))
-    still_in = [p for p in store.players(match["id"]) if p["forfeited_at"] is None]
-    if len(still_in) <= 1:
+    players = store.players(match["id"])
+    if match["mode"] == "team":
+        # Teammates keep playing. A team with nobody left loses and the match ends.
+        over = any(all(p["forfeited_at"] is not None for p in players if p["team"] == t) for t in (0, 1))
+    else:
+        over = len([p for p in players if p["forfeited_at"] is None]) <= 1
+    if over:
         lifecycle.end_match(match["id"], "forfeit", at=now)
     else:
         events.state(match["id"])

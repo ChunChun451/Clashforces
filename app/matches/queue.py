@@ -56,7 +56,7 @@ def match_pairs() -> list[str]:
         lo, hi = matchmaking.ranked_range(ua["cf_rating"], ub["cf_rating"])
         s = {"count": config.RANKED_COUNT, "rating_min": lo, "rating_max": hi, "tags_include": [], "tags_avoid": [],
              "avoid_interactive": False, "custom_problems": None, "duration_min": config.RANKED_DURATION_MIN,
-             "freeze_min": 0, "handicap": None, "discord_webhook": None, "exclude": [],
+             "freeze_min": 0, "handicap": None, "exclude": [],
              "queue_joined": {str(a.user_id): a.joined_at, str(b.user_id): b.joined_at}}
         with db.transaction():
             db.execute("DELETE FROM queue WHERE user_id IN (?, ?)", (a.user_id, b.user_id))

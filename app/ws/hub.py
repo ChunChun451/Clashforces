@@ -27,6 +27,7 @@ class Conn:
 
 class Hub:
     def __init__(self):
+        self.conns: set[Conn] = set()  # every open socket, logged in or not
         self.by_match: dict[str, set[Conn]] = defaultdict(set)
         self.by_user: dict[int, set[Conn]] = defaultdict(set)
         self.presence_listeners: list[Callable[[int, bool], Any]] = []
@@ -34,6 +35,7 @@ class Hub:
     # ---------- connections ----------
 
     def add(self, conn: Conn) -> None:
+        self.conns.add(conn)
         if conn.user_id is not None:
             first = not self.by_user[conn.user_id]
             self.by_user[conn.user_id].add(conn)
@@ -41,6 +43,7 @@ class Hub:
                 self._presence(conn.user_id, True)
 
     def remove(self, conn: Conn) -> None:
+        self.conns.discard(conn)
         for code in list(conn.matches):
             self.unsubscribe(conn, code)
         if conn.user_id is not None:
@@ -82,13 +85,8 @@ class Hub:
             pass  # no loop (sync tests)
 
     def send_all(self, type_: str, data: dict) -> None:
-        for conns in list(self.by_user.values()):
-            for conn in list(conns):
-                self._spawn(conn, {"type": type_, "data": data})
-        for conns in list(self.by_match.values()):
-            for conn in list(conns):
-                if conn.user_id is None:
-                    self._spawn(conn, {"type": type_, "data": data})
+        for conn in list(self.conns):
+            self._spawn(conn, {"type": type_, "data": data})
 
     def send_user(self, user_id: int, type_: str, data: dict) -> None:
         for conn in list(self.by_user.get(user_id, ())):
