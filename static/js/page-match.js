@@ -453,7 +453,8 @@ function resultTitle() {
     if (!won) text = "Draw";
     else if (isPlayer()) text = won.team === M.my_team ? "Your team won" : "Your team lost";
     else text = `${won.name} wins`;
-    const sub = won ? el("p.team-name.muted", teamBadge(won.team), `${won.name} won · ${won.members.map((m) => m.handle).join(" & ")}`)
+    const names = won ? won.members.map((m) => m.handle).join(" & ") : "";
+    const sub = won ? el("p.team-name.muted", teamBadge(won.team), isPlayer() ? `${won.name} won · ${names}` : names)
       : el("p.muted", "Both teams finished level.");
     return el("div.stack", el("h2.result-title", text), sub, reason ? el("p.muted", reason) : null);
   }
