@@ -178,3 +178,15 @@ async def test_poll_loop_checks_each_player_once_then_waits(cache_filled, stub_c
     task.cancel()
     handles = [c[1]["handle"] for c in stub_cf.calls]
     assert sorted(handles) == ["alice", "bob"]  # min-interval floor stops repeats
+
+
+async def test_upsolve_refresh_marks_done_and_cooldown(cache_filled, stub_cf, frozen_now):
+    from app.poller import upsolve
+    uid = users.create("alice", 1500, 1500)
+    db.execute("UPDATE users SET history_synced = 1, last_sub_id = 1 WHERE id = ?", (uid,))
+    db.execute("INSERT INTO matches(id, code, mode, rules, status, settings, created_at) VALUES (1,'AAAAAA','friend','icpc','ended','{}',0)")
+    db.execute("INSERT INTO upsolve(user_id, problem_key, match_id, added_at) VALUES (?, '2010D', 1, 0)", (uid,))
+    stub_cf.on("user.status", lambda q: [raw_sub(50, "2010D", "OK", NOW)])
+    assert await upsolve.refresh(uid)
+    assert upsolve.items(uid)[0]["done_at"] is not None
+    assert not await upsolve.refresh(uid)  # cooldown

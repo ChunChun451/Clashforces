@@ -6,7 +6,9 @@ from pydantic import BaseModel
 
 from app import config, db
 from app.auth import session, users, verify
+from app.cf.client import CFError
 from app.matches import locks
+from app.poller import upsolve
 
 router = APIRouter(prefix="/api")
 
@@ -90,3 +92,19 @@ async def update_settings(body: SettingsIn, user=Depends(session.require_user)):
         raise HTTPException(400, "Discord webhook URLs start with " + config.DISCORD_PREFIX)
     db.execute("UPDATE users SET discord_webhook = ? WHERE id = ?", (hook, user["id"]))
     return {"ok": True}
+
+
+@router.get("/me/upsolve")
+async def my_upsolve(user=Depends(session.require_user)):
+    return {"items": upsolve.items(user["id"]), "can_refresh": upsolve.can_refresh(user["id"])}
+
+
+@router.post("/me/upsolve/refresh")
+async def refresh_upsolve(user=Depends(session.require_user)):
+    try:
+        done = await upsolve.refresh(user["id"])
+    except CFError:
+        raise HTTPException(503, "Codeforces is not answering. Try again later.")
+    if not done:
+        raise HTTPException(429, "You refreshed recently. Try again in a few minutes.")
+    return {"items": upsolve.items(user["id"]), "can_refresh": False}

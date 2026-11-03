@@ -14,6 +14,7 @@ from app.cf import cache
 from app.cf.client import get_client
 from app.matches import lifecycle
 from app.matches import queue as ranked_queue
+from app.poller import upsolve
 from app.poller.poller import poller
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
@@ -37,6 +38,7 @@ async def lifespan(app: FastAPI):
         tasks.append(asyncio.create_task(poller.run(), name="poller"))
         tasks.append(asyncio.create_task(lifecycle.run(), name="lifecycle"))
         tasks.append(asyncio.create_task(ranked_queue.run(), name="ranked-queue"))
+        tasks.append(asyncio.create_task(upsolve.sweep_loop(), name="upsolve-sweep"))
     else:
         lifecycle.setup()
         ranked_queue.setup()
