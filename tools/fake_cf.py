@@ -11,10 +11,14 @@ handles starting with "ghost". Add submissions with:
 verdict can be OK, WRONG_ANSWER, COMPILATION_ERROR, TESTING, ...
 
 Every /api/ call is logged; GET /fake/calls returns the log (tools/loadtest.py
-uses it to check the one-call-per-2-seconds rule).
+uses it to check the one-call-per-2-seconds rule). FAKE_CF_LATENCY_MS="300-700"
+makes each API answer take a random 300-700 ms, like the real API.
 """
 
+import asyncio
 import json
+import os
+import random
 import time
 from pathlib import Path
 
@@ -25,11 +29,15 @@ app = FastAPI()
 subs: dict[str, list] = {}
 next_id = [1000]
 calls: list[dict] = []  # {"start", "end", "method"} for every /api/ request
+_lat = [float(x) / 1000 for x in (os.environ.get("FAKE_CF_LATENCY_MS") or "0").split("-")]
+LATENCY_S = (_lat[0], _lat[-1])
 
 
 @app.middleware("http")
 async def log_calls(request: Request, call_next):
     start = time.time()
+    if request.url.path.startswith("/api/") and LATENCY_S[1] > 0:
+        await asyncio.sleep(random.uniform(*LATENCY_S))
     response = await call_next(request)
     if request.url.path.startswith("/api/"):
         calls.append({"start": start, "end": time.time(), "method": request.url.path[5:]})

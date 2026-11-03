@@ -12,6 +12,8 @@ puts them into a mix of matches and lets them submit for the whole match:
 - 40% of players press "I submitted" a few seconds after submitting,
   30% only come back to the tab (soft "focus" hint), 30% do neither
 - every player and one spectator per match keep a WebSocket open
+- fake CF answers each call in --cf-latency-ms (default 300-700 ms, like the real API)
+- in team ICPC, nobody resubmits a problem their team already solved
 
 Measured: delay from creationTimeSeconds (and from the moment the verdict was
 ready on fake CF) until the final verdict shows up on the player's own
@@ -106,6 +108,8 @@ class Sub:
     created: int          # creationTimeSeconds
     created_f: float      # wall clock at submit
     verdict: str
+    match: str = ""
+    judge_s: float = 0.0
     judged_at: float | None = None
     first_seen: float | None = None
     final_seen: float | None = None
@@ -122,6 +126,7 @@ class Player:
     code: str = ""
     solved: set = field(default_factory=set)
     end_time: int = 0
+    team: int | None = None
 
 
 @dataclass
@@ -137,6 +142,7 @@ class Match:
     ended_at: float | None = None
     final_at: float | None = None
     claimed: set = field(default_factory=set)
+    team_solved: dict = field(default_factory=dict)  # team -> labels (team ICPC)
 
 
 class Run:
@@ -164,7 +170,7 @@ class Run:
     # ---------- processes ----------
 
     def start_processes(self) -> None:
-        env = dict(os.environ, PYTHONUNBUFFERED="1")
+        env = dict(os.environ, PYTHONUNBUFFERED="1", FAKE_CF_LATENCY_MS=self.args.cf_latency_ms)
         env.pop("HTTPS_PROXY", None)
         env.pop("HTTP_PROXY", None)
         cf_log = open(self.workdir / "fake_cf.log", "w")
@@ -172,10 +178,10 @@ class Run:
             [sys.executable, "-m", "uvicorn", "tools.fake_cf:app", "--port", str(self.cf_port), "--log-level", "warning"],
             cwd=ROOT, env=env, stdout=cf_log, stderr=subprocess.STDOUT))
         app_env = dict(env, CF_API_BASE=f"{self.cf_url}/api", DB_PATH=str(self.workdir / "load.db"),
-                       SECRET_KEY="loadtest-secret", COOKIE_SECURE="0")
+                       SECRET_KEY="loadtest-secret", COOKIE_SECURE="0", LOADTEST_CONFIG=self.args.config)
         app_log = open(self.workdir / "app.log", "w")
         self.app = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app.main:app", "--port", str(self.app_port), "--workers", "1",
+            [sys.executable, "-m", "uvicorn", "tools.tuned_app:app", "--port", str(self.app_port), "--workers", "1",
              "--proxy-headers", "--forwarded-allow-ips", "*", "--no-access-log"],
             cwd=ROOT, env=app_env, stdout=app_log, stderr=subprocess.STDOUT)
         self.procs.append(self.app)
@@ -295,7 +301,8 @@ class Run:
                     m.labels = [(x["label"], x["key"]) for x in st["problems"]]
                     m.end_time = st["end_time"]
                     for p in m.players:
-                        p.end_time = next(x["end_time"] for x in st["players"] if x["user_id"] == p.user_id)
+                        me = next(x for x in st["players"] if x["user_id"] == p.user_id)
+                        p.end_time, p.team = me["end_time"], me.get("team")
                     pending.discard(code)
                 elif st["status"] == "lobby" and not all(x["ready"] for x in st["players"]):
                     # bounced back to the lobby (e.g. CF hiccup): ready again
@@ -358,6 +365,7 @@ class Run:
 
     async def judge(self, sub: Sub, sub_id: int) -> None:
         delay = self.rng.uniform(40, 90) if self.rng.random() < 0.05 else self.rng.uniform(2, 20)
+        sub.judge_s = delay
         await asyncio.sleep(delay)
         await self.cf_verdict(sub_id, sub.verdict)
         sub.judged_at = time.time()
@@ -376,17 +384,21 @@ class Run:
                 pass
             if time.time() > p.end_time - 20:
                 break
-            left = [(lab, key) for lab, key in m.labels if lab not in p.solved and lab not in m.claimed]
+            team_done = m.team_solved.get(p.team, set()) if m.mode == "team" else set()
+            left = [(lab, key) for lab, key in m.labels
+                    if lab not in p.solved and lab not in m.claimed and lab not in team_done]
             if not left:
                 break
             label, key = rng.choice(left)
             verdict = pick(rng, VERDICTS)
             res = await self.cf_submit(p.handle, key, "TESTING")
-            sub = Sub(p.handle, p.behaviour, res["creationTimeSeconds"], time.time(), verdict)
+            sub = Sub(p.handle, p.behaviour, res["creationTimeSeconds"], time.time(), verdict,
+                      match=f"{m.mode}-{m.rules}-{len(m.players)}")
             self.subs[(p.handle.lower(), sub.created)] = sub
             tasks.append(asyncio.create_task(self.judge(sub, res["id"])))
             if verdict == "OK":
                 p.solved.add(label)
+                m.team_solved.setdefault(p.team, set()).add(label)
             if p.behaviour == "button":
                 await asyncio.sleep(rng.uniform(2, 8))  # switch tabs, press the button
                 await ws.send(json.dumps({"type": "submitted", "data": {"code": p.code}}))
@@ -485,9 +497,9 @@ class Run:
                       if match_start <= h["t"] <= match_end]
         return {
             "players": self.n,
+            "config_overrides": json.loads(self.args.config or "{}"),
             "matches": [{"mode": m.mode, "rules": m.rules, "size": len(m.players),
-                         "end_to_final_s": round(m.final_at - max(m.ended_at or m.end_time, m.end_time), 1)
-                         if m.final_at and m.ended_at else None,
+                         "end_to_final_s": round(m.final_at - m.ended_at, 1) if m.final_at and m.ended_at else None,
                          "ended_early": bool(m.ended_at and m.ended_at < m.end_time - 5)}
                         for m in self.matches.values()],
             "duration_min": self.args.duration,
@@ -516,6 +528,11 @@ class Run:
             },
             "queue_depth_poll_plus_interactive": summary(poll_depth),
             "errors": self.errors,
+            "subs": [{"behaviour": s.behaviour, "match": s.match, "verdict": s.verdict, "judge_s": round(s.judge_s, 1),
+                      "creation_to_ws_s": round(s.final_seen - s.created, 1) if s.final_seen else None,
+                      "ready_to_ws_s": round(s.final_seen - s.judged_at, 1) if s.final_seen and s.judged_at else None,
+                      "first_seen_s": round(s.first_seen - s.created, 1) if s.first_seen else None}
+                     for s in subs],
         }
 
 
@@ -543,6 +560,8 @@ async def main() -> None:
     ap.add_argument("--spectators", type=int, default=1, help="extra anonymous WebSockets per match")
     ap.add_argument("--parallel", action="store_true", help="run the player counts at the same time (separate stacks)")
     ap.add_argument("--seed", type=int, default=7)
+    ap.add_argument("--cf-latency-ms", default="300-700", help="fake CF answer time, e.g. 300-700 or 0")
+    ap.add_argument("--config", default="", help='JSON overrides for app/config.py, e.g. \'{"HARD_HINT_DELAY_S": 4}\'')
     ap.add_argument("--out", default="loadtest-results.json")
     args = ap.parse_args()
 
@@ -556,7 +575,11 @@ async def main() -> None:
     if args.parallel:
         results = await asyncio.gather(*[r.run() for r in runs])
     else:
-        results = [await r.run() for r in runs]
+        results = []
+        for r in runs:
+            results.append(await r.run())
+            print_summary(results[-1])
+            Path(args.out).write_text(json.dumps(results, indent=2))  # keep finished runs if a later one fails
     for r in results:
         print_summary(r)
     Path(args.out).write_text(json.dumps(results, indent=2))
