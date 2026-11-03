@@ -13,7 +13,7 @@ import logging
 from app import clock, config, db
 from app.cf.client import CFError, get_client
 from app.core import lockout
-from app.matches import draft, events, finalize, locks, store, view
+from app.matches import contest, draft, events, finalize, locks, store, view
 from app.models import Submission
 from app.poller.poller import poller
 
@@ -136,6 +136,7 @@ async def tick() -> None:
         locks.release_match(m["id"])
         events.state(m["id"])
 
+    contest.tick(now)
     draft.tick(now)
 
     for match in db.all("SELECT * FROM matches WHERE status = 'running'"):

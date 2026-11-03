@@ -5,7 +5,7 @@ from app import db
 from app.auth import session
 from app.cf import cache
 from app.core import custom_list, selection
-from app.matches import draft, service, store, view
+from app.matches import contest, draft, service, store, view
 from app.matches import settings as settings_mod
 from app.matches.service import MatchError
 from app.poller import ingest
@@ -60,6 +60,22 @@ class CaptainIn(BaseModel):
 
 
 class PickIn(BaseModel):
+    user_id: int
+
+
+class StartIn(BaseModel):
+    force: bool = False
+
+
+class ExtendIn(BaseModel):
+    minutes: int
+
+
+class AnnounceIn(BaseModel):
+    body: str
+
+
+class PlayerIn(BaseModel):
     user_id: int
 
 
@@ -154,6 +170,69 @@ async def start_draft(code: str, user=Depends(session.require_user)):
 async def draft_pick(code: str, body: PickIn, user=Depends(session.require_user)):
     _run(draft.pick, user, code, body.user_id)
     return {"ok": True}
+
+
+# ---------- hosted contests ----------
+
+@router.post("/contests")
+async def create_contest(body: dict, user=Depends(session.require_user)):
+    return {"code": _run(contest.create, user, body)}
+
+
+@router.get("/contests/{code}/edit")
+async def contest_edit_form(code: str, user=Depends(session.require_user)):
+    return _run(contest.editable, user, code)
+
+
+@router.patch("/contests/{code}")
+async def update_contest(code: str, body: dict, user=Depends(session.require_user)):
+    _run(contest.update, user, code, body)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/start")
+async def start_contest(code: str, body: StartIn | None = None, user=Depends(session.require_user)):
+    _run(contest.start_now, user, code, bool(body and body.force))
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/extend")
+async def extend_contest(code: str, body: ExtendIn, user=Depends(session.require_user)):
+    return {"end_time": _run(contest.extend, user, code, body.minutes)}
+
+
+@router.post("/contests/{code}/end")
+async def end_contest(code: str, user=Depends(session.require_user)):
+    _run(contest.end_early, user, code)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/cancel")
+async def cancel_contest(code: str, user=Depends(session.require_user)):
+    _run(contest.cancel, user, code)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/announcements")
+async def announce(code: str, body: AnnounceIn, user=Depends(session.require_user)):
+    return _run(contest.announce, user, code, body.body)
+
+
+@router.post("/contests/{code}/kick")
+async def kick(code: str, body: PlayerIn, user=Depends(session.require_user)):
+    _run(contest.kick, user, code, body.user_id)
+    return {"ok": True}
+
+
+@router.post("/contests/{code}/allow")
+async def allow(code: str, body: PlayerIn, user=Depends(session.require_user)):
+    _run(contest.allow, user, code, body.user_id)
+    return {"ok": True}
+
+
+@router.get("/events")
+async def events_listing(user=Depends(session.current_user)):
+    return contest.listing(user["id"] if user else None)
 
 
 @router.post("/matches/{code}/submitted")
