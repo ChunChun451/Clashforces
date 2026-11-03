@@ -1,0 +1,2564 @@
+[
+  {
+    "players": 20,
+    "config_overrides": {},
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 24.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": 0.0,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 24.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 42.0,
+        "ended_early": false
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 37.0,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 104.0,
+      "running": 188.7,
+      "play_done": 1117.6,
+      "all_final": 1125.7
+    },
+    "submissions": 54,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 28,
+          "p50": 18.0,
+          "p90": 29.0,
+          "max": 79.0,
+          "mean": 23.7
+        },
+        "from_verdict_ready_s": {
+          "n": 28,
+          "p50": 6.1,
+          "p90": 11.3,
+          "max": 12.9,
+          "mean": 6.0
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 14,
+          "p50": 25.1,
+          "p90": 42.8,
+          "max": 62.0,
+          "mean": 27.7
+        },
+        "from_verdict_ready_s": {
+          "n": 14,
+          "p50": 11.1,
+          "p90": 27.3,
+          "max": 36.1,
+          "mean": 13.1
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 12,
+          "p50": 39.9,
+          "p90": 86.1,
+          "max": 101.5,
+          "mean": 43.9
+        },
+        "from_verdict_ready_s": {
+          "n": 12,
+          "p50": 19.5,
+          "p90": 80.9,
+          "max": 92.3,
+          "mean": 30.6
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 54,
+          "p50": 22.6,
+          "p90": 61.6,
+          "max": 101.5,
+          "mean": 29.2
+        },
+        "from_verdict_ready_s": {
+          "n": 54,
+          "p50": 7.8,
+          "p90": 30.0,
+          "max": 92.3,
+          "mean": 13.3
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 448,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 25,
+        "user.status": 421
+      },
+      "min_gap_s": 2.307,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 25,
+        "mean": 23.3
+      },
+      "max_in_any_60s": 25
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 467,
+        "p50": 0.5,
+        "p90": 0.5,
+        "max": 3.0,
+        "mean": 0.5
+      },
+      "rss_mb": {
+        "n": 560,
+        "p50": 65.3,
+        "p90": 65.3,
+        "max": 65.4,
+        "mean": 64.9
+      }
+    },
+    "ws": {
+      "clients": 25,
+      "messages_received": 741,
+      "broadcasts": 95,
+      "receivers_per_broadcast": {
+        "n": 95,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 5.7
+      },
+      "fanout_spread_ms": {
+        "n": 95,
+        "p50": 0.5,
+        "p90": 0.7,
+        "max": 1.4,
+        "mean": 0.5
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 467,
+      "p50": 1.0,
+      "p90": 1.0,
+      "max": 3,
+      "mean": 0.9
+    },
+    "errors": [],
+    "subs": [
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 7.0,
+        "ready_to_ws_s": 0.9,
+        "first_seen_s": 7.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.9,
+        "creation_to_ws_s": 32.8,
+        "ready_to_ws_s": 26.8,
+        "first_seen_s": 32.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 56.8,
+        "creation_to_ws_s": 62.0,
+        "ready_to_ws_s": 5.0,
+        "first_seen_s": 11.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 9.1,
+        "creation_to_ws_s": 11.4,
+        "ready_to_ws_s": 2.0,
+        "first_seen_s": 11.4
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.1,
+        "creation_to_ws_s": 27.3,
+        "ready_to_ws_s": 9.6,
+        "first_seen_s": 9.8
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 19.6,
+        "creation_to_ws_s": 26.3,
+        "ready_to_ws_s": 6.2,
+        "first_seen_s": 8.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.2,
+        "creation_to_ws_s": 46.9,
+        "ready_to_ws_s": 30.1,
+        "first_seen_s": 46.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.2,
+        "creation_to_ws_s": 62.2,
+        "ready_to_ws_s": 56.1,
+        "first_seen_s": 62.2
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 11.8,
+        "creation_to_ws_s": 18.3,
+        "ready_to_ws_s": 6.1,
+        "first_seen_s": 8.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.7,
+        "creation_to_ws_s": 20.9,
+        "ready_to_ws_s": 16.6,
+        "first_seen_s": 20.9
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 18.6,
+        "creation_to_ws_s": 29.5,
+        "ready_to_ws_s": 10.3,
+        "first_seen_s": 9.1
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.5,
+        "creation_to_ws_s": 25.8,
+        "ready_to_ws_s": 11.0,
+        "first_seen_s": 0.8
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 9.2,
+        "creation_to_ws_s": 16.1,
+        "ready_to_ws_s": 6.1,
+        "first_seen_s": 8.2
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.7,
+        "creation_to_ws_s": 26.9,
+        "ready_to_ws_s": 12.2,
+        "first_seen_s": 14.5
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 17.5,
+        "ready_to_ws_s": 11.3,
+        "first_seen_s": 17.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 16.4,
+        "creation_to_ws_s": 37.5,
+        "ready_to_ws_s": 20.3,
+        "first_seen_s": 37.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 16.2,
+        "creation_to_ws_s": 25.7,
+        "ready_to_ws_s": 8.6,
+        "first_seen_s": 25.7
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.1,
+        "creation_to_ws_s": 88.8,
+        "ready_to_ws_s": 83.7,
+        "first_seen_s": 88.8
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 19.7,
+        "creation_to_ws_s": 28.1,
+        "ready_to_ws_s": 7.9,
+        "first_seen_s": 5.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 18.4,
+        "ready_to_ws_s": 12.0,
+        "first_seen_s": 18.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 14.8,
+        "creation_to_ws_s": 25.4,
+        "ready_to_ws_s": 10.2,
+        "first_seen_s": 25.4
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 10.6,
+        "creation_to_ws_s": 12.7,
+        "ready_to_ws_s": 1.3,
+        "first_seen_s": 4.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 16.2,
+        "creation_to_ws_s": 60.8,
+        "ready_to_ws_s": 44.5,
+        "first_seen_s": 60.8
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.7,
+        "creation_to_ws_s": 14.5,
+        "ready_to_ws_s": 4.8,
+        "first_seen_s": 7.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 13.5,
+        "creation_to_ws_s": 43.4,
+        "ready_to_ws_s": 29.6,
+        "first_seen_s": 43.4
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 45.6,
+        "creation_to_ws_s": 51.3,
+        "ready_to_ws_s": 4.8,
+        "first_seen_s": 13.5
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 16.6,
+        "ready_to_ws_s": 1.0,
+        "first_seen_s": 16.6
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.5,
+        "creation_to_ws_s": 21.2,
+        "ready_to_ws_s": 0.7,
+        "first_seen_s": 8.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.6,
+        "creation_to_ws_s": 29.0,
+        "ready_to_ws_s": 22.0,
+        "first_seen_s": 29.0
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.7,
+        "creation_to_ws_s": 27.7,
+        "ready_to_ws_s": 8.0,
+        "first_seen_s": 7.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.2,
+        "creation_to_ws_s": 14.6,
+        "ready_to_ws_s": 12.2,
+        "first_seen_s": 14.6
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.1,
+        "creation_to_ws_s": 14.1,
+        "ready_to_ws_s": 6.2,
+        "first_seen_s": 14.1
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.8,
+        "creation_to_ws_s": 16.0,
+        "ready_to_ws_s": 12.9,
+        "first_seen_s": 16.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 17.6,
+        "creation_to_ws_s": 28.8,
+        "ready_to_ws_s": 11.1,
+        "first_seen_s": 16.7
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 70.7,
+        "creation_to_ws_s": 74.4,
+        "ready_to_ws_s": 3.1,
+        "first_seen_s": 13.9
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 17.7,
+        "ready_to_ws_s": 11.3,
+        "first_seen_s": 17.7
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.4,
+        "creation_to_ws_s": 11.2,
+        "ready_to_ws_s": 3.0,
+        "first_seen_s": 11.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.2,
+        "creation_to_ws_s": 11.9,
+        "ready_to_ws_s": 1.0,
+        "first_seen_s": 1.8
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.4,
+        "creation_to_ws_s": 14.8,
+        "ready_to_ws_s": 3.0,
+        "first_seen_s": 7.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 9.2,
+        "creation_to_ws_s": 24.8,
+        "ready_to_ws_s": 15.0,
+        "first_seen_s": 24.8
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.9,
+        "creation_to_ws_s": 27.1,
+        "ready_to_ws_s": 11.2,
+        "first_seen_s": 14.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.9,
+        "creation_to_ws_s": 17.4,
+        "ready_to_ws_s": 2.4,
+        "first_seen_s": 17.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 4.4,
+        "creation_to_ws_s": 41.3,
+        "ready_to_ws_s": 36.1,
+        "first_seen_s": 41.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 19.2,
+        "ready_to_ws_s": 2.2,
+        "first_seen_s": 19.2
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.0,
+        "creation_to_ws_s": 23.9,
+        "ready_to_ws_s": 4.7,
+        "first_seen_s": 11.3
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 12.4,
+        "creation_to_ws_s": 17.1,
+        "ready_to_ws_s": 3.9,
+        "first_seen_s": 9.5
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 17.4,
+        "creation_to_ws_s": 18.4,
+        "ready_to_ws_s": 0.0,
+        "first_seen_s": 18.4
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.6,
+        "creation_to_ws_s": 9.9,
+        "ready_to_ws_s": 0.2,
+        "first_seen_s": 9.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.9,
+        "creation_to_ws_s": 101.5,
+        "ready_to_ws_s": 92.3,
+        "first_seen_s": 101.5
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.7,
+        "creation_to_ws_s": 13.0,
+        "ready_to_ws_s": 3.1,
+        "first_seen_s": 13.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.7,
+        "creation_to_ws_s": 13.7,
+        "ready_to_ws_s": 1.2,
+        "first_seen_s": 13.7
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 16.0,
+        "creation_to_ws_s": 17.4,
+        "ready_to_ws_s": 1.1,
+        "first_seen_s": 9.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 16.9,
+        "creation_to_ws_s": 20.0,
+        "ready_to_ws_s": 2.3,
+        "first_seen_s": 7.3
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 70.7,
+        "creation_to_ws_s": 79.0,
+        "ready_to_ws_s": 7.7,
+        "first_seen_s": 8.4
+      }
+    ]
+  },
+  {
+    "players": 30,
+    "config_overrides": {},
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 27.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": 0.0,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 27.0,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 38.0,
+        "ended_early": false
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 50.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": 0.0,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 47.1,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 151.7,
+      "running": 273.1,
+      "play_done": 1171.6,
+      "all_final": 1218.7
+    },
+    "submissions": 73,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 29,
+          "p50": 17.8,
+          "p90": 30.2,
+          "max": 91.9,
+          "mean": 24.4
+        },
+        "from_verdict_ready_s": {
+          "n": 29,
+          "p50": 7.9,
+          "p90": 11.6,
+          "max": 15.6,
+          "mean": 7.0
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 22,
+          "p50": 26.2,
+          "p90": 49.8,
+          "max": 73.7,
+          "mean": 29.4
+        },
+        "from_verdict_ready_s": {
+          "n": 22,
+          "p50": 10.4,
+          "p90": 30.4,
+          "max": 70.5,
+          "mean": 15.1
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 22,
+          "p50": 59.5,
+          "p90": 140.3,
+          "max": 153.3,
+          "mean": 74.4
+        },
+        "from_verdict_ready_s": {
+          "n": 22,
+          "p50": 43.1,
+          "p90": 120.5,
+          "max": 145.7,
+          "mean": 58.9
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 73,
+          "p50": 27.5,
+          "p90": 91.6,
+          "max": 153.3,
+          "mean": 41.0
+        },
+        "from_verdict_ready_s": {
+          "n": 73,
+          "p50": 10.9,
+          "p90": 71.4,
+          "max": 145.7,
+          "mean": 25.1
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 488,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 37,
+        "user.status": 449
+      },
+      "min_gap_s": 2.305,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 25,
+        "mean": 23.6
+      },
+      "max_in_any_60s": 25
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 472,
+        "p50": 0.5,
+        "p90": 0.5,
+        "max": 4.0,
+        "mean": 0.5
+      },
+      "rss_mb": {
+        "n": 607,
+        "p50": 66.5,
+        "p90": 66.5,
+        "max": 66.6,
+        "mean": 65.8
+      }
+    },
+    "ws": {
+      "clients": 37,
+      "messages_received": 964,
+      "broadcasts": 117,
+      "receivers_per_broadcast": {
+        "n": 117,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 5.9
+      },
+      "fanout_spread_ms": {
+        "n": 117,
+        "p50": 0.5,
+        "p90": 0.7,
+        "max": 3.1,
+        "mean": 0.5
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 472,
+      "p50": 1.0,
+      "p90": 2.0,
+      "max": 4,
+      "mean": 0.9
+    },
+    "errors": [],
+    "subs": [
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 83.1,
+        "creation_to_ws_s": 91.9,
+        "ready_to_ws_s": 8.4,
+        "first_seen_s": 14.4
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 26.9,
+        "ready_to_ws_s": 10.9,
+        "first_seen_s": 14.8
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.9,
+        "creation_to_ws_s": 85.6,
+        "ready_to_ws_s": 71.6,
+        "first_seen_s": 85.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.0,
+        "creation_to_ws_s": 30.2,
+        "ready_to_ws_s": 11.4,
+        "first_seen_s": 4.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 15.5,
+        "creation_to_ws_s": 16.9,
+        "ready_to_ws_s": 0.4,
+        "first_seen_s": 16.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 9.5,
+        "creation_to_ws_s": 28.6,
+        "ready_to_ws_s": 18.6,
+        "first_seen_s": 28.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 19.3,
+        "creation_to_ws_s": 25.3,
+        "ready_to_ws_s": 5.1,
+        "first_seen_s": 12.4
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 9.9,
+        "creation_to_ws_s": 18.1,
+        "ready_to_ws_s": 8.2,
+        "first_seen_s": 18.1
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.2,
+        "creation_to_ws_s": 16.7,
+        "ready_to_ws_s": 2.1,
+        "first_seen_s": 16.7
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 10.1,
+        "creation_to_ws_s": 41.5,
+        "ready_to_ws_s": 30.6,
+        "first_seen_s": 41.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 7.0,
+        "creation_to_ws_s": 17.7,
+        "ready_to_ws_s": 10.4,
+        "first_seen_s": 17.7
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.4,
+        "creation_to_ws_s": 15.0,
+        "ready_to_ws_s": 0.3,
+        "first_seen_s": 10.3
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.2,
+        "creation_to_ws_s": 30.3,
+        "ready_to_ws_s": 11.6,
+        "first_seen_s": 18.0
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 18.6,
+        "creation_to_ws_s": 109.9,
+        "ready_to_ws_s": 91.2,
+        "first_seen_s": 109.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 17.9,
+        "creation_to_ws_s": 132.9,
+        "ready_to_ws_s": 114.7,
+        "first_seen_s": 132.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 15.2,
+        "creation_to_ws_s": 26.8,
+        "ready_to_ws_s": 11.6,
+        "first_seen_s": 26.8
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.0,
+        "creation_to_ws_s": 34.3,
+        "ready_to_ws_s": 29.1,
+        "first_seen_s": 34.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 49.0,
+        "creation_to_ws_s": 50.8,
+        "ready_to_ws_s": 1.5,
+        "first_seen_s": 38.6
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.2,
+        "creation_to_ws_s": 7.3,
+        "ready_to_ws_s": 4.1,
+        "first_seen_s": 7.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 12.2,
+        "creation_to_ws_s": 22.2,
+        "ready_to_ws_s": 9.4,
+        "first_seen_s": 22.2
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 7.9,
+        "creation_to_ws_s": 10.5,
+        "ready_to_ws_s": 1.9,
+        "first_seen_s": 10.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.2,
+        "creation_to_ws_s": 25.3,
+        "ready_to_ws_s": 10.4,
+        "first_seen_s": 12.3
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 20.0,
+        "creation_to_ws_s": 141.1,
+        "ready_to_ws_s": 121.1,
+        "first_seen_s": 141.1
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.8,
+        "creation_to_ws_s": 16.0,
+        "ready_to_ws_s": 0.7,
+        "first_seen_s": 8.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.0,
+        "creation_to_ws_s": 14.8,
+        "ready_to_ws_s": 2.9,
+        "first_seen_s": 14.8
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 18.1,
+        "creation_to_ws_s": 35.5,
+        "ready_to_ws_s": 16.9,
+        "first_seen_s": 35.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 2.5,
+        "creation_to_ws_s": 73.7,
+        "ready_to_ws_s": 70.5,
+        "first_seen_s": 73.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 19.0,
+        "creation_to_ws_s": 29.5,
+        "ready_to_ws_s": 9.8,
+        "first_seen_s": 29.5
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.2,
+        "creation_to_ws_s": 73.2,
+        "ready_to_ws_s": 61.7,
+        "first_seen_s": 73.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.2,
+        "creation_to_ws_s": 21.6,
+        "ready_to_ws_s": 15.7,
+        "first_seen_s": 21.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 25.7,
+        "ready_to_ws_s": 9.5,
+        "first_seen_s": 11.1
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.2,
+        "creation_to_ws_s": 145.6,
+        "ready_to_ws_s": 134.3,
+        "first_seen_s": 145.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 8.3,
+        "creation_to_ws_s": 12.7,
+        "ready_to_ws_s": 3.8,
+        "first_seen_s": 12.7
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.6,
+        "creation_to_ws_s": 22.8,
+        "ready_to_ws_s": 4.0,
+        "first_seen_s": 12.3
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.5,
+        "creation_to_ws_s": 15.5,
+        "ready_to_ws_s": 7.3,
+        "first_seen_s": 15.5
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 17.4,
+        "creation_to_ws_s": 57.5,
+        "ready_to_ws_s": 39.8,
+        "first_seen_s": 57.5
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 16.9,
+        "creation_to_ws_s": 24.9,
+        "ready_to_ws_s": 7.9,
+        "first_seen_s": 12.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.0,
+        "creation_to_ws_s": 54.4,
+        "ready_to_ws_s": 46.9,
+        "first_seen_s": 54.4
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.5,
+        "creation_to_ws_s": 153.3,
+        "ready_to_ws_s": 145.7,
+        "first_seen_s": 153.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.4,
+        "creation_to_ws_s": 23.9,
+        "ready_to_ws_s": 9.3,
+        "first_seen_s": 23.9
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.0,
+        "creation_to_ws_s": 26.8,
+        "ready_to_ws_s": 15.6,
+        "first_seen_s": 26.8
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.2,
+        "creation_to_ws_s": 14.2,
+        "ready_to_ws_s": 7.9,
+        "first_seen_s": 14.2
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.5,
+        "creation_to_ws_s": 17.2,
+        "ready_to_ws_s": 5.7,
+        "first_seen_s": 17.2
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.9,
+        "creation_to_ws_s": 52.9,
+        "ready_to_ws_s": 41.4,
+        "first_seen_s": 52.9
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.9,
+        "creation_to_ws_s": 49.6,
+        "ready_to_ws_s": 31.7,
+        "first_seen_s": 49.6
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.9,
+        "creation_to_ws_s": 27.7,
+        "ready_to_ws_s": 10.1,
+        "first_seen_s": 15.1
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 14.7,
+        "creation_to_ws_s": 61.4,
+        "ready_to_ws_s": 46.5,
+        "first_seen_s": 61.4
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 78.0,
+        "creation_to_ws_s": 87.4,
+        "ready_to_ws_s": 8.6,
+        "first_seen_s": 28.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.5,
+        "creation_to_ws_s": 21.7,
+        "ready_to_ws_s": 4.6,
+        "first_seen_s": 21.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.6,
+        "creation_to_ws_s": 41.0,
+        "ready_to_ws_s": 31.6,
+        "first_seen_s": 41.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 17.6,
+        "creation_to_ws_s": 30.1,
+        "ready_to_ws_s": 11.7,
+        "first_seen_s": 4.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.7,
+        "creation_to_ws_s": 27.0,
+        "ready_to_ws_s": 8.8,
+        "first_seen_s": 27.0
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.7,
+        "creation_to_ws_s": 15.4,
+        "ready_to_ws_s": 10.1,
+        "first_seen_s": 15.4
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.6,
+        "creation_to_ws_s": 108.5,
+        "ready_to_ws_s": 96.5,
+        "first_seen_s": 108.5
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 81.2,
+        "creation_to_ws_s": 90.1,
+        "ready_to_ws_s": 8.2,
+        "first_seen_s": 27.8
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 2.4,
+        "creation_to_ws_s": 17.8,
+        "ready_to_ws_s": 14.8,
+        "first_seen_s": 17.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 30.6,
+        "ready_to_ws_s": 15.1,
+        "first_seen_s": 30.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.4,
+        "creation_to_ws_s": 20.2,
+        "ready_to_ws_s": 14.5,
+        "first_seen_s": 20.2
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 12.6,
+        "creation_to_ws_s": 31.6,
+        "ready_to_ws_s": 18.5,
+        "first_seen_s": 31.6
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 10.8,
+        "creation_to_ws_s": 13.1,
+        "ready_to_ws_s": 2.0,
+        "first_seen_s": 13.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.0,
+        "creation_to_ws_s": 27.5,
+        "ready_to_ws_s": 11.7,
+        "first_seen_s": 27.5
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 5.3,
+        "creation_to_ws_s": 42.6,
+        "ready_to_ws_s": 37.0,
+        "first_seen_s": 42.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 15.6,
+        "creation_to_ws_s": 21.0,
+        "ready_to_ws_s": 4.8,
+        "first_seen_s": 21.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.4,
+        "creation_to_ws_s": 28.3,
+        "ready_to_ws_s": 10.2,
+        "first_seen_s": 15.4
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.8,
+        "creation_to_ws_s": 17.7,
+        "ready_to_ws_s": 2.1,
+        "first_seen_s": 17.7
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.0,
+        "creation_to_ws_s": 31.5,
+        "ready_to_ws_s": 22.0,
+        "first_seen_s": 31.5
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 17.0,
+        "creation_to_ws_s": 28.9,
+        "ready_to_ws_s": 11.3,
+        "first_seen_s": 9.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 14.1,
+        "creation_to_ws_s": 33.9,
+        "ready_to_ws_s": 19.4,
+        "first_seen_s": 33.9
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 8.7,
+        "creation_to_ws_s": 13.4,
+        "ready_to_ws_s": 4.2,
+        "first_seen_s": 13.4
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 3.5,
+        "creation_to_ws_s": 110.4,
+        "ready_to_ws_s": 106.4,
+        "first_seen_s": 110.4
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.3,
+        "creation_to_ws_s": 22.3,
+        "ready_to_ws_s": 13.1,
+        "first_seen_s": 22.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.1,
+        "creation_to_ws_s": 16.0,
+        "ready_to_ws_s": 10.1,
+        "first_seen_s": 16.0
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 3.6,
+        "creation_to_ws_s": 7.7,
+        "ready_to_ws_s": 3.8,
+        "first_seen_s": 7.7
+      }
+    ]
+  },
+  {
+    "players": 40,
+    "config_overrides": {},
+    "matches": [
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 38.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": 0.0,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 38.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 48.1,
+        "ended_early": false
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 61.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "lockout",
+        "size": 4,
+        "end_to_final_s": 0.0,
+        "ended_early": true
+      },
+      {
+        "mode": "friend",
+        "rules": "icpc",
+        "size": 2,
+        "end_to_final_s": 58.1,
+        "ended_early": false
+      },
+      {
+        "mode": "team",
+        "rules": "icpc",
+        "size": 6,
+        "end_to_final_s": 20.3,
+        "ended_early": true
+      },
+      {
+        "mode": "group",
+        "rules": "icpc",
+        "size": 4,
+        "end_to_final_s": 60.1,
+        "ended_early": false
+      }
+    ],
+    "duration_min": 15,
+    "phases_s": {
+      "logged_in": 202.2,
+      "running": 362.2,
+      "play_done": 1259.8,
+      "all_final": 1319.9
+    },
+    "submissions": 94,
+    "missed_on_ws": 0,
+    "latency": {
+      "button": {
+        "from_creation_s": {
+          "n": 26,
+          "p50": 19.5,
+          "p90": 49.2,
+          "max": 86.0,
+          "mean": 26.2
+        },
+        "from_verdict_ready_s": {
+          "n": 26,
+          "p50": 6.9,
+          "p90": 15.5,
+          "max": 26.2,
+          "mean": 7.3
+        }
+      },
+      "focus": {
+        "from_creation_s": {
+          "n": 26,
+          "p50": 32.1,
+          "p90": 65.8,
+          "max": 96.6,
+          "mean": 41.3
+        },
+        "from_verdict_ready_s": {
+          "n": 26,
+          "p50": 17.5,
+          "p90": 50.3,
+          "max": 80.4,
+          "mean": 24.5
+        }
+      },
+      "none": {
+        "from_creation_s": {
+          "n": 42,
+          "p50": 101.2,
+          "p90": 154.0,
+          "max": 201.9,
+          "mean": 90.7
+        },
+        "from_verdict_ready_s": {
+          "n": 42,
+          "p50": 79.5,
+          "p90": 138.7,
+          "max": 185.5,
+          "mean": 73.6
+        }
+      },
+      "all": {
+        "from_creation_s": {
+          "n": 94,
+          "p50": 37.7,
+          "p90": 126.7,
+          "max": 201.9,
+          "mean": 59.2
+        },
+        "from_verdict_ready_s": {
+          "n": 94,
+          "p50": 17.0,
+          "p90": 110.1,
+          "max": 185.5,
+          "mean": 41.7
+        }
+      }
+    },
+    "cf": {
+      "total_calls": 528,
+      "methods": {
+        "contest.list": 1,
+        "problemset.problems": 1,
+        "user.info": 49,
+        "user.status": 477
+      },
+      "min_gap_s": 2.304,
+      "overlapping_calls": 0,
+      "per_minute_in_match": {
+        "max": 25,
+        "mean": 23.9
+      },
+      "max_in_any_60s": 25
+    },
+    "process": {
+      "cpu_pct": {
+        "n": 478,
+        "p50": 0.5,
+        "p90": 1.0,
+        "max": 5.0,
+        "mean": 0.5
+      },
+      "rss_mb": {
+        "n": 657,
+        "p50": 67.9,
+        "p90": 68.0,
+        "max": 68.1,
+        "mean": 66.9
+      }
+    },
+    "ws": {
+      "clients": 49,
+      "messages_received": 1221,
+      "broadcasts": 147,
+      "receivers_per_broadcast": {
+        "n": 147,
+        "p50": 7.0,
+        "p90": 7.0,
+        "max": 7,
+        "mean": 5.9
+      },
+      "fanout_spread_ms": {
+        "n": 147,
+        "p50": 0.5,
+        "p90": 0.7,
+        "max": 0.9,
+        "mean": 0.5
+      }
+    },
+    "queue_depth_poll_plus_interactive": {
+      "n": 478,
+      "p50": 1.0,
+      "p90": 2.0,
+      "max": 4,
+      "mean": 1.0
+    },
+    "errors": [],
+    "subs": [
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.4,
+        "creation_to_ws_s": 13.3,
+        "ready_to_ws_s": 2.2,
+        "first_seen_s": 13.3
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 12.7,
+        "creation_to_ws_s": 26.0,
+        "ready_to_ws_s": 12.5,
+        "first_seen_s": 13.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.9,
+        "creation_to_ws_s": 51.8,
+        "ready_to_ws_s": 39.7,
+        "first_seen_s": 51.8
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.3,
+        "creation_to_ws_s": 82.4,
+        "ready_to_ws_s": 74.6,
+        "first_seen_s": 82.4
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.6,
+        "creation_to_ws_s": 18.0,
+        "ready_to_ws_s": 13.2,
+        "first_seen_s": 18.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 9.6,
+        "creation_to_ws_s": 121.2,
+        "ready_to_ws_s": 110.6,
+        "first_seen_s": 121.2
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 4.0,
+        "creation_to_ws_s": 4.6,
+        "ready_to_ws_s": 0.3,
+        "first_seen_s": 4.6
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 19.3,
+        "creation_to_ws_s": 72.1,
+        "ready_to_ws_s": 52.0,
+        "first_seen_s": 72.1
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "OK",
+        "judge_s": 73.0,
+        "creation_to_ws_s": 121.0,
+        "ready_to_ws_s": 48.0,
+        "first_seen_s": 121.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 17.3,
+        "ready_to_ws_s": 1.9,
+        "first_seen_s": 9.8
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 11.0,
+        "creation_to_ws_s": 18.6,
+        "ready_to_ws_s": 7.2,
+        "first_seen_s": 18.6
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.1,
+        "creation_to_ws_s": 24.9,
+        "ready_to_ws_s": 17.0,
+        "first_seen_s": 24.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 14.0,
+        "creation_to_ws_s": 29.7,
+        "ready_to_ws_s": 15.5,
+        "first_seen_s": 29.7
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 10.6,
+        "creation_to_ws_s": 36.4,
+        "ready_to_ws_s": 25.2,
+        "first_seen_s": 36.4
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 78.8,
+        "creation_to_ws_s": 86.0,
+        "ready_to_ws_s": 6.5,
+        "first_seen_s": 14.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 56.9,
+        "ready_to_ws_s": 39.9,
+        "first_seen_s": 56.9
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 16.0,
+        "creation_to_ws_s": 201.9,
+        "ready_to_ws_s": 185.5,
+        "first_seen_s": 201.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 17.4,
+        "creation_to_ws_s": 28.4,
+        "ready_to_ws_s": 10.3,
+        "first_seen_s": 16.1
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 7.8,
+        "creation_to_ws_s": 17.1,
+        "ready_to_ws_s": 9.3,
+        "first_seen_s": 17.1
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 13.8,
+        "creation_to_ws_s": 95.9,
+        "ready_to_ws_s": 81.7,
+        "first_seen_s": 95.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 11.9,
+        "creation_to_ws_s": 22.6,
+        "ready_to_ws_s": 10.0,
+        "first_seen_s": 22.6
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.4,
+        "creation_to_ws_s": 41.4,
+        "ready_to_ws_s": 25.1,
+        "first_seen_s": 41.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 12.9,
+        "creation_to_ws_s": 23.6,
+        "ready_to_ws_s": 10.0,
+        "first_seen_s": 23.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 46.5,
+        "creation_to_ws_s": 126.2,
+        "ready_to_ws_s": 79.2,
+        "first_seen_s": 126.2
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 5.9,
+        "creation_to_ws_s": 8.2,
+        "ready_to_ws_s": 1.4,
+        "first_seen_s": 8.2
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 3.0,
+        "creation_to_ws_s": 128.5,
+        "ready_to_ws_s": 125.5,
+        "first_seen_s": 128.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 7.9,
+        "creation_to_ws_s": 26.3,
+        "ready_to_ws_s": 18.4,
+        "first_seen_s": 26.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 53.7,
+        "creation_to_ws_s": 58.9,
+        "ready_to_ws_s": 4.2,
+        "first_seen_s": 10.7
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-4",
+        "verdict": "OK",
+        "judge_s": 15.6,
+        "creation_to_ws_s": 19.6,
+        "ready_to_ws_s": 3.3,
+        "first_seen_s": 19.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 87.7,
+        "creation_to_ws_s": 193.4,
+        "ready_to_ws_s": 105.6,
+        "first_seen_s": 193.4
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 10.7,
+        "creation_to_ws_s": 16.4,
+        "ready_to_ws_s": 5.3,
+        "first_seen_s": 8.7
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 19.3,
+        "ready_to_ws_s": 2.4,
+        "first_seen_s": 19.3
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 16.8,
+        "creation_to_ws_s": 20.0,
+        "ready_to_ws_s": 2.3,
+        "first_seen_s": 20.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 15.3,
+        "creation_to_ws_s": 96.6,
+        "ready_to_ws_s": 80.4,
+        "first_seen_s": 96.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 12.6,
+        "creation_to_ws_s": 145.0,
+        "ready_to_ws_s": 132.0,
+        "first_seen_s": 145.0
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 73.4,
+        "creation_to_ws_s": 76.5,
+        "ready_to_ws_s": 3.1,
+        "first_seen_s": 9.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 15.1,
+        "creation_to_ws_s": 49.1,
+        "ready_to_ws_s": 33.3,
+        "first_seen_s": 49.1
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 3.9,
+        "creation_to_ws_s": 156.5,
+        "ready_to_ws_s": 152.1,
+        "first_seen_s": 156.5
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.6,
+        "creation_to_ws_s": 13.7,
+        "ready_to_ws_s": 0.1,
+        "first_seen_s": 13.7
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 13.0,
+        "creation_to_ws_s": 112.0,
+        "ready_to_ws_s": 98.9,
+        "first_seen_s": 112.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.8,
+        "creation_to_ws_s": 23.9,
+        "ready_to_ws_s": 7.6,
+        "first_seen_s": 23.9
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 17.5,
+        "creation_to_ws_s": 127.0,
+        "ready_to_ws_s": 109.0,
+        "first_seen_s": 127.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 13.5,
+        "creation_to_ws_s": 154.7,
+        "ready_to_ws_s": 141.1,
+        "first_seen_s": 154.7
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.4,
+        "creation_to_ws_s": 129.6,
+        "ready_to_ws_s": 117.9,
+        "first_seen_s": 129.6
+      },
+      {
+        "behaviour": "button",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.7,
+        "creation_to_ws_s": 13.7,
+        "ready_to_ws_s": 7.4,
+        "first_seen_s": 13.7
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 17.2,
+        "creation_to_ws_s": 113.0,
+        "ready_to_ws_s": 94.9,
+        "first_seen_s": 113.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 3.4,
+        "creation_to_ws_s": 55.6,
+        "ready_to_ws_s": 51.3,
+        "first_seen_s": 55.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.1,
+        "creation_to_ws_s": 15.2,
+        "ready_to_ws_s": 11.1,
+        "first_seen_s": 15.2
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 12.2,
+        "creation_to_ws_s": 18.2,
+        "ready_to_ws_s": 5.4,
+        "first_seen_s": 3.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 13.8,
+        "creation_to_ws_s": 32.2,
+        "ready_to_ws_s": 18.0,
+        "first_seen_s": 4.5
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 11.2,
+        "creation_to_ws_s": 28.6,
+        "ready_to_ws_s": 17.0,
+        "first_seen_s": 28.6
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "OK",
+        "judge_s": 16.8,
+        "creation_to_ws_s": 121.2,
+        "ready_to_ws_s": 103.9,
+        "first_seen_s": 121.2
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.3,
+        "creation_to_ws_s": 27.9,
+        "ready_to_ws_s": 10.8,
+        "first_seen_s": 15.3
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.8,
+        "creation_to_ws_s": 90.7,
+        "ready_to_ws_s": 79.7,
+        "first_seen_s": 90.7
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 3.2,
+        "creation_to_ws_s": 17.5,
+        "ready_to_ws_s": 14.0,
+        "first_seen_s": 17.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.7,
+        "creation_to_ws_s": 22.3,
+        "ready_to_ws_s": 15.6,
+        "first_seen_s": 22.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.5,
+        "creation_to_ws_s": 17.9,
+        "ready_to_ws_s": 12.3,
+        "first_seen_s": 17.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.9,
+        "creation_to_ws_s": 47.7,
+        "ready_to_ws_s": 42.0,
+        "first_seen_s": 47.7
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 3.6,
+        "creation_to_ws_s": 57.5,
+        "ready_to_ws_s": 53.0,
+        "first_seen_s": 57.5
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-4",
+        "verdict": "OK",
+        "judge_s": 16.6,
+        "creation_to_ws_s": 25.1,
+        "ready_to_ws_s": 8.1,
+        "first_seen_s": 15.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.2,
+        "creation_to_ws_s": 161.0,
+        "ready_to_ws_s": 158.2,
+        "first_seen_s": 161.0
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 81.6,
+        "creation_to_ws_s": 86.8,
+        "ready_to_ws_s": 4.7,
+        "first_seen_s": 24.3
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "OK",
+        "judge_s": 3.5,
+        "creation_to_ws_s": 41.8,
+        "ready_to_ws_s": 38.2,
+        "first_seen_s": 41.8
+      },
+      {
+        "behaviour": "none",
+        "match": "team-lockout-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 16.1,
+        "creation_to_ws_s": 46.0,
+        "ready_to_ws_s": 29.0,
+        "first_seen_s": 46.0
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.4,
+        "creation_to_ws_s": 23.5,
+        "ready_to_ws_s": 18.8,
+        "first_seen_s": 23.5
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 10.5,
+        "creation_to_ws_s": 107.1,
+        "ready_to_ws_s": 95.9,
+        "first_seen_s": 107.1
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 3.5,
+        "creation_to_ws_s": 29.9,
+        "ready_to_ws_s": 26.2,
+        "first_seen_s": 29.9
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.3,
+        "creation_to_ws_s": 31.9,
+        "ready_to_ws_s": 17.0,
+        "first_seen_s": 31.9
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 8.9,
+        "creation_to_ws_s": 23.9,
+        "ready_to_ws_s": 14.3,
+        "first_seen_s": 23.9
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-4",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 65.2,
+        "creation_to_ws_s": 77.5,
+        "ready_to_ws_s": 11.7,
+        "first_seen_s": 13.4
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 14.2,
+        "creation_to_ws_s": 22.1,
+        "ready_to_ws_s": 7.4,
+        "first_seen_s": 22.1
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.0,
+        "creation_to_ws_s": 109.6,
+        "ready_to_ws_s": 104.5,
+        "first_seen_s": 109.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 64.3,
+        "creation_to_ws_s": 66.5,
+        "ready_to_ws_s": 1.7,
+        "first_seen_s": 10.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 11.6,
+        "creation_to_ws_s": 61.2,
+        "ready_to_ws_s": 49.3,
+        "first_seen_s": 61.2
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 8.0,
+        "creation_to_ws_s": 147.6,
+        "ready_to_ws_s": 139.5,
+        "first_seen_s": 147.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 18.6,
+        "creation_to_ws_s": 28.5,
+        "ready_to_ws_s": 9.4,
+        "first_seen_s": 5.6
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 3.8,
+        "creation_to_ws_s": 116.3,
+        "ready_to_ws_s": 111.9,
+        "first_seen_s": 116.3
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 15.7,
+        "creation_to_ws_s": 22.7,
+        "ready_to_ws_s": 6.1,
+        "first_seen_s": 22.7
+      },
+      {
+        "behaviour": "button",
+        "match": "team-icpc-6",
+        "verdict": "COMPILATION_ERROR",
+        "judge_s": 18.0,
+        "creation_to_ws_s": 26.9,
+        "ready_to_ws_s": 8.7,
+        "first_seen_s": 6.8
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.3,
+        "creation_to_ws_s": 14.5,
+        "ready_to_ws_s": 0.1,
+        "first_seen_s": 14.5
+      },
+      {
+        "behaviour": "focus",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 60.1,
+        "creation_to_ws_s": 70.4,
+        "ready_to_ws_s": 9.4,
+        "first_seen_s": 20.3
+      },
+      {
+        "behaviour": "button",
+        "match": "friend-icpc-2",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 5.0,
+        "creation_to_ws_s": 14.0,
+        "ready_to_ws_s": 8.9,
+        "first_seen_s": 14.0
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 14.0,
+        "creation_to_ws_s": 23.7,
+        "ready_to_ws_s": 8.8,
+        "first_seen_s": 23.7
+      },
+      {
+        "behaviour": "none",
+        "match": "friend-icpc-2",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 15.7,
+        "creation_to_ws_s": 110.6,
+        "ready_to_ws_s": 94.9,
+        "first_seen_s": 110.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-6",
+        "verdict": "OK",
+        "judge_s": 7.4,
+        "creation_to_ws_s": 18.9,
+        "ready_to_ws_s": 10.6,
+        "first_seen_s": 18.9
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-4",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 11.0,
+        "creation_to_ws_s": 39.0,
+        "ready_to_ws_s": 27.8,
+        "first_seen_s": 39.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 4.2,
+        "creation_to_ws_s": 77.1,
+        "ready_to_ws_s": 72.2,
+        "first_seen_s": 77.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "friend-icpc-2",
+        "verdict": "OK",
+        "judge_s": 14.9,
+        "creation_to_ws_s": 30.8,
+        "ready_to_ws_s": 15.2,
+        "first_seen_s": 30.8
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 6.1,
+        "creation_to_ws_s": 32.0,
+        "ready_to_ws_s": 24.9,
+        "first_seen_s": 32.0
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 16.0,
+        "creation_to_ws_s": 68.6,
+        "ready_to_ws_s": 52.1,
+        "first_seen_s": 68.6
+      },
+      {
+        "behaviour": "none",
+        "match": "team-icpc-6",
+        "verdict": "OK",
+        "judge_s": 10.3,
+        "creation_to_ws_s": 23.4,
+        "ready_to_ws_s": 12.2,
+        "first_seen_s": 11.0
+      },
+      {
+        "behaviour": "none",
+        "match": "group-icpc-6",
+        "verdict": "TIME_LIMIT_EXCEEDED",
+        "judge_s": 6.1,
+        "creation_to_ws_s": 106.6,
+        "ready_to_ws_s": 99.6,
+        "first_seen_s": 106.6
+      },
+      {
+        "behaviour": "button",
+        "match": "group-icpc-4",
+        "verdict": "OK",
+        "judge_s": 18.8,
+        "creation_to_ws_s": 28.0,
+        "ready_to_ws_s": 8.8,
+        "first_seen_s": 8.1
+      },
+      {
+        "behaviour": "focus",
+        "match": "group-icpc-6",
+        "verdict": "WRONG_ANSWER",
+        "judge_s": 2.7,
+        "creation_to_ws_s": 56.6,
+        "ready_to_ws_s": 53.8,
+        "first_seen_s": 56.6
+      }
+    ]
+  }
+]

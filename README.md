@@ -154,15 +154,76 @@ rate limiter, the poller and the WebSocket hub live in memory.
 
 ### Azure (one small VM, free HTTPS)
 
-In Azure Cloud Shell (Bash):
+Production runs on one Azure VM (Ubuntu 24.04, Standard_B1s, 1 GB RAM): the app and
+Caddy in Docker, the database in the `clashforces-data` volume. Nobody has SSH keys, so
+every command below runs from **Azure Cloud Shell (Bash)** through `az vm run-command`.
+Its output appears when the command finishes (up to a few minutes for a build).
+
+> Until PR #2 is merged, the deploy scripts only exist on the `deploy-azure` branch: in the
+> commands below, replace `main` in the `raw.githubusercontent.com` URL with `deploy-azure`
+> and add `REF=deploy-azure`. After the merge, run the update command once more with
+> `REF=main` so the VM follows `main` again.
+
+**Update an existing VM** to the current layout (helper scripts, timers, Caddyfile from
+`DOMAIN`/`REDIRECT_FROM`). Safe to re-run; it does not recreate the VM, restart a healthy
+app, touch the data volume or change `SECRET_KEY`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/ChunChun451/Clashforces/main/deploy/azure/create-vm.sh | bash
+az vm run-command invoke -g clashforces -n clashforces --command-id RunShellScript --query 'value[0].message' -o tsv --scripts "curl -fsSL https://raw.githubusercontent.com/ChunChun451/Clashforces/main/deploy/azure/apply.sh -o /tmp/apply.sh && DOMAIN=clashforces.duckdns.org REDIRECT_FROM=clashforces-45d9d760.indiasouthcentral.cloudapp.azure.com REF=main bash /tmp/apply.sh"
 ```
 
-This creates an Ubuntu VM that builds the app with Docker, runs Caddy for HTTPS on a free
-`*.cloudapp.azure.com` domain, and generates `SECRET_KEY` on the server. To redeploy the
-latest `main`, run `/opt/clashforces/update.sh` on the VM (the command is printed at the end).
+The settings are saved in `/opt/clashforces/deploy.env`, so later runs need no variables.
+
+**Create a new VM** (refuses if one already exists):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ChunChun451/Clashforces/main/deploy/azure/create-vm.sh | DOMAIN=clashforces.duckdns.org bash
+```
+
+It prints the new public IP: point the DuckDNS name at it. The VM's free
+`<label>.indiasouthcentral.cloudapp.azure.com` name is added as a 301 redirect. Optional:
+`REDIRECT_FROM` (more names to redirect), `LABEL`, `LOCATION`, `SIZE`, `REF`. A new VM has a
+new `SECRET_KEY` (everyone logs in again) and an empty database unless you restore a backup.
+
+**What runs on the VM** (`/opt/clashforces`):
+
+| | |
+|---|---|
+| `update.sh` | Deploy `origin/main`: build first, swap only if the build works, health-check, roll back to the previous image if the check fails. Skips while a match is running (`FORCE=1` overrides). |
+| `autodeploy.sh` + `clashforces-autodeploy.timer` | Every 5 min: runs `update.sh` if `origin/main` moved. Paused while the file `NO_DEPLOY` exists. No GitHub secrets needed. |
+| `backup-now.sh` + `clashforces-backup.timer` | SQLite online backup (consistent while the app writes) to `backups/clashforces-YYYYMMDD-HHMM.db.gz` (UTC). Nightly at 22:00 UTC (03:30 IST); keeps 14. |
+| `restore.sh <file>` | Safety backup, stop the app, restore, start, health-check. Refuses while a match is running. |
+| `deploy.log` | Every deploy, skip, rollback, backup and restore. |
+| `app.env`, `deploy.env`, `Caddyfile` | Secrets (`SECRET_KEY`, `ALLOWED_ORIGINS`); `DOMAIN`/`REDIRECT_FROM`; generated Caddy config. |
+
+Everyday commands (each is one paste):
+
+```bash
+az vm run-command invoke -g clashforces -n clashforces --command-id RunShellScript --query 'value[0].message' -o tsv --scripts "/opt/clashforces/update.sh"
+```
+
+```bash
+az vm run-command invoke -g clashforces -n clashforces --command-id RunShellScript --query 'value[0].message' -o tsv --scripts "tail -n 30 /opt/clashforces/deploy.log"
+```
+
+```bash
+az vm run-command invoke -g clashforces -n clashforces --command-id RunShellScript --query 'value[0].message' -o tsv --scripts "/opt/clashforces/backup-now.sh && ls -lh /opt/clashforces/backups | tail -n 5"
+```
+
+Pause and resume auto-deploy, restore and logs are in [docs/event-runbook.md](docs/event-runbook.md).
+`.github/workflows/uptime.yml` checks `/api/health` every 15 minutes and opens a GitHub issue
+when it fails (closing it on recovery).
+
+### Load test
+
+`tools/loadtest.py` runs the app against `tools/fake_cf.py` on localhost with 20, 30 and 40
+fake players in running matches and reports verdict delays, Codeforces calls per minute,
+CPU/RAM and WebSocket fan-out. It never talks to production or the real Codeforces API.
+Results: [docs/loadtest.md](docs/loadtest.md).
+
+```bash
+python -m tools.loadtest --players 20 30 40
+```
 
 ## Layout
 
@@ -178,4 +239,7 @@ app/
 static/           HTML, CSS (tokens/base/components/home/match), vanilla JS, favicon.svg
 tests/            pytest suite and recorded-shape fixtures
 tools/fake_cf.py  fake Codeforces API for local development
+tools/loadtest.py load test against the fake API (docs/loadtest.md)
+deploy/azure/     VM scripts: create-vm, apply, update/auto-deploy, backup/restore
+docs/             event runbook, load-test report
 ```
