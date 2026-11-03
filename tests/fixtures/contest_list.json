@@ -1,0 +1,85 @@
+{
+ "status": "OK",
+ "result": [
+  {
+   "id": 2050,
+   "name": "Codeforces Round 999 (Div. 2)",
+   "type": "CF",
+   "phase": "CODING",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1800000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 2010,
+   "name": "Educational Codeforces Round 170",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1701000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 2001,
+   "name": "Codeforces Round 960 (Div. 1)",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1700000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 2000,
+   "name": "Codeforces Round 960 (Div. 2)",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1700000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 1960,
+   "name": "Codeforces Round 940 (Div. 3)",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1690000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 1951,
+   "name": "April Fools Day Contest",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1680000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 1950,
+   "name": "Codeforces Round 930 (Div. 2)",
+   "type": "CF",
+   "phase": "FINISHED",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1679000000,
+   "relativeTimeSeconds": 0
+  },
+  {
+   "id": 2100,
+   "name": "Codeforces Round 1005 (Div. 2)",
+   "type": "CF",
+   "phase": "BEFORE",
+   "frozen": false,
+   "durationSeconds": 7200,
+   "startTimeSeconds": 1900000000,
+   "relativeTimeSeconds": 0
+  }
+ ]
+}

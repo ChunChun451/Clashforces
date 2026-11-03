@@ -1,0 +1,31 @@
+{
+ "status": "OK",
+ "result": [
+  {
+   "handle": "alice",
+   "rating": 1650,
+   "maxRating": 1720,
+   "rank": "expert",
+   "maxRank": "expert",
+   "contribution": 0,
+   "lastOnlineTimeSeconds": 1750000000,
+   "registrationTimeSeconds": 1500000000,
+   "friendOfCount": 3,
+   "avatar": "",
+   "titlePhoto": ""
+  },
+  {
+   "handle": "Bob_77",
+   "rating": 1320,
+   "maxRating": 1400,
+   "rank": "pupil",
+   "maxRank": "specialist",
+   "contribution": 0,
+   "lastOnlineTimeSeconds": 1750000000,
+   "registrationTimeSeconds": 1500000000,
+   "friendOfCount": 0,
+   "avatar": "",
+   "titlePhoto": ""
+  }
+ ]
+}

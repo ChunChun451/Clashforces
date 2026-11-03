@@ -1,0 +1,503 @@
+{
+ "status": "OK",
+ "result": {
+  "problems": [
+   {
+    "contestId": 2000,
+    "index": "A",
+    "name": "Easy Start",
+    "type": "PROGRAMMING",
+    "tags": [
+     "implementation"
+    ],
+    "rating": 800,
+    "points": 500.0
+   },
+   {
+    "contestId": 2000,
+    "index": "B",
+    "name": "Count Pairs",
+    "type": "PROGRAMMING",
+    "tags": [
+     "math",
+     "greedy"
+    ],
+    "rating": 1200,
+    "points": 500.0
+   },
+   {
+    "contestId": 2000,
+    "index": "C",
+    "name": "Grid Walk",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp"
+    ],
+    "rating": 1400,
+    "points": 500.0
+   },
+   {
+    "contestId": 2000,
+    "index": "D",
+    "name": "Shared Tree",
+    "type": "PROGRAMMING",
+    "tags": [
+     "trees",
+     "dfs and similar"
+    ],
+    "rating": 1800,
+    "points": 500.0
+   },
+   {
+    "contestId": 2000,
+    "index": "E",
+    "name": "Hard Mix",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp",
+     "greedy"
+    ],
+    "rating": 2100,
+    "points": 500.0
+   },
+   {
+    "contestId": 2001,
+    "index": "A",
+    "name": "Grid Walk Hard",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp",
+     "graphs"
+    ],
+    "rating": 1600,
+    "points": 500.0
+   },
+   {
+    "contestId": 2001,
+    "index": "B",
+    "name": "Shared Tree",
+    "type": "PROGRAMMING",
+    "tags": [
+     "trees",
+     "dfs and similar"
+    ],
+    "rating": 1800,
+    "points": 500.0
+   },
+   {
+    "contestId": 2001,
+    "index": "C",
+    "name": "Hard Mix",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp",
+     "greedy"
+    ],
+    "rating": 2100,
+    "points": 500.0
+   },
+   {
+    "contestId": 2001,
+    "index": "D",
+    "name": "Final Boss",
+    "type": "PROGRAMMING",
+    "tags": [
+     "data structures"
+    ],
+    "rating": 2600,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "A",
+    "name": "Two Buttons",
+    "type": "PROGRAMMING",
+    "tags": [
+     "brute force"
+    ],
+    "rating": 800,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "B",
+    "name": "Sorting Game",
+    "type": "PROGRAMMING",
+    "tags": [
+     "sortings",
+     "greedy"
+    ],
+    "rating": 1000,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "C",
+    "name": "Binary Guess",
+    "type": "PROGRAMMING",
+    "tags": [
+     "interactive",
+     "binary search"
+    ],
+    "rating": 1500,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "D",
+    "name": "Paths Again",
+    "type": "PROGRAMMING",
+    "tags": [
+     "graphs",
+     "shortest paths"
+    ],
+    "rating": 1600,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "E",
+    "name": "Knapsack Plus",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp"
+    ],
+    "rating": 1900,
+    "points": 500.0
+   },
+   {
+    "contestId": 2010,
+    "index": "F",
+    "name": "Segment Magic",
+    "type": "PROGRAMMING",
+    "tags": [
+     "data structures",
+     "dp"
+    ],
+    "rating": 2000,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "A",
+    "name": "Old Friends",
+    "type": "PROGRAMMING",
+    "tags": [
+     "implementation"
+    ],
+    "rating": 900,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "B",
+    "name": "Even Odd",
+    "type": "PROGRAMMING",
+    "tags": [
+     "math"
+    ],
+    "rating": 1300,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "C",
+    "name": "String Fold",
+    "type": "PROGRAMMING",
+    "tags": [
+     "strings",
+     "greedy"
+    ],
+    "rating": 1400,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "D",
+    "name": "Hidden Array",
+    "type": "PROGRAMMING",
+    "tags": [
+     "interactive",
+     "constructive algorithms"
+    ],
+    "rating": 1700,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "E",
+    "name": "Tree Queries",
+    "type": "PROGRAMMING",
+    "tags": [
+     "trees",
+     "data structures"
+    ],
+    "rating": 2000,
+    "points": 500.0
+   },
+   {
+    "contestId": 1950,
+    "index": "F",
+    "name": "Joke Problem",
+    "type": "PROGRAMMING",
+    "tags": [
+     "*special"
+    ]
+   },
+   {
+    "contestId": 1950,
+    "index": "G",
+    "name": "Unrated One",
+    "type": "PROGRAMMING",
+    "tags": [
+     "greedy"
+    ]
+   },
+   {
+    "contestId": 1951,
+    "index": "A",
+    "name": "Fools Day",
+    "type": "PROGRAMMING",
+    "tags": [
+     "*special",
+     "implementation"
+    ],
+    "rating": 1500,
+    "points": 500.0
+   },
+   {
+    "contestId": 2050,
+    "index": "A",
+    "name": "Live Problem",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp"
+    ],
+    "rating": 1400,
+    "points": 500.0
+   },
+   {
+    "contestId": 2050,
+    "index": "B",
+    "name": "Live Problem Two",
+    "type": "PROGRAMMING",
+    "tags": [
+     "greedy"
+    ],
+    "rating": 1800,
+    "points": 500.0
+   },
+   {
+    "contestId": 1960,
+    "index": "A",
+    "name": "Coins",
+    "type": "PROGRAMMING",
+    "tags": [
+     "greedy",
+     "math"
+    ],
+    "rating": 1400,
+    "points": 500.0
+   },
+   {
+    "contestId": 1960,
+    "index": "B",
+    "name": "Matrix Path",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp",
+     "matrices"
+    ],
+    "rating": 1600,
+    "points": 500.0
+   },
+   {
+    "contestId": 1960,
+    "index": "C",
+    "name": "Cyclic Shift",
+    "type": "PROGRAMMING",
+    "tags": [
+     "strings"
+    ],
+    "rating": 1800,
+    "points": 500.0
+   },
+   {
+    "contestId": 1960,
+    "index": "D",
+    "name": "Flow Light",
+    "type": "PROGRAMMING",
+    "tags": [
+     "flows",
+     "graphs"
+    ],
+    "rating": 2000,
+    "points": 500.0
+   },
+   {
+    "contestId": 1960,
+    "index": "E",
+    "name": "Prefix Sums",
+    "type": "PROGRAMMING",
+    "tags": [
+     "dp",
+     "implementation"
+    ],
+    "rating": 1500,
+    "points": 500.0
+   }
+  ],
+  "problemStatistics": [
+   {
+    "contestId": 2000,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2000,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2000,
+    "index": "C",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2000,
+    "index": "D",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2000,
+    "index": "E",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2001,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2001,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2001,
+    "index": "C",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2001,
+    "index": "D",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "C",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "D",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "E",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2010,
+    "index": "F",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "C",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "D",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "E",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "F",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1950,
+    "index": "G",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1951,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2050,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 2050,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1960,
+    "index": "A",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1960,
+    "index": "B",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1960,
+    "index": "C",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1960,
+    "index": "D",
+    "solvedCount": 1000
+   },
+   {
+    "contestId": 1960,
+    "index": "E",
+    "solvedCount": 1000
+   }
+  ]
+ }
+}
