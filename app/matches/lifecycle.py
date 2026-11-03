@@ -71,11 +71,17 @@ def on_submissions(user_id: int, changed: list[Submission]) -> None:
 def check_all_solved(match) -> None:
     rows, _ = store.standings(match)
     pb = store.problems(match["id"])
+    team = store.is_team(match)
+    members = store.team_of(store.players(match["id"])) if team else {}
     for row in rows:
         if all(c.solved for c in row.cells.values()) and row.cells:
-            poller.unwatch(row.player)  # nothing left to track for this player
+            # nothing left to track for this player (or every member of this team)
+            for uid in ([u for u, t in members.items() if t == row.player] if team else [row.player]):
+                poller.unwatch(uid)
     active = [r for r in rows if not r.forfeited]
-    if active and all(len(store.player_problem_keys(pb, r.player)) == r.solved for r in active):
+    need = (lambda r: len(store.player_problem_keys(pb, -1))) if team else \
+        (lambda r: len(store.player_problem_keys(pb, r.player)))
+    if active and all(need(r) == r.solved for r in active):
         last_ok = max(r.last_ok or 0 for r in active)
         end_match(match["id"], "all_solved", at=last_ok + 1)
 
@@ -109,8 +115,12 @@ def _decided(match, now: int | None = None) -> bool:
     now = now or clock.now()
     rows, _ = store.standings(match)
     pts = store.points(store.problems(match["id"]))
-    can_score = {p["user_id"] for p in store.players(match["id"])
-                 if p["forfeited_at"] is None and p["end_time"] > now}
+    players = store.players(match["id"])
+    can_score = {p["user_id"] for p in players if p["forfeited_at"] is None and p["end_time"] > now}
+    if store.is_team(match):
+        # a team can still score while any member can
+        members = store.team_of(players)
+        can_score = {members[u] for u in can_score if u in members}
     return lockout.decided(rows, pts, can_score)
 
 

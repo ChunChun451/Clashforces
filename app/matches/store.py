@@ -4,6 +4,7 @@ import json
 import sqlite3
 
 from app import db
+from app.core import team as team_core
 from app.core.icpc import score_icpc
 from app.core.lockout import score_lockout
 from app.models import PlayerInput, Row, Sub
@@ -91,8 +92,60 @@ def points(problem_rows) -> dict[str, int]:
     return {p["problem_key"]: p["points"] for p in problem_rows if p["user_id"] is None}
 
 
+# ---------- team matches ----------
+
+def is_team(match) -> bool:
+    return match["mode"] == "team"
+
+
+def team_of(player_rows) -> dict[int, int]:
+    """user_id -> 0 (Team A) / 1 (Team B). Players without a side are left out."""
+    return {p["user_id"]: p["team"] for p in player_rows if p["team"] in (0, 1)}
+
+
+def member_end(match, player_rows) -> dict[int, int]:
+    return {p["user_id"]: p["end_time"] or match["end_time"] for p in player_rows}
+
+
+def team_inputs(match, player_rows, problem_rows) -> dict[int, PlayerInput]:
+    keys = player_problem_keys(problem_rows, -1)  # shared set (team mode has no per-player sets)
+    out = {}
+    for t in (0, 1):
+        members = [p for p in player_rows if p["team"] == t]
+        ends = [p["end_time"] or match["end_time"] for p in members] or [match["end_time"]]
+        out[t] = team_core.team_input(t, max(ends), keys,
+                                      forfeited=bool(members) and all(p["forfeited_at"] is not None for p in members))
+    return out
+
+
+def team_parts(match, player_rows, problem_rows):
+    """(score(team_subs) -> ranked team rows, to_team(member_subs) -> team_subs)."""
+    teams = team_inputs(match, player_rows, problem_rows)
+    members = team_of(player_rows)
+    ends = member_end(match, player_rows)
+    ident = {0: 0, 1: 1}
+    if match["rules"] == "lockout":
+        pts = points(problem_rows)
+        score = lambda ts: team_core.score_team_lockout(match["start_time"], teams, ident, pts, ts)  # noqa: E731
+    else:
+        score = lambda ts: team_core.score_team(match["start_time"], teams, ident, ts)  # noqa: E731
+    return score, lambda s: team_core.team_subs(s, members, ends)
+
+
+def member_rows(match, player_rows, problem_rows, subs_list) -> dict:
+    """Each member's own ICPC-style cells (who solved what, own tries). user_id -> Row."""
+    rows = score_icpc(match["start_time"], inputs(match, player_rows, problem_rows), subs_list)
+    return {r.player: r for r in rows}
+
+
 def scorer(match, player_rows, problem_rows):
-    """Returns score(subs) -> ranked rows for this match's rules."""
+    """Returns score(subs) -> ranked rows for this match's rules.
+
+    Team matches return one row per team (row.player = 0 or 1).
+    """
+    if is_team(match):
+        score, to_team = team_parts(match, player_rows, problem_rows)
+        return lambda s: score(to_team(s))
     ins = inputs(match, player_rows, problem_rows)
     if match["rules"] == "lockout":
         pts = points(problem_rows)

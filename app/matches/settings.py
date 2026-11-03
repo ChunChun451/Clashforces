@@ -27,6 +27,12 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         "handicap": raw.get("handicap") or None,
         "exclude": list(raw.get("exclude") or []),
     }
+    if mode == "team":
+        s["team_size"] = int(raw.get("team_size", 2))
+        if s["team_size"] not in config.TEAM_SIZES:
+            raise SettingsError("Teams have 2 or 3 players.")
+        if s["handicap"]:
+            raise SettingsError("Team duels have no handicaps.")
     if not config.DURATION_MIN <= s["duration_min"] <= config.DURATION_MAX:
         raise SettingsError(f"Duration must be {config.DURATION_MIN}–{config.DURATION_MAX} minutes.")
     if rules != "icpc":

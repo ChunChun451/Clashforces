@@ -23,18 +23,26 @@ def submissions(match_id: int, user_id: int, changed: list[Submission]) -> None:
         return
     s = store.settings(match)
     labels = {p["problem_key"]: p["label"] for p in store.problems(match_id)}
-    handle = next((p["handle"] for p in store.players(match_id) if p["user_id"] == user_id), None)
+    players = store.players(match_id)
+    handle = next((p["handle"] for p in players if p["user_id"] == user_id), None)
     fs = view.freeze_start(match, s)
+    team = store.team_of(players) if store.is_team(match) else {}
+
+    def same_side(viewer) -> bool:
+        if viewer == user_id:
+            return True
+        return bool(team) and viewer in team and team.get(viewer) == team.get(user_id)
 
     def for_viewer(viewer):
         snapshot = view.build(match, viewer)
         visible = [c for c in changed
-                   if not (snapshot.get("frozen") and viewer != user_id and fs is not None and c.time >= fs)]
+                   if not (snapshot.get("frozen") and not same_side(viewer) and fs is not None and c.time >= fs)]
         return {
             "standings": snapshot["standings"],
             "frozen": snapshot.get("frozen", False),
             "changed": [{"user_id": user_id, "handle": handle, "label": labels.get(c.problem_key),
-                         "verdict": c.verdict, "time": c.time, "accepted": c.verdict == OK} for c in visible],
+                         "team": team.get(user_id), "verdict": c.verdict, "time": c.time,
+                         "accepted": c.verdict == OK} for c in visible],
         }
 
     hub.send_match(match["code"], "standings", for_viewer)
