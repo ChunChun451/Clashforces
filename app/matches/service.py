@@ -26,13 +26,19 @@ MIN_PLAYERS = {"friend": 2, "group": config.ROOM_MIN_PLAYERS, "ranked": 2}
 
 
 def max_players(match) -> int:
-    if match["mode"] == "team":
-        return 2 * store.settings(match).get("team_size", 2)
+    if store.is_team(match):
+        return store.team_count(match) * store.team_size(match)
+    if match["mode"] == "contest":
+        return int(store.settings(match).get("max_players", config.CONTEST_MAX_PLAYERS))
     return MAX_PLAYERS[match["mode"]]
 
 
 def min_players(match) -> int:
-    return max_players(match) if match["mode"] == "team" else MIN_PLAYERS[match["mode"]]
+    if match["mode"] == "team":
+        return 2 if store.settings(match).get("uneven_ok") else max_players(match)
+    if match["mode"] == "contest":
+        return 2
+    return MIN_PLAYERS[match["mode"]]
 
 
 class MatchError(Exception):
@@ -102,9 +108,17 @@ def _insert_match(creator_id: int, mode: str, rules: str, s: dict, rematch_of: i
             (code, mode, rules, json.dumps(s), creator_id, rematch_of, now),
         )
         match_id = cur.lastrowid
+        if mode == "team":
+            store.ensure_teams(match_id, s.get("team_count", 2))
+            if rematch_of is not None:  # a rematch keeps the team names
+                for t in store.teams(rematch_of):
+                    db.execute("UPDATE match_teams SET name = ? WHERE match_id = ? AND idx = ?",
+                               (t["name"], match_id, t["idx"]))
         for uid in (creator_id, *extra_players):
             locks.acquire(uid, "match", match_id)
-            team = _previous_team(rematch_of, uid, 0) if mode == "team" else None
+            team = None
+            if mode == "team" and s.get("fill") != "draft":
+                team = _previous_team(rematch_of, uid, 0, s.get("team_count", 2))
             db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at, team) VALUES (?,?,?,?,?)",
                        (match_id, uid, users.by_id(uid)["handle"], now, team))
     for uid in (creator_id, *extra_players):
@@ -112,28 +126,38 @@ def _insert_match(creator_id: int, mode: str, rules: str, s: dict, rematch_of: i
     return code
 
 
-def join(user, code: str) -> None:
+def join(user, code: str, team: int | None = None) -> None:
+    """Join a lobby. `team` (0-based) picks a side directly, e.g. from a per-team invite link."""
     _check_user(user)
     match = store.match_by_code(code)
     if match is None:
         raise MatchError("No match with that code.")
-    if any(p["user_id"] == user["id"] for p in store.players(match["id"])):
+    players = store.players(match["id"])
+    if any(p["user_id"] == user["id"] for p in players):
+        if team is not None and match["status"] == "lobby" and store.is_team(match):
+            switch_team(user, code, team)
         return
     if match["status"] != "lobby":
         raise MatchError("This match has already started. You can still watch it.")
     if match["mode"] == "ranked":
         raise MatchError("Ranked matches can't be joined by link.")
-    players = store.players(match["id"])
+    if match["mode"] == "contest":
+        if match["creator_id"] == user["id"]:
+            raise MatchError("You are hosting this contest, so you can't play in it.")
+        if db.one("SELECT 1 FROM match_kicks WHERE match_id = ? AND user_id = ?", (match["id"], user["id"])):
+            raise MatchError("The host removed you from this contest. Ask them to let you back in.")
     if len(players) >= max_players(match):
         raise MatchError("This match is full. You can still watch it.")
-    team = _join_side(match, players, user["id"]) if match["mode"] == "team" else None
+    side = _join_side(match, players, user["id"], team) if store.is_team(match) else None
     with db.transaction():
-        try:
-            locks.acquire(user["id"], "match", match["id"])
-        except locks.LockError as e:
-            raise MatchError(str(e))
+        if match["mode"] != "contest":
+            # Contest lobbies can be open for days, so their lock is taken at the start instead.
+            try:
+                locks.acquire(user["id"], "match", match["id"])
+            except locks.LockError as e:
+                raise MatchError(str(e))
         db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at, team) VALUES (?,?,?,?,?)",
-                   (match["id"], user["id"], user["handle"], clock.now(), team))
+                   (match["id"], user["id"], user["handle"], clock.now(), side))
     _spawn(_sync_quietly(user["id"]))
     events.state(match["id"])
 
@@ -142,9 +166,13 @@ def leave(user, code: str) -> None:
     match = _lobby_of(user, code)
     with db.transaction():
         db.execute("DELETE FROM match_players WHERE match_id = ? AND user_id = ?", (match["id"], user["id"]))
+        db.execute("UPDATE match_teams SET captain_id = NULL WHERE match_id = ? AND captain_id = ?",
+                   (match["id"], user["id"]))
         locks.release(user["id"], match["id"])
         rest = store.players(match["id"])
-        if not rest:
+        if match["mode"] == "contest":
+            pass  # the host isn't a player: an empty contest lobby stays open
+        elif not rest:
             db.execute("UPDATE matches SET status = 'cancelled', end_reason = 'cancelled', ended_at = ? WHERE id = ?",
                        (clock.now(), match["id"]))
         else:
@@ -161,21 +189,50 @@ def leave(user, code: str) -> None:
 
 # ---------- teams ----------
 
-def _previous_team(rematch_of: int | None, user_id: int, default: int) -> int:
+def _team_conf(match) -> tuple[int, int, dict]:
+    s = store.settings(match)
+    return int(s.get("team_count", 2)), int(s.get("team_size", 2)), s
+
+
+def _team_label(match, t: int) -> str:
+    names = store.team_names(match)
+    return names[t] if 0 <= t < len(names) else team_core.default_name(t)
+
+
+def _previous_team(rematch_of: int | None, user_id: int, default, count: int = 2):
     """A rematch keeps the same teams."""
     if rematch_of is None:
         return default
     t = db.scalar("SELECT team FROM match_players WHERE match_id = ? AND user_id = ?", (rematch_of, user_id))
-    return t if t in (0, 1) else default
+    return t if t is not None and 0 <= t < count else default
 
 
-def _join_side(match, players, user_id: int) -> int:
-    size = store.settings(match).get("team_size", 2)
-    counts = [sum(1 for p in players if p["team"] == t) for t in (0, 1)]
-    want = _previous_team(match["rematch_of"], user_id, -1)
-    if want in (0, 1) and counts[want] < size:
+def _counts(match, players) -> list[int]:
+    count, _, _ = _team_conf(match)
+    return [sum(1 for p in players if p["team"] == t) for t in range(count)]
+
+
+def _join_side(match, players, user_id: int, want: int | None = None):
+    """Requested team, else the team from the previous match (rematch), else the smallest team.
+
+    In a captains' draft new players wait unplaced until a captain picks them.
+    """
+    count, size, s = _team_conf(match)
+    counts = _counts(match, players)
+    if want is not None:
+        if not 0 <= want < count:
+            raise MatchError("That team doesn't exist.")
+        if s.get("fill") == "draft":
+            raise MatchError("Teams are picked by the captains in this match.")
+        if counts[want] >= size:
+            raise MatchError(f"{_team_label(match, want)} is full.")
         return want
-    return 0 if counts[0] <= counts[1] else 1
+    if s.get("fill") == "draft" and not (s.get("draft") or {}).get("done"):
+        return None  # waits in the pool for a captain to pick them
+    prev = _previous_team(match["rematch_of"], user_id, -1, count)
+    if prev >= 0 and counts[prev] < size:
+        return prev
+    return team_core.smallest_team(counts, size)
 
 
 def _set_teams(match, team_of: dict) -> None:
@@ -186,44 +243,114 @@ def _set_teams(match, team_of: dict) -> None:
     events.state(match["id"])
 
 
+def is_host(match, user) -> bool:
+    return user is not None and match["creator_id"] == user["id"]
+
+
 def switch_team(user, code: str, team: int) -> None:
     """A player picks a side. Everyone's Ready resets, since the teams changed."""
     match = _lobby_of(user, code)
-    if match["mode"] != "team":
-        raise MatchError("Only team duels have sides.")
-    if team not in (0, 1):
-        raise MatchError("Pick Team A or Team B.")
+    if not store.is_team(match):
+        raise MatchError("Only team matches have sides.")
+    count, size, s = _team_conf(match)
+    if not 0 <= team < count:
+        raise MatchError("That team doesn't exist.")
+    if s.get("fill") == "draft":
+        raise MatchError("Teams are picked by the captains in this match.")
     players = store.players(match["id"])
     me = next(p for p in players if p["user_id"] == user["id"])
     if me["team"] == team:
         return
-    size = store.settings(match).get("team_size", 2)
-    if sum(1 for p in players if p["team"] == team) >= size:
-        raise MatchError(f"{team_core.TEAM_NAMES[team]} is full.")
+    if _counts(match, players)[team] >= size:
+        raise MatchError(f"{_team_label(match, team)} is full.")
+    if db.one("SELECT 1 FROM match_teams WHERE match_id = ? AND captain_id = ?", (match["id"], user["id"])):
+        raise MatchError("Captains stay with their team.")
     _set_teams(match, {user["id"]: team})
 
 
-def arrange_teams(user, code: str, how: str, rng: random.Random | None = None) -> dict:
-    """The creator shuffles the sides at random or balances them by Codeforces rating."""
-    match = _lobby_of(user, code)
-    if match["mode"] != "team":
-        raise MatchError("Only team duels have sides.")
-    if match["creator_id"] != user["id"]:
-        raise MatchError("Only the creator can arrange the teams.")
+def move_player(user, code: str, player_id: int, team: int | None) -> None:
+    """The creator (or contest host) moves a player to another team (None = back to the pool)."""
+    match = _hosted_lobby(user, code)
+    if not store.is_team(match):
+        raise MatchError("Only team matches have sides.")
+    count, size, s = _team_conf(match)
     players = store.players(match["id"])
-    size = store.settings(match).get("team_size", 2)
+    target = next((p for p in players if p["user_id"] == player_id), None)
+    if target is None:
+        raise MatchError("That player is not in this lobby.")
+    if team is not None:
+        if not 0 <= team < count:
+            raise MatchError("That team doesn't exist.")
+        if target["team"] == team:
+            return
+        if _counts(match, players)[team] >= size:
+            raise MatchError(f"{_team_label(match, team)} is full.")
+    db.execute("UPDATE match_teams SET captain_id = NULL WHERE match_id = ? AND captain_id = ?",
+               (match["id"], player_id))
+    _set_teams(match, {player_id: team})
+
+
+def rename_team(user, code: str, idx: int, name: str) -> str:
+    """The creator (or host) names a team. Names are unique within the match."""
+    match = store.match_by_code(code)
+    if match is None:
+        raise MatchError("No match with that code.")
+    if not is_host(match, user):
+        raise MatchError("Only the host can rename teams.")
+    if not store.is_team(match):
+        raise MatchError("Only team matches have team names.")
+    if match["status"] not in ("lobby", "running"):
+        raise MatchError("Teams can't be renamed once the match is over.")
+    names = store.team_names(match)
+    if not 0 <= idx < len(names):
+        raise MatchError("That team doesn't exist.")
+    try:
+        clean = team_core.clean_name(name, idx)
+        names[idx] = clean
+        team_core.check_unique(names)
+    except team_core.NameError_ as e:
+        raise MatchError(str(e))
+    store.ensure_teams(match["id"], len(names))
+    db.execute("UPDATE match_teams SET name = ? WHERE match_id = ? AND idx = ?", (clean, match["id"], idx))
+    events.state(match["id"])
+    return clean
+
+
+def arrange_teams(user, code: str, how: str, rng: random.Random | None = None) -> dict:
+    """The creator shuffles the sides at random or balances them by Codeforces rating (snake draft)."""
+    match = _hosted_lobby(user, code)
+    if not store.is_team(match):
+        raise MatchError("Only team matches have sides.")
+    count, size, s = _team_conf(match)
+    if s.get("fill") == "draft" and (s.get("draft") or {}).get("active"):
+        raise MatchError("The captains' draft is running.")
+    players = store.players(match["id"])
     if how == "shuffle":
-        teams = team_core.shuffle([p["user_id"] for p in players], size, rng or random.Random())
+        teams = team_core.shuffle([p["user_id"] for p in players], size, rng or random.Random(), count)
     elif how == "balance":
-        teams = team_core.balance({p["user_id"]: _team_rating(p) for p in players}, size)
+        teams = team_core.balance({p["user_id"]: _team_rating(p) for p in players}, size, count)
     else:
         raise MatchError("Unknown arrangement.")
+    db.execute("UPDATE match_teams SET captain_id = NULL WHERE match_id = ?", (match["id"],))
     _set_teams(match, teams)
     return teams
 
 
 def _team_rating(p) -> int:
     return p["current_rating"] or config.UNRATED_START
+
+
+def _hosted_lobby(user, code: str):
+    """A lobby the user may manage: they created it (and play in it), or they host the contest."""
+    match = store.match_by_code(code)
+    if match is None:
+        raise MatchError("No match with that code.")
+    if not is_host(match, user):
+        raise MatchError("Only the host can do that." if match["mode"] == "contest"
+                         else "Only the creator can arrange the teams.")
+    if match["status"] != "lobby":
+        raise MatchError("The match has already started.")
+    return match
 
 
 def _lobby_of(user, code: str):
@@ -243,6 +370,8 @@ def update_settings(user, code: str, raw: dict) -> None:
         raise MatchError("Only the creator can change settings.")
     if match["mode"] == "ranked":
         raise MatchError("Ranked settings are fixed.")
+    if match["mode"] == "contest":
+        raise MatchError("Edit a contest from its host controls.")
     rules = raw.get("rules", match["rules"])
     old = store.settings(match)
     raw = {**raw, "exclude": old.get("exclude", [])}
@@ -255,15 +384,44 @@ def update_settings(user, code: str, raw: dict) -> None:
     ids = {p["user_id"] for p in players}
     if h and h.get("user_id") is not None and h["user_id"] not in ids:
         raise MatchError("The handicap player is not in this lobby.")
+    moves = {}
     if match["mode"] == "team":
-        for t in (0, 1):
-            n = sum(1 for p in players if p["team"] == t)
+        names = store.team_names(match)
+        old_count = len(names)
+        counts = [0] * s["team_count"]
+        stranded = []
+        for p in players:
+            t = p["team"]
+            if t is not None and 0 <= t < s["team_count"]:
+                counts[t] += 1
+            else:
+                stranded.append(p["user_id"])
+        for t, n in enumerate(counts):
             if n > s["team_size"]:
-                raise MatchError(f"{team_core.TEAM_NAMES[t]} already has {n} players. "
-                                 f"Someone has to leave before teams can be {s['team_size']}.")
+                raise MatchError(f"{names[t] if t < old_count else team_core.default_name(t)} already has {n} "
+                                 f"players. Someone has to leave before teams can be {s['team_size']}.")
+        if len(players) > s["team_count"] * s["team_size"]:
+            raise MatchError(f"{len(players)} players are in the lobby; {s['team_count']} teams of "
+                             f"{s['team_size']} only fit {s['team_count'] * s['team_size']}.")
+        if s.get("fill") != "draft":
+            for uid in stranded:  # their team was removed: put them on the smallest team
+                t = team_core.smallest_team(counts, s["team_size"])
+                counts[t] += 1
+                moves[uid] = t
+        s["draft"] = None
     with db.transaction():
         db.execute("UPDATE matches SET settings = ?, rules = ? WHERE id = ?", (json.dumps(s), rules, match["id"]))
         db.execute("UPDATE match_players SET ready = 0 WHERE match_id = ?", (match["id"],))
+        if match["mode"] == "team":
+            store.ensure_teams(match["id"], s["team_count"])
+            for uid, t in moves.items():
+                db.execute("UPDATE match_players SET team = ? WHERE match_id = ? AND user_id = ?",
+                           (t, match["id"], uid))
+            if s.get("fill") == "draft":
+                db.execute("UPDATE match_players SET team = NULL WHERE match_id = ? AND team >= ?",
+                           (match["id"], s["team_count"]))
+            else:
+                db.execute("UPDATE match_teams SET captain_id = NULL WHERE match_id = ?", (match["id"],))
     events.state(match["id"])
 
 
@@ -272,17 +430,33 @@ def set_ready(user, code: str, ready: bool) -> None:
     db.execute("UPDATE match_players SET ready = ? WHERE match_id = ? AND user_id = ?",
                (1 if ready else 0, match["id"], user["id"]))
     events.state(match["id"])
+    if match["mode"] == "contest":
+        return  # contests start on schedule (or when the host says so); Ready just tells the host you're here
     players = store.players(match["id"])
     if len(players) >= min_players(match) and all(p["ready"] for p in players) and not start_blocker(match, players):
         _spawn(start(match["id"]))
 
 
-def start_blocker(match, players) -> str | None:
-    """Why a lobby can't start even when everyone is ready (team duels: uneven teams)."""
-    if match["mode"] != "team":
+def start_blocker(match, players, force: bool = False) -> str | None:
+    """Why a lobby can't start even when everyone is ready (team matches: uneven or unfilled teams).
+
+    force: the contest host pressed "Start anyway" (uneven teams are fine, two sides are still needed).
+    """
+    if not store.is_team(match):
+        if match["mode"] == "contest" and len(players) < 2:
+            return "A contest needs at least 2 players."
         return None
-    size = store.settings(match).get("team_size", 2)
-    return team_core.can_start({p["user_id"]: (p["team"] if p["team"] in (0, 1) else -1) for p in players}, size)
+    count, size, s = _team_conf(match)
+    draft = s.get("draft") or {}
+    if draft.get("active"):
+        return "The captains' draft is still running."
+    team_of = {p["user_id"]: p["team"] for p in players}
+    contest = match["mode"] == "contest"
+    if contest:
+        team_of = {u: t for u, t in team_of.items() if t is not None}  # the unplaced are seated at the start
+    uneven = force or bool(s.get("uneven_ok"))
+    return team_core.can_start(team_of, size, count, store.team_names(match), need_full=not (contest or uneven),
+                               allow_uneven=uneven)
 
 
 # ---------- start ----------
@@ -455,9 +629,10 @@ def forfeit(user, code: str) -> None:
     db.execute("UPDATE match_players SET forfeited_at = ?, end_time = MIN(end_time, ?) WHERE match_id = ? AND user_id = ?",
                (now, max(now, match["start_time"]), match["id"], user["id"]))
     players = store.players(match["id"])
-    if match["mode"] == "team":
-        # Teammates keep playing. A team with nobody left loses and the match ends.
-        over = any(all(p["forfeited_at"] is not None for p in players if p["team"] == t) for t in (0, 1))
+    if store.is_team(match):
+        # Teammates keep playing. A team with nobody left is out; the match ends when one team is left.
+        alive = {p["team"] for p in players if p["forfeited_at"] is None and p["team"] is not None}
+        over = len(alive) <= 1
     else:
         over = len([p for p in players if p["forfeited_at"] is None]) <= 1
     if over:
@@ -474,6 +649,8 @@ def rematch(user, code: str) -> str:
         raise MatchError("You can rematch once the match has ended.")
     if match["mode"] == "ranked":
         raise MatchError("Queue again for another ranked match.")
+    if match["mode"] == "contest":
+        raise MatchError("Hosted contests don't have rematches.")
     if not any(p["user_id"] == user["id"] for p in store.players(match["id"])):
         raise MatchError("Only players can start a rematch.")
     existing = db.one("SELECT code, status FROM matches WHERE rematch_of = ? AND status = 'lobby'", (match["id"],))
