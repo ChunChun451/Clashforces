@@ -292,3 +292,50 @@ async def test_handicap_rules_validation(world):
         service.create(w.a, "friend", "lockout", {"handicap": {"type": "penalty", "user_id": w.b["id"], "minutes": 40}})
     with pytest.raises(service.MatchError):
         service.create(w.a, "friend", "lockout", {"handicap": {"type": "per_player_range", "ranges": {}}})
+
+
+async def test_group_room_n_players(world):
+    w = world
+    extra = [users.by_id(users.create(h, 1500, 1500)) for h in ("carl", "dina", "egon")]
+    db.execute("UPDATE users SET history_synced = 1")
+    for u in extra:
+        w.subs[u["handle"]] = []
+    code = service.create(w.a, "group", "icpc", {"count": 3, "rating_min": 1400, "rating_max": 1800})
+    service.join(w.b, code)
+    match = store.match_by_code(code)
+    service.set_ready(w.a, code, True)
+    service.set_ready(w.b, code, True)
+    await settle()
+    assert store.match_by_id(match["id"])["status"] == "lobby"  # 2 players are not enough for a room
+    for u in extra:
+        service.join(u, code)
+    db.execute("UPDATE match_players SET ready = 1 WHERE match_id = ?", (match["id"],))
+    assert await service.start(match["id"], random.Random(3))
+    match = store.match_by_id(match["id"])
+    probs = store.problems(match["id"])
+    start = match["start_time"]
+    k = [p["problem_key"] for p in probs]
+    w.subs["carl"] += [raw(1, k[0], "OK", start + 300), raw(2, k[1], "OK", start + 600)]
+    w.subs["dina"] += [raw(3, k[0], "OK", start + 300), raw(4, k[1], "OK", start + 600)]
+    w.subs["egon"] += [raw(5, k[0], "WRONG_ANSWER", start + 100)]
+    w.subs["alice"] += [raw(6, k[2], "OK", start + 900)]
+    w.now.t = start + 1000
+    for u in [w.a, w.b, *extra]:
+        await poller.check(u["id"])
+    service.forfeit(extra[2], code)  # egon leaves; the room continues
+    assert store.match_by_id(match["id"])["status"] == "running"
+    w.now.t = match["end_time"] + 30
+    await finish(w, match)
+    places = {p["handle"]: p["place"] for p in store.players(match["id"])}
+    assert places == {"carl": 1, "dina": 1, "alice": 3, "Bob_77": 4, "egon": 5}
+
+
+async def test_group_room_full_at_ten(world):
+    w = world
+    code = service.create(w.a, "group", "lockout", {})
+    for i in range(9):
+        u = users.by_id(users.create(f"p{i}", 1500, 1500))
+        service.join(u, code)
+    late = users.by_id(users.create("late", 1500, 1500))
+    with pytest.raises(service.MatchError):
+        service.join(late, code)
