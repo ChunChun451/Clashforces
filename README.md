@@ -152,6 +152,18 @@ docker run -d --name clashforces -p 127.0.0.1:8000:8000 -v clashforces-data:/dat
 Then use `Caddyfile.example` as your Caddyfile. Run **one** worker only: the
 rate limiter, the poller and the WebSocket hub live in memory.
 
+### Azure (one small VM, free HTTPS)
+
+In Azure Cloud Shell (Bash):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ChunChun451/Clashforces/main/deploy/azure/create-vm.sh | bash
+```
+
+This creates an Ubuntu VM that builds the app with Docker, runs Caddy for HTTPS on a free
+`*.cloudapp.azure.com` domain, and generates `SECRET_KEY` on the server. To redeploy the
+latest `main`, run `/opt/clashforces/update.sh` on the VM (the command is printed at the end).
+
 ## Layout
 
 ```

@@ -1,0 +1,48 @@
+#cloud-config
+# First-boot setup for the Clashforces VM. create-vm.sh replaces __DOMAIN__.
+package_update: true
+packages:
+  - docker.io
+  - git
+write_files:
+  - path: /opt/clashforces/Caddyfile
+    content: |
+      __DOMAIN__ {
+        encode zstd gzip
+        reverse_proxy clashforces:8000
+      }
+  - path: /opt/clashforces/update.sh
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      # Pull the latest main, rebuild and restart the app. Data stays in the clashforces-data volume.
+      set -e
+      cd /opt/clashforces/src
+      git pull --ff-only
+      docker build -t clashforces .
+      docker rm -f clashforces 2>/dev/null || true
+      docker run -d --name clashforces --restart unless-stopped --network web \
+        -v clashforces-data:/data --env-file /opt/clashforces/app.env clashforces
+  - path: /opt/clashforces/setup.sh
+    permissions: "0755"
+    content: |
+      #!/bin/sh
+      set -e
+      # 1 GB swap so the small VM doesn't run out of memory during docker build.
+      if [ ! -f /swapfile ]; then
+        fallocate -l 1G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
+        echo '/swapfile none swap sw 0 0' >> /etc/fstab
+      fi
+      systemctl enable --now docker
+      [ -d /opt/clashforces/src ] || git clone https://github.com/ChunChun451/Clashforces.git /opt/clashforces/src
+      if [ ! -f /opt/clashforces/app.env ]; then
+        printf 'SECRET_KEY=%s\nALLOWED_ORIGINS=https://__DOMAIN__\n' "$(openssl rand -hex 32)" > /opt/clashforces/app.env
+        chmod 600 /opt/clashforces/app.env
+      fi
+      docker network inspect web >/dev/null 2>&1 || docker network create web
+      /opt/clashforces/update.sh
+      docker rm -f caddy 2>/dev/null || true
+      docker run -d --name caddy --restart unless-stopped --network web -p 80:80 -p 443:443 \
+        -v /opt/clashforces/Caddyfile:/etc/caddy/Caddyfile:ro -v caddy-data:/data -v caddy-config:/config caddy:2
+runcmd:
+  - [sh, /opt/clashforces/setup.sh]
