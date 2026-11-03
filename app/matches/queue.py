@@ -17,6 +17,8 @@ class QueueError(Exception):
 
 
 def join(user) -> None:
+    if user["banned_at"]:
+        raise QueueError("This account has been banned.")
     if user["handle"] is None or user["needs_reverify"]:
         raise QueueError("Your Codeforces handle changed. Re-verify it in Settings first.")
     with db.transaction():

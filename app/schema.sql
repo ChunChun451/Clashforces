@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
   history_synced   INTEGER NOT NULL DEFAULT 0,   -- full user.status import done
   last_sub_id      INTEGER NOT NULL DEFAULT 0,   -- newest CF submission id we have seen
   created_at       INTEGER NOT NULL,
-  last_seen_at     INTEGER
+  last_seen_at     INTEGER,
+  banned_at        INTEGER                       -- set by an admin; banned accounts can't log in
 );
 
 CREATE TABLE IF NOT EXISTS verifications (

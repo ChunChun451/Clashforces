@@ -128,6 +128,8 @@ def problem_rows(s: dict) -> list[tuple]:
 # ---------- create / edit ----------
 
 def create(user, raw: dict) -> str:
+    if user["banned_at"]:
+        raise MatchError("This account has been banned.")
     if user["handle"] is None or user["needs_reverify"]:
         raise MatchError("Your Codeforces handle changed. Re-verify it in Settings first.")
     now = clock.now()

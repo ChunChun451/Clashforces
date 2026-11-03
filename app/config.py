@@ -16,6 +16,20 @@ BACKGROUND_TASKS = os.environ.get("BACKGROUND_TASKS", "1") == "1"  # tests turn 
 # have an account in the local database). Refused when COOKIE_SECURE=1.
 DEV_AUTO_LOGIN = os.environ.get("DEV_AUTO_LOGIN", "").strip()
 
+
+def parse_admin_handles(raw: str | None) -> frozenset[str]:
+    """Comma-separated Codeforces handles, compared case-insensitively.
+    Unset: the site owner. Set but empty: nobody is an admin."""
+    if raw is None:
+        raw = "GandalfTheGay"
+    return frozenset(h.strip().lower() for h in raw.split(",") if h.strip())
+
+
+# Who can open /admin. Example: ADMIN_HANDLES="GandalfTheGay,tourist"
+ADMIN_HANDLES = parse_admin_handles(os.environ.get("ADMIN_HANDLES"))
+ADMIN_ACTIVE_WINDOW_S = 5 * 60   # "active now" on the admin page = seen this recently
+ADMIN_PAGE_SIZE = 50
+
 # ---------- Codeforces API client ----------
 CF_API_BASE = os.environ.get("CF_API_BASE", "https://codeforces.com/api")
 CF_MIN_INTERVAL_S = 2.0          # at most one request every 2 seconds

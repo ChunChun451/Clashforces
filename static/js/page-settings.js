@@ -48,6 +48,8 @@ function render() {
             if (!ok) { e.target.checked = false; toast("Notifications are blocked in your browser settings.", true); }
           } else notifications.disable();
         } }), "Enable notifications")),
+      me.is_admin ? panel("Admin", "Users, matches and live numbers for the whole site. Only admins see this.",
+        el("div.actions", el("a.btn", { href: "/admin" }, "Open admin page"))) : null,
       panel("Session", "“Log out everywhere” also ends sessions on your other devices.",
         el("div.actions",
           el("button.btn", { type: "button", onclick: () => logout(false) }, "Log out"),

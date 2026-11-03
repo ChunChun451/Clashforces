@@ -77,6 +77,8 @@ async def _sync_quietly(user_id: int) -> None:
 
 
 def _check_user(user) -> None:
+    if user["banned_at"]:
+        raise MatchError("This account has been banned.")
     if user["handle"] is None or user["needs_reverify"]:
         raise MatchError("Your Codeforces handle changed. Re-verify it in Settings first.")
 

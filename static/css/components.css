@@ -317,3 +317,5 @@ td.rank { width: 48px; color: var(--muted); }
 .team-badge[class*="team-"] { color: var(--team); }
 .team-name { display: inline-flex; align-items: center; gap: var(--s2); }
 .chip.you { height: 18px; padding: 0 6px; font-size: 11px; }
+/* admins only: on phones the admin page is reached from Settings, so the top bar keeps one row */
+@media (max-width: 720px) { .topbar .admin-link { display: none; } }

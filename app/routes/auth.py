@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
 from app import db
-from app.auth import session, users, verify
+from app.auth import admin, session, users, verify
 from app.cf.client import CFError
 from app.matches import locks
 from app.poller import upsolve
@@ -57,6 +57,8 @@ async def auth_check(body: CheckIn, request: Request):
     except verify.VerifyError as e:
         raise HTTPException(400, str(e))
     task = db.one("SELECT user_id FROM verifications WHERE id = ?", (body.task_id,))
+    if user_id is not None and users.by_id(user_id)["banned_at"]:
+        raise HTTPException(403, verify.BANNED)
     if user_id is not None and task["user_id"] is None:
         session.login(request, user_id)  # sign-up / login; a handle change keeps the session
     return view
@@ -77,6 +79,7 @@ async def me(user=Depends(session.current_user)):
     return {
         "user": users.public(user),
         "active": None if lock is None else {"kind": lock["kind"], "code": lock["code"]},
+        "is_admin": admin.is_admin(user),
     }
 
 
