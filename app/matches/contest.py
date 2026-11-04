@@ -18,6 +18,7 @@ from app import clock, config, db
 from app.auth import handles, users
 from app.cf import cache
 from app.cf.client import CFError, Lane
+from app.cf.parse import problem_url
 from app.core import custom_list, selection
 from app.core import team as team_core
 from app.matches import events, locks, store
@@ -51,6 +52,7 @@ def resolve_problems(text: str, points=None) -> list[dict]:
     res = custom_list.check(text or "", by_key, cache.running_contest_ids(), {}, config.CONTEST_PROBLEMS_MAX)
     if res.errors:
         raise MatchError(res.errors[0])
+    cache.add_gym(res.problems)
     n = len(res.problems)
     default = selection.lockout_points(n)
     pts = list(points or [])
@@ -237,8 +239,8 @@ def host_view(match) -> dict:
         group = p.group if p else cp["key"]
         tried = [pl["current_handle"] for pl in players if group in touched[pl["user_id"]]]
         probs.append({"label": cp["label"], "key": cp["key"], "points": cp["points"],
-                      "name": p.name if p else cp["key"], "rating": p.rating if p else None,
-                      "url": f"https://codeforces.com/contest/{p.contest_id}/problem/{p.index}" if p else None,
+                      "name": (p.name if p else "") or cp["key"], "rating": p.rating if p else None,
+                      "url": problem_url(p.contest_id, p.index) if p else None,
                       "tried_by": tried})
     warnings = [f"{len(x['tried_by'])} {'player has' if len(x['tried_by']) == 1 else 'players have'} already tried "
                 f"{x['key']} ({', '.join(x['tried_by'][:5])}{'…' if len(x['tried_by']) > 5 else ''})"

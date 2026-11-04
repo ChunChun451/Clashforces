@@ -12,7 +12,7 @@ import time
 
 from app import config, db
 from app.cf.client import CFClient, CFError, Lane
-from app.cf.parse import parse_contests, parse_problems
+from app.cf.parse import GYM_MIN_ID, is_gym, parse_contests, parse_problems
 from app.core.dedup import dup_groups
 from app.models import Contest, Problem
 
@@ -41,7 +41,7 @@ def store_contests(contests: list[Contest]) -> None:
 def store_problems(problems: list[Problem]) -> None:
     groups = dup_groups(problems, load_contests())
     with db.transaction() as c:
-        c.execute("DELETE FROM problems")
+        c.execute("DELETE FROM problems WHERE contest_id < ?", (GYM_MIN_ID,))  # gym rows come from hosts
         c.executemany(
             "INSERT INTO problems(key, contest_id, idx, name, rating, tags, dup_group) VALUES (?,?,?,?,?,?,?)",
             [(p.key, p.contest_id, p.index, p.name, p.rating, json.dumps(list(p.tags)), groups[p.key])
@@ -70,6 +70,27 @@ def problems() -> list[Problem]:
         ]
         _by_key = {p.key: p for p in _problems}
     return _problems
+
+
+def add_gym(problems: list[Problem]) -> None:
+    """Remember gym/mashup problems a host listed. They have no rating or tags, and their
+    name is empty until a player's submission tells us (see learn_gym_names)."""
+    rows = [(p.key, p.contest_id, p.index, p.name, None, "[]", p.key) for p in problems if is_gym(p.contest_id)]
+    if not rows:
+        return
+    db.executemany("INSERT OR IGNORE INTO problems(key, contest_id, idx, name, rating, tags, dup_group)"
+                   " VALUES (?,?,?,?,?,?,?)", rows)
+    _invalidate()
+
+
+def learn_gym_names(subs) -> None:
+    """Fill in gym problem names from submissions (the API can't list a gym's problems without a key)."""
+    unnamed = {r["key"] for r in db.all("SELECT key FROM problems WHERE contest_id >= ? AND name = ''", (GYM_MIN_ID,))}
+    named = {s.problem_key: s.problem_name for s in subs if s.problem_name and s.problem_key in unnamed}
+    for key, name in named.items():
+        db.execute("UPDATE problems SET name = ? WHERE key = ? AND name = ''", (name, key))
+    if named:
+        _invalidate()
 
 
 def get(key: str) -> Problem | None:

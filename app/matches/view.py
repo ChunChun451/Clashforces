@@ -4,6 +4,7 @@ import json
 from collections import Counter
 
 from app import clock
+from app.cf.parse import contest_url, problem_url
 from app.core import freeze
 from app.core import team as team_core
 from app.matches import store
@@ -162,8 +163,8 @@ def problem_json(pb, show_tags: bool = True) -> dict:
         "tags": tags if show_tags else [],
         "points": pb["points"],
         "owner": pb["user_id"],
-        "url": f"https://codeforces.com/contest/{pb['contest_id']}/problem/{pb['idx']}" if pb["contest_id"] else None,
-        "contest_url": f"https://codeforces.com/contest/{pb['contest_id']}" if pb["contest_id"] else None,
+        "url": problem_url(pb["contest_id"], pb["idx"]),
+        "contest_url": contest_url(pb["contest_id"]),
     }
 
 

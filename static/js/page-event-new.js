@@ -95,7 +95,8 @@ function problemRows() {
     const def = (i + 1) * 100;
     return el("div.problem-row",
       el("span.letter", String.fromCharCode(65 + i)),
-      el("span.what", el("span.n", p.name), el("span.m", `${p.key} · ${p.rating ?? "unrated"}`)),
+      el("span.what", el("span.n", p.name || "Gym / mashup problem"),
+        el("span.m", `${p.key} · ${p.gym ? "gym" : p.rating ?? "unrated"}`)),
       lockout ? el("span.pts-cell", el("input.pts.mono", { type: "number", min: 1, max: 10000, value: state.points[p.key] ?? def,
         "aria-label": `Points for ${p.key}`, oninput: (e) => { state.points[p.key] = e.target.value === "" ? null : Number(e.target.value); } })) : el("span"),
       el("span.moves",
@@ -182,10 +183,13 @@ function render() {
 
   const problems = panel("Problems", el("button.btn.small", { type: "button", onclick: checkProblems }, "Check list"),
     el("div.field", el("label", { for: "probs" }, "Codeforces problem IDs or links, in order (up to 15)"),
-      el("textarea", { id: "probs", placeholder: "1850C, 1850D\nhttps://codeforces.com/contest/2043/problem/E",
+      el("textarea", { id: "probs", placeholder: "1850C, 1850D\nhttps://codeforces.com/contest/2043/problem/E\nhttps://codeforces.com/gym/106608/problem/A",
         oninput: (e) => { state.problems = e.target.value; state.checked = []; } }, state.problems)),
     problemRows(),
     checkResult,
+    state.checked.some((p) => p.gym) ? el("p.small.muted",
+      "Gym and mashup problems: make sure every player can open them (for a private mashup, share its invite link). "
+      + "Their names show up once someone submits.") : null,
     el("p.small.muted", state.rules === "lockout"
       ? "Labels follow the order (A, B, C…). Points default to 100, 200, 300…; change them per problem after checking the list."
       : "Labels follow the order (A, B, C…). Only you can see the problems until the start."));

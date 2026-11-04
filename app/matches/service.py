@@ -542,6 +542,7 @@ def choose_problems(match, players, rng) -> list[tuple]:
         res = custom_list.check(s["custom_problems"], by_key, running, {})
         if res.errors:
             raise MatchError(res.errors[0])
+        cache.add_gym(res.problems)
         chosen = res.problems
         pts = selection.lockout_points(len(chosen))
         return [(None, lab, p.key, pt) for lab, p, pt in zip(selection.labels(len(chosen)), chosen, pts)]

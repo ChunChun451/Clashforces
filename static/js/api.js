@@ -77,7 +77,9 @@ export function toast(msg, bad = false) {
 
 export function cfProblemUrl(key) {
   const m = /^(\d+)([A-Z]\d*)$/.exec(key);
-  return m ? `https://codeforces.com/contest/${m[1]}/problem/${m[2]}` : "#";
+  if (!m) return "#";
+  const kind = Number(m[1]) >= 100000 ? "gym" : "contest";  // gym contests and mashups
+  return `https://codeforces.com/${kind}/${m[1]}/problem/${m[2]}`;
 }
 
 let mePromise = null;

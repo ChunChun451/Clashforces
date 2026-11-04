@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from app import db
 from app.auth import session
 from app.cf import cache
+from app.cf.parse import is_gym, submission_url
 from app.core import custom_list, selection
 from app.matches import contest, draft, reveal, service, store, view
 from app.matches import settings as settings_mod
@@ -298,7 +299,7 @@ async def timeline(code: str, user=Depends(session.current_user)):
             "label": label, "problem_key": s.problem, "verdict": s.verdict, "time": s.time,
             "minute": (s.time - match["start_time"]) // 60, "team": team.get(s.player),
             "team_name": team_names[team[s.player]] if s.player in team else None,
-            "url": f"https://codeforces.com/contest/{p.contest_id}/submission/{s.id}" if p else None,
+            "url": submission_url(p.contest_id, s.id) if p else None,
         })
     return {"start_time": match["start_time"], "items": items}
 
@@ -344,7 +345,8 @@ async def validate(body: ValidateIn, user=Depends(session.current_user)):
     by_key = {p.key: p for p in cache.problems()}
     res = custom_list.check(body.text, by_key, cache.running_contest_ids(), touched)
     return {
-        "problems": [{"key": p.key, "name": p.name, "rating": p.rating} for p in res.problems],
+        "problems": [{"key": p.key, "name": p.name, "rating": p.rating, "gym": is_gym(p.contest_id)}
+                     for p in res.problems],
         "errors": res.errors,
         "warnings": [f"{who} has already tried {key}" for who, key in res.warnings],
     }

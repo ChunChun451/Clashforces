@@ -45,6 +45,7 @@ class Submission:
     time: int             # creationTimeSeconds (Codeforces time)
     passed_tests: int = 0
     language: str = ""
+    problem_name: str = ""
 
 
 # ---------- scoring inputs ----------

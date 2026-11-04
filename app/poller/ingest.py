@@ -31,6 +31,7 @@ def store(user_id: int, subs: list[Submission]) -> list[Submission]:
                        (s.verdict, s.passed_tests, s.id))
             changed.append(s)
     mark_touched(user_id, subs)
+    cache.learn_gym_names(subs)
     if subs:
         db.execute("UPDATE users SET last_sub_id = MAX(last_sub_id, ?) WHERE id = ?",
                    (max(s.id for s in subs), user_id))

@@ -1,17 +1,21 @@
 """Parse and validate a pasted list of problem IDs (pure).
 
 Accepts "2043C", "2043 C", "2043/C", "2043c", and Codeforces problem URLs,
-separated by commas, spaces or new lines.
+separated by commas, spaces or new lines. Gym and mashup problems (contest id 100000
+and up, e.g. "106608C" or codeforces.com/gym/106608/problem/C) are accepted too, even
+though they aren't in the problemset cache.
 """
 
 import re
 from dataclasses import dataclass, field
 
 from app import config
+from app.cf.parse import is_gym
 from app.models import Problem
 
 URL_RE = re.compile(
-    r"https?://(?:www\.)?codeforces\.com/(?:contest/(\d+)/problem/|problemset/problem/(\d+)/)([A-Za-z]\d?)",
+    r"https?://(?:www\.)?codeforces\.com/(?:contest/(\d+)/problem/|problemset/problem/(\d+)/|gym/(\d+)/problem/)"
+    r"([A-Za-z]\d?)",
 )
 ID_RE = re.compile(r"(?<![\w/])(\d{1,6})\s*/?\s*([A-Za-z]\d?)(?![A-Za-z0-9])")
 
@@ -49,7 +53,7 @@ def parse(text: str) -> tuple[list[str], list[str]]:
     keys = []
     found = []
     for m in URL_RE.finditer(text):
-        found.append((m.start(), m.end(), f"{m.group(1) or m.group(2)}{m.group(3).upper()}"))
+        found.append((m.start(), m.end(), f"{m.group(1) or m.group(2) or m.group(3)}{m.group(4).upper()}"))
     rest = URL_RE.sub(lambda m: " " * (m.end() - m.start()), text)
     for m in ID_RE.finditer(rest):
         found.append((m.start(), m.end(), f"{int(m.group(1))}{m.group(2).upper()}"))
@@ -60,6 +64,14 @@ def parse(text: str) -> tuple[list[str], list[str]]:
     return keys, leftovers
 
 
+def gym_problem(key: str) -> Problem | None:
+    """A placeholder for a gym/mashup problem: no name, rating or tags yet."""
+    m = re.fullmatch(r"(\d+)([A-Z]\d?)", key)
+    if not m or not is_gym(int(m.group(1))):
+        return None
+    return Problem(key, int(m.group(1)), m.group(2), "", None, ())
+
+
 def check(text: str, by_key: dict[str, Problem], running: set[int], touched_by_player: dict,
           max_count: int = config.PROBLEM_COUNT_MAX) -> CustomCheck:
     """touched_by_player: player name -> set of touched dup groups."""
@@ -67,7 +79,7 @@ def check(text: str, by_key: dict[str, Problem], running: set[int], touched_by_p
     result = CustomCheck(unreadable=leftovers, max_count=max_count)
     seen_groups = set()
     for key in keys:
-        p = by_key.get(key)
+        p = by_key.get(key) or gym_problem(key)
         if p is None:
             result.unknown.append(key)
             continue

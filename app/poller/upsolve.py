@@ -11,6 +11,7 @@ import logging
 
 from app import clock, config, db
 from app.cf.client import CFError, Lane
+from app.cf.parse import problem_url
 from app.poller import history
 
 log = logging.getLogger("upsolve")
@@ -27,7 +28,7 @@ def items(user_id: int) -> list[dict]:
         "key": r["problem_key"], "name": r["name"] or r["problem_key"], "rating": r["rating"],
         "tags": json.loads(r["tags"]) if r["tags"] else [], "match_code": r["code"],
         "added_at": r["added_at"], "done_at": r["done_at"],
-        "url": f"https://codeforces.com/contest/{r['contest_id']}/problem/{r['idx']}" if r["contest_id"] else None,
+        "url": problem_url(r["contest_id"], r["idx"]),
     } for r in rows]
 
 

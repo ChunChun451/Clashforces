@@ -3,8 +3,31 @@
 from app.models import TESTING, Contest, Problem, Submission
 
 
+GYM_MIN_ID = 100000  # gym contests and mashups have ids from here up
+
+
 def problem_key(contest_id, index) -> str:
     return f"{contest_id}{index}"
+
+
+def is_gym(contest_id) -> bool:
+    return contest_id is not None and int(contest_id) >= GYM_MIN_ID
+
+
+def _base(contest_id) -> str:
+    return f"https://codeforces.com/{'gym' if is_gym(contest_id) else 'contest'}/{contest_id}"
+
+
+def problem_url(contest_id, index) -> str | None:
+    return f"{_base(contest_id)}/problem/{index}" if contest_id else None
+
+
+def contest_url(contest_id) -> str | None:
+    return _base(contest_id) if contest_id else None
+
+
+def submission_url(contest_id, submission_id) -> str | None:
+    return f"{_base(contest_id)}/submission/{submission_id}" if contest_id else None
 
 
 def parse_problems(result: dict) -> list[Problem]:
@@ -51,5 +74,6 @@ def parse_submissions(result: list, handle: str) -> list[Submission]:
             time=s["creationTimeSeconds"],
             passed_tests=s.get("passedTestCount", 0),
             language=s.get("programmingLanguage", ""),
+            problem_name=p.get("name", ""),
         ))
     return out
