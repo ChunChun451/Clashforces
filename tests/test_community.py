@@ -1,4 +1,4 @@
-"""The Players page: members list, activity feed, saved challenges."""
+"""The Players page: members list and saved challenges."""
 
 import pytest
 
@@ -88,11 +88,9 @@ def test_challenge_rules(world, carol, monkeypatch):  # noqa: F811
         community.send(w.a, code, "Bob_77")
 
 
-async def test_activity_and_players(world, carol):  # noqa: F811
+async def test_players_list(world, carol):  # noqa: F811
     w = world
     match = await start_duel(w)
-    feed = community.activity()
-    assert [m["code"] for m in feed["live"]] == [match["code"]]
     people = {p["handle"]: p for p in community.players(carol["id"])}
     assert people["alice"]["playing"] == {"code": match["code"], "mode": "friend"}
     assert people["carol"]["is_me"] and not people["carol"]["playing"]
@@ -102,19 +100,14 @@ async def test_activity_and_players(world, carol):  # noqa: F811
     w.subs["Bob_77"] += [raw(1, key, "OK", match["start_time"] + 600)]
     w.now.t = match["end_time"] + 30
     await finish(w, match)
-    feed = community.activity()
-    assert feed["live"] == []
-    m = next(i for i in feed["items"] if i["kind"] == "match")
-    assert m["code"] == match["code"] and not m["draw"]
-    assert [s["players"][0]["handle"] for s in m["sides"]] == ["Bob_77", "alice"]  # winner first
-    assert {i["handle"] for i in feed["items"] if i["kind"] == "joined"} == {"alice", "Bob_77", "carol"}
     assert {p["handle"]: p["played"] for p in community.players(None)} == {"alice": 1, "Bob_77": 1, "carol": 0}
+    assert all(p["playing"] is None for p in community.players(None))
 
     db.execute("UPDATE users SET banned_at = 1 WHERE id = ?", (carol["id"],))
     assert "carol" not in {p["handle"] for p in community.players(None)}
 
 
-def test_unlisted_contests_stay_off_the_feed(world):  # noqa: F811
+def test_unlisted_contests_get_no_watch_link(world):  # noqa: F811
     w = world
     db.execute("INSERT INTO matches(code, mode, rules, status, settings, creator_id, created_at, start_time, end_time,"
                " visibility) VALUES ('HIDDEN', 'contest', 'icpc', 'running', '{}', ?, ?, ?, ?, 'unlisted')",
@@ -122,7 +115,6 @@ def test_unlisted_contests_stay_off_the_feed(world):  # noqa: F811
     mid = db.scalar("SELECT id FROM matches WHERE code = 'HIDDEN'")
     db.execute("INSERT INTO match_players(match_id, user_id, handle, joined_at) VALUES (?,?,?,?)",
                (mid, w.a["id"], "alice", T0))
-    assert community.activity()["live"] == []
     assert next(p for p in community.players(None) if p["handle"] == "alice")["playing"] is None
 
 

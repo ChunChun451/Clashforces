@@ -1,4 +1,4 @@
-"""The Players page: members, live matches and recent results, and challenges."""
+"""The Players page: members and challenges."""
 
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -11,11 +11,6 @@ router = APIRouter(prefix="/api")
 @router.get("/players")
 async def players(me=Depends(session.current_user)):
     return {"players": community.players(me["id"] if me else None)}
-
-
-@router.get("/activity")
-async def activity():
-    return community.activity()
 
 
 @router.get("/challenges")

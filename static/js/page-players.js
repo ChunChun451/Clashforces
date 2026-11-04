@@ -1,19 +1,16 @@
 // Everyone on Clashforces: who's around, what's happening, and challenges.
 import { $, api, el, emptyState, getMe, handleEl, mountTopbar, toast } from "./api.js";
-import { fmtCountdown } from "./time.js";
 
 mountTopbar("/players");
 const app = $("#app");
 const me = await getMe();
 
 let players = [];
-let feed = { live: [], items: [], server_time: Date.now() / 1000 };
 let challenges = { incoming: [], outgoing: [] };
 let query = "";
-let offset = 0; // server time - local time (s)
-const now = () => Date.now() / 1000 + offset;
+const now = () => Date.now() / 1000;
 
-const MODE_NAME = { friend: "Friend duel", group: "Group room", ranked: "Ranked", team: "Team duel", contest: "Contest" };
+const MODE_NAME = { friend: "Friend duel", group: "Group room", ranked: "Ranked", team: "Team duel" };
 
 function ago(t) {
   const s = Math.max(0, now() - t);
@@ -22,11 +19,6 @@ function ago(t) {
   if (s < 86400) return `${Math.round(s / 3600)}h ago`;
   if (s < 86400 * 30) return `${Math.round(s / 86400)}d ago`;
   return new Date(t * 1000).toLocaleDateString(undefined, { month: "short", day: "numeric" });
-}
-
-function names(list, max = 3) {
-  return [list.slice(0, max).map((p, i) => [i ? ", " : "", handleEl(p.handle, p.cf_rating)]),
-    list.length > max ? el("span.muted", ` +${list.length - max}`) : ""];
 }
 
 function settingsLine(s) {
@@ -39,13 +31,11 @@ function settingsLine(s) {
 }
 
 async function load() {
-  const [p, a, c] = await Promise.all([
+  const [p, c] = await Promise.all([
     api("/api/players").then((r) => r.players).catch(() => players),
-    api("/api/activity").catch(() => feed),
     me.user ? api("/api/challenges").catch(() => challenges) : Promise.resolve(challenges),
   ]);
-  players = p; feed = a; challenges = c;
-  offset = feed.server_time - Date.now() / 1000;
+  players = p; challenges = c;
   render();
 }
 
@@ -154,56 +144,6 @@ function refreshList() {
   if (box) box.replaceChildren(listBody(q ? players.filter((p) => p.handle.toLowerCase().includes(q)) : players, q));
 }
 
-const feedRow = (main, side) => el("li", el("span.feed-main", main), el("span.feed-side", side));
-
-function liveRow(m) {
-  const left = m.end_time ? m.end_time - now() : null;
-  return feedRow(
-    [el("span.live-word", el("span.pulse", { "aria-hidden": "true" }), "Live"), " ", m.title ? el("strong", m.title) : names(m.players, 2)],
-    [left !== null ? el("span.mono", { dataset: { until: String(m.end_time) } }, `${fmtCountdown(left)} left`) : "",
-      el("a", { href: `/m/${m.code}` }, "Watch")]);
-}
-
-function sideText(s) {
-  return s.name ? el("strong", s.name) : names(s.players, 2);
-}
-
-function matchItem(it) {
-  const [a, b] = it.sides;
-  let line;
-  if (it.mode === "contest") line = [el("strong", it.title || "Contest"), a ? [" won by ", sideText(a)] : " finished"];
-  else if (it.n_sides > 2) line = [sideText(a), it.draw ? " tied first of " : " won a room of ", String(it.n_sides)];
-  else if (it.draw) line = [sideText(a), " drew with ", sideText(b)];
-  else line = [sideText(a), it.end_reason === "forfeit" ? " won by forfeit vs " : " beat ", sideText(b)];
-  return feedRow(line, el("a", { href: `/m/${it.code}`, title: `${MODE_NAME[it.mode] || it.mode} · ${it.rules === "icpc" ? "ICPC" : "Lockout"}` }, ago(it.at)));
-}
-
-// Sign-ups next to each other in time collapse into one line.
-function joinedGroup(list) {
-  const shown = list.slice(0, 3);
-  return feedRow(
-    [shown.map((it, i) => [i ? ", " : "", handleEl(it.handle, it.cf_rating)]),
-      list.length > 3 ? el("span.muted", ` +${list.length - 3}`) : "", " joined"],
-    ago(list[0].at));
-}
-
-function activityPanel() {
-  const rows = feed.live.map(liveRow);
-  let joins = [];
-  const flush = () => { if (joins.length) rows.push(joinedGroup(joins)); joins = []; };
-  for (const it of feed.items) {
-    if (it.kind === "joined") { joins.push(it); continue; }
-    flush();
-    rows.push(matchItem(it));
-  }
-  flush();
-  return el("section.panel.activity-panel",
-    el("div.panel-head", el("h2", "Activity"), feed.live.length ? el("span.small.accent", `${feed.live.length} live`) : null),
-    rows.length
-      ? el("div.panel-scroll", el("ul.panel-list.feed", rows))
-      : el("div.panel-fill", emptyState({ iconName: "history", title: "Quiet so far", text: "Finished matches and new members show up here." })));
-}
-
 function render() {
   app.replaceChildren(el("div.page",
     el("div.page-head",
@@ -211,19 +151,10 @@ function render() {
         el("p.lede", "Challenge anyone, even if they're offline. They'll see it when they're back.")),
       me.user ? el("a.btn.ghost", { href: "/friends" }, "Friends & leaderboard") : el("a.btn.primary", { href: "/login?next=/players" }, "Log in to challenge")),
     challengesSection(),
-    el("div.grid-2.equal.community", playersPanel(), activityPanel())));
-}
-
-function tick() {
-  for (const node of app.querySelectorAll("[data-until]")) {
-    const left = Number(node.dataset.until) - now();
-    if (left <= 0) { load(); return; }
-    node.textContent = `${fmtCountdown(left)} left`;
-  }
+    playersPanel()));
 }
 
 await load();
-setInterval(tick, 1000);
 setInterval(() => { if (!document.hidden && !document.activeElement?.matches?.(".pl-search")) load(); }, 30000);
 
 if (me.user) {

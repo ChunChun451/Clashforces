@@ -1,15 +1,11 @@
-/* Players page: members, activity feed, challenges. Home's challenge banner uses .challenges too. */
+/* Players page: one column with challenges and the member list. */
+main.players-main { max-width: 760px; }
 
 .panel-head .count {
   display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; margin-left: var(--s2); border-radius: 999px;
   background: var(--accent-soft); color: var(--accent); font: 600 11px var(--font-mono); vertical-align: 2px;
 }
-.match-code { font-family: var(--font-mono); font-size: 12px; color: var(--muted); border-bottom-color: transparent; }
-.match-code:hover { color: var(--text-strong); }
 
-/* Both columns are the same height and scroll inside, so neither ends early. */
-.community > .panel { height: min(720px, calc(100vh - 220px)); min-height: 460px; }
-.panel-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
 .panel-scroll > .empty-state { margin: var(--s7) auto; }
 
 .pl-search-wrap { padding: var(--s3) var(--s5); border-bottom: 1px solid var(--line); }
@@ -22,10 +18,9 @@
 .pl-tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; line-height: 18px; }
 .pl-side { display: flex; align-items: center; gap: var(--s3); flex: none; }
 .panel-list .meta.accent { color: var(--accent); }
-.live-word { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 500; }
 
 /* Quiet rows: compact, and the Challenge button only shows on the row you point at. */
-.pl-list > li, .feed > li { min-height: 44px; }
+.pl-list > li { min-height: 44px; }
 @media (hover: hover) {
   /* the button sits over the status and swaps in on hover or keyboard focus */
   .pl-row { position: relative; }
@@ -35,18 +30,9 @@
   .pl-row:hover .meta, .pl-row:focus-within .meta { opacity: 0; }
 }
 
-.feed-main { flex: 1; min-width: 0; line-height: 1.45; }
-.feed-side { flex: none; display: inline-flex; gap: var(--s3); font-size: 13px; color: var(--muted); }
-.feed-side a { color: var(--muted); border-bottom-color: transparent; }
-.feed-side a:hover { color: var(--text-strong); }
-
 .challenges .panel-list > li { flex-wrap: wrap; }
 .challenges .meta.danger { color: var(--danger); }
 
-@media (max-width: 1000px) {
-  .community > .panel { height: auto; min-height: 0; }
-  .community .panel-scroll { max-height: 560px; }
-}
 @media (max-width: 720px) {
   .panel-list > li { padding-left: var(--s4); padding-right: var(--s4); }
 }

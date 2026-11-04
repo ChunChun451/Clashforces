@@ -1,4 +1,4 @@
-"""The Players page: everyone on the site, what's happening, and challenges.
+"""The Players page: everyone on the site, and challenges.
 
 A challenge is an invite to a lobby that is saved, so it still reaches someone
 who was offline when it was sent. It stays open while the lobby does.
@@ -6,10 +6,9 @@ who was offline when it was sent. It stays open while the lobby does.
 
 from app import clock, db
 from app.auth import users
-from app.matches import reveal, service, store
+from app.matches import service, store
 from app.ws.hub import hub
 
-FEED_LIMIT = 30
 CHALLENGES_PER_HOUR = 15
 
 
@@ -36,56 +35,6 @@ def players(viewer_id: int | None) -> list[dict]:
         out.append(item)
     out.sort(key=lambda p: (not p["is_me"], not (p["online"] or p["playing"]), -(p["last_seen_at"] or p["joined_at"] or 0)))
     return out
-
-
-# ---------- activity ----------
-
-def _sides(m) -> list[dict]:
-    """Finished match -> sides in place order. A side is a team, or one player."""
-    rows = db.all("SELECT handle, cf_rating, place, team FROM match_players WHERE match_id = ? ORDER BY place, handle",
-                  (m["id"],))
-    if store.is_team(m):
-        names = store.team_names(m)
-        sides: dict[int, dict] = {}
-        for r in rows:
-            if r["team"] is None:
-                continue
-            s = sides.setdefault(r["team"], {"name": names[r["team"]] if r["team"] < len(names) else None,
-                                             "place": r["place"], "players": []})
-            s["players"].append({"handle": r["handle"], "cf_rating": r["cf_rating"]})
-        return sorted(sides.values(), key=lambda s: (s["place"] or 99))
-    return [{"name": None, "place": r["place"], "players": [{"handle": r["handle"], "cf_rating": r["cf_rating"]}]}
-            for r in rows]
-
-
-def _live_item(m) -> dict:
-    s = store.settings(m)
-    rows = db.all("SELECT handle, cf_rating FROM match_players WHERE match_id = ? ORDER BY joined_at", (m["id"],))
-    return {"code": m["code"], "mode": m["mode"], "rules": m["rules"], "title": s.get("title"),
-            "start_time": m["start_time"], "end_time": m["end_time"],
-            "players": [{"handle": r["handle"], "cf_rating": r["cf_rating"]} for r in rows][:8], "n_players": len(rows)}
-
-
-def activity() -> dict:
-    """Live matches, plus a feed of finished matches and new members. Unlisted contests stay out."""
-    listed = "(m.mode != 'contest' OR m.visibility = 'public')"
-    live = [_live_item(m) for m in db.all(
-        f"SELECT m.* FROM matches m WHERE m.status = 'running' AND {listed} ORDER BY m.start_time DESC LIMIT 12")]
-    items = []
-    for m in db.all(f"SELECT m.* FROM matches m WHERE m.status = 'ended' AND m.result_status = 'final' AND {listed}"
-                    f" AND {reveal.UNLOCKED_SQL} ORDER BY m.ended_at DESC LIMIT ?", (FEED_LIMIT,)):
-        sides = _sides(m)
-        if len(sides) < 2 and m["mode"] != "contest":
-            continue
-        items.append({"kind": "match", "at": m["ended_at"], "code": m["code"], "mode": m["mode"], "rules": m["rules"],
-                      "title": store.settings(m).get("title"), "end_reason": m["end_reason"], "sides": sides[:6],
-                      "n_sides": len(sides),
-                      "draw": len(sides) > 1 and sides[0]["place"] == sides[1]["place"]})
-    for u in db.all("SELECT handle, cf_rating, created_at FROM users WHERE handle IS NOT NULL AND banned_at IS NULL"
-                    " ORDER BY created_at DESC LIMIT ?", (FEED_LIMIT,)):
-        items.append({"kind": "joined", "at": u["created_at"], "handle": u["handle"], "cf_rating": u["cf_rating"]})
-    items.sort(key=lambda i: -(i["at"] or 0))
-    return {"live": live, "items": items[:FEED_LIMIT], "server_time": clock.now()}
 
 
 # ---------- challenges ----------
