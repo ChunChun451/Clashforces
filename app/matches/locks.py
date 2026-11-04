@@ -39,7 +39,7 @@ def release_match(match_id: int) -> None:
 
 def current(user_id: int) -> sqlite3.Row | None:
     return db.one(
-        "SELECT l.*, m.code FROM active_locks l LEFT JOIN matches m ON m.id = l.match_id WHERE l.user_id = ?",
+        "SELECT l.*, m.code, m.status AS match_status FROM active_locks l LEFT JOIN matches m ON m.id = l.match_id WHERE l.user_id = ?",
         (user_id,),
     )
 

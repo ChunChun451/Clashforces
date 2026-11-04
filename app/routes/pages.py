@@ -27,6 +27,7 @@ PAGES = {
     "/queue": "queue",
     "/upsolve": "upsolve",
     "/friends": "friends",
+    "/players": "players",
     "/u/{handle}": "profile",
 }
 

@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
-from app import db
+from app import community, db
 from app.auth import admin, session, users, verify
 from app.cf.client import CFError
 from app.matches import locks
@@ -78,7 +78,8 @@ async def me(user=Depends(session.current_user)):
     lock = locks.current(user["id"])
     return {
         "user": users.public(user),
-        "active": None if lock is None else {"kind": lock["kind"], "code": lock["code"]},
+        "active": None if lock is None else {"kind": lock["kind"], "code": lock["code"], "status": lock["match_status"]},
+        "challenges": community.incoming_count(user["id"]),
         "is_admin": admin.is_admin(user),
     }
 

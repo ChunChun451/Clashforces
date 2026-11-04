@@ -94,17 +94,23 @@ let globalListeners = false;
 export async function mountTopbar(current) {
   const bar = $("#topbar");
   if (!bar) return;
-  const links = [["/", "Play"], ["/events", "Events"], ["/queue", "Ranked"], ["/friends", "Friends"], ["/upsolve", "Upsolve"]];
+  const links = [["/", "Play"], ["/events", "Events"], ["/players", "Players"], ["/queue", "Ranked"], ["/friends", "Friends"], ["/upsolve", "Upsolve"]];
   const nav = el("nav.nav", { "aria-label": "Main" },
-    links.map(([href, label]) => el("a", { href, "aria-current": current === href ? "page" : null }, label)));
+    links.map(([href, label]) => el("a", { href, "aria-current": current === href ? "page" : null },
+      label, href === "/players" ? el("span.nav-badge", { id: "challenge-badge", hidden: true }) : null)));
   const right = el("div.topbar-right");
   const light = document.documentElement.dataset.theme === "light";
   const themeBtn = el("button.btn.ghost.icon", { type: "button", onclick: toggleTheme,
     "aria-label": light ? "Switch to dark theme" : "Switch to light theme", title: light ? "Dark theme" : "Light theme" },
   icon(light ? "moon" : "sun"));
   right.append(themeBtn);
+  try {
+    const f = sessionStorage.getItem("flash");  // a message left by the previous page
+    if (f) { sessionStorage.removeItem("flash"); toast(f); }
+  } catch { /* storage blocked */ }
   bar.replaceChildren(el("a.brand", { href: "/", "aria-label": "Clashforces home" }, brandMark(), el("span.brand-word", "clash", el("span", "forces"))), nav, right);
   const me = await getMe();
+  setChallengeBadge(me.challenges || 0);
   if (me.user) {
     if (me.is_admin) right.append(el("a.btn.ghost.icon.admin-link", { href: "/admin", "aria-label": "Admin", title: "Admin", "aria-current": current === "/admin" ? "page" : null }, icon("shield")));
     right.append(
@@ -123,11 +129,22 @@ export async function mountTopbar(current) {
       toast(`${d.from} invited you to a match: ${location.origin}/m/${d.code}`);
       nt.notify(`${d.from} invited you to a duel`, "invite", { always: true });
     });
+    ws.on("challenges", (d) => setChallengeBadge(d.count));
+    ws.on("challenge_declined", (d) => toast(`${d.handle} declined your challenge.`));
     ws.connect();
   }
   if (me.user && me.user.needs_reverify) {
     toast("Your Codeforces handle changed. Re-verify it in Settings.", true);
   }
+}
+
+// Open challenges waiting for you, on the Players tab.
+function setChallengeBadge(n) {
+  const b = $("#challenge-badge");
+  if (!b) return;
+  b.hidden = !n;
+  b.textContent = n ? String(n) : "";
+  b.setAttribute("aria-label", `${n} open ${n === 1 ? "challenge" : "challenges"}`);
 }
 
 // A blank list is never just blank: say what goes here and how to fill it.

@@ -281,7 +281,10 @@ function lobby() {
     rows.push(el("div.lobby-player.slot", el("span.who", el("span.ready-dot", { "aria-hidden": "true" }), M.mode === "ranked" ? "Opponent" : "Waiting for your friend")));
   }
   const waiting = M.players.length < needed
-    ? (M.mode === "group" ? `Waiting for players: ${M.players.length} of at least ${needed}.` : "Share the invite link to fill the empty seat.")
+    ? (M.mode === "group" ? [`Waiting for players: ${M.players.length} of at least ${needed}.`,
+      isPlayer() ? [" Share the link or ", el("a", { href: "/players" }, "challenge someone"), "."] : ""]
+      : isPlayer() && M.mode !== "ranked" ? ["Share the invite link or ", el("a", { href: "/players" }, "challenge a player"), " to fill the empty seat."]
+        : "Share the invite link to fill the empty seat.")
     : M.players.every((p) => p.ready) ? "Everyone is ready." : `Waiting for ${M.players.filter((p) => !p.ready).map((p) => p.handle).join(", ")} to press Ready.`;
 
   let actions;

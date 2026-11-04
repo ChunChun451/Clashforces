@@ -31,7 +31,7 @@ label { display: block; font-size: 13px; color: var(--muted); margin-bottom: var
 .field + .field { margin-top: var(--s4); }
 .grid-2 > .field + .field, .row > .field + .field { margin-top: 0; }
 .field.grow { flex: 1; min-width: 0; }
-input[type="text"], input[type="number"], input[type="url"], input[type="datetime-local"], select, textarea {
+input[type="text"], input[type="search"], input[type="number"], input[type="url"], input[type="datetime-local"], select, textarea {
   width: 100%; height: var(--h-md); padding: 0 var(--s3);
   background: var(--surface); color: var(--text-strong);
   border: 1px solid var(--line); border-radius: var(--r);

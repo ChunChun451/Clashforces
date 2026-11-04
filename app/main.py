@@ -22,6 +22,7 @@ from app.routes import admin as admin_routes
 from app.routes import auth as auth_routes
 from app.routes import matches as match_routes
 from app.routes import queue as queue_routes
+from app.routes import community as community_routes
 from app.routes import users as user_routes
 from app.routes import ws as ws_routes
 from app.ws.hub import hub
@@ -65,6 +66,16 @@ async def csrf_guard(request: Request, call_next):
     return await call_next(request)
 
 
+@app.middleware("http")
+async def revalidate_static(request: Request, call_next):
+    """Browsers check static files and pages with the server before reusing them (a cheap 304),
+    so a deploy never leaves anyone running old CSS or JS."""
+    response = await call_next(request)
+    if request.url.path.startswith("/static/") or response.headers.get("content-type", "").startswith("text/html"):
+        response.headers.setdefault("Cache-Control", "no-cache")
+    return response
+
+
 LOOPBACK = {"127.0.0.1", "::1", "localhost"}
 
 
@@ -91,6 +102,7 @@ app.include_router(auth_routes.router)
 app.include_router(match_routes.router)
 app.include_router(queue_routes.router)
 app.include_router(user_routes.router)
+app.include_router(community_routes.router)
 app.include_router(ws_routes.router)
 app.include_router(pages.router)
 app.include_router(admin_routes.router)

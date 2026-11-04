@@ -1,4 +1,4 @@
-import { $, api, el, emptyState, fmtDuration, getMe, handleEl, mountTopbar, ratingClass } from "./api.js";
+import { $, api, el, emptyState, fmtDuration, getMe, handleEl, mountTopbar, ratingClass, toast } from "./api.js";
 import { icon } from "./icons.js";
 
 mountTopbar("/");
@@ -215,12 +215,12 @@ function friendsPanel(friends) {
   let body;
   if (!friends.length) {
     body = emptyState({ iconName: "userPlus", title: "No friends added",
-      text: "Add friends by handle to see when they're online.",
-      action: el("a.btn.small", { href: "/friends" }, "Add friends") });
+      text: "Find people to duel on the Players tab, or add friends by handle to see when they're online.",
+      action: el("a.btn.small", { href: "/players" }, "Browse players") });
   } else if (!online.length) {
     body = emptyState({ iconName: "users", title: "Nobody online right now",
-      text: `${friends.length} ${friends.length === 1 ? "friend" : "friends"} added. Send a duel link and they can join later.`,
-      action: el("a.btn.small", { href: "/new" }, "Create a duel link") });
+      text: `${friends.length} ${friends.length === 1 ? "friend" : "friends"} added. Challenge one anyway: they'll see it when they're back.`,
+      action: el("a.btn.small", { href: "/players" }, "Browse players") });
   } else {
     body = el("ul.panel-list", online.slice(0, 5).map((f) => el("li",
       el("span", el("span.online-dot.on", { "aria-hidden": "true" }), handleEl(f.handle, f.cf_rating)),
@@ -232,14 +232,32 @@ function friendsPanel(friends) {
     el("div.panel-fill", body));
 }
 
+const MODE_WORD = { friend: "friend duel", group: "group room", team: "team duel" };
+
+// Challenges waiting for you: one banner each, Accept joins the lobby.
+function challengeBanners(incoming) {
+  return incoming.slice(0, 3).map((c) => el("div.banner.good", { role: "status" },
+    el("span.pulse", { "aria-hidden": "true" }),
+    el("span.grow", handleEl(c.from.handle, c.from.cf_rating), ` challenged you to a ${MODE_WORD[c.mode] || "match"}`,
+      el("span.muted", ` · ${c.settings.rules === "icpc" ? "ICPC" : "Lockout"}`, c.settings.duration_min ? ` · ${c.settings.duration_min} min` : "")),
+    el("button.btn.ghost.small", { type: "button", onclick: async (e) => {
+      e.currentTarget.closest(".banner").remove();
+      try { await api(`/api/challenges/${c.id}/decline`, { method: "POST" }); } catch (ex) { toast(ex.message, true); }
+    } }, "Decline"),
+    el("button.btn.primary.small", { type: "button", onclick: async () => {
+      try { await api(`/api/matches/${c.code}/join`, { method: "POST" }); location.href = `/m/${c.code}`; } catch (ex) { toast(ex.message, true); }
+    } }, "Accept")));
+}
+
 async function loggedIn() {
   const active = me.active;
   const handle = encodeURIComponent(me.user.handle || "");
-  const [recent, hist, friends, stats] = await Promise.all([
+  const [recent, hist, friends, stats, challenges] = await Promise.all([
     api(`/api/users/${handle}/matches`).then((r) => r.matches).catch(() => []),
     api(`/api/users/${handle}/rating-history`).then((r) => r.points).catch(() => []),
     api("/api/friends").then((r) => r.friends).catch(() => []),
     api(`/api/users/${handle}/stats`).catch(() => null),
+    me.challenges ? api("/api/challenges").then((r) => r.incoming).catch(() => []) : Promise.resolve([]),
   ]);
   app.replaceChildren(el("div.page",
     el("div.stack",
@@ -253,7 +271,8 @@ async function loggedIn() {
       active ? el("div.banner.good", { role: "status" },
         el("span.pulse", { "aria-hidden": "true" }),
         el("span.grow", active.kind === "queue" ? "You're in the ranked queue." : ["You're in match ", el("span.mono", active.code), "."]),
-        el("a.btn.primary.small", { href: active.kind === "queue" ? "/queue" : `/m/${active.code}` }, active.kind === "queue" ? "Open queue" : "Back to match")) : null),
+        el("a.btn.primary.small", { href: active.kind === "queue" ? "/queue" : `/m/${active.code}` }, active.kind === "queue" ? "Open queue" : "Back to match")) : null,
+      challengeBanners(challenges)),
     el("section.stack", { "aria-label": "Ways to play" },
       el("div.card-grid.mode-grid.n5", [...MODES, UPSOLVE].map((m) => modeCard(m, true)))),
     el("div.dash",

@@ -5,6 +5,7 @@ mountTopbar("/");
 const app = $("#app");
 const params = new URLSearchParams(location.search);
 const editCode = params.get("edit");
+const challengeHandle = editCode ? null : (params.get("challenge") || "").trim() || null;
 const me = await getMe();
 if (!me.user) location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
 
@@ -128,6 +129,10 @@ function payload() {
 
 const err = el("div.error-box", { hidden: true, role: "alert" });
 
+function flash(msg) {
+  try { sessionStorage.setItem("flash", msg); } catch { /* shown nowhere then; the lobby still opens */ }
+}
+
 async function submit(e) {
   e.preventDefault();
   err.hidden = true;
@@ -138,6 +143,12 @@ async function submit(e) {
       location.href = `/m/${editCode}`;
     } else {
       const r = await api("/api/matches", { method: "POST", body: payload() });
+      if (challengeHandle) {
+        try {
+          const c = await api(`/api/matches/${r.code}/invite`, { method: "POST", body: { handle: challengeHandle } });
+          flash(c.online ? `Challenge sent to ${c.handle}.` : `Challenge saved. ${c.handle} sees it next time they're on.`);
+        } catch (ex) { flash(`The lobby is open, but the challenge didn't go through: ${ex.message}`); }
+      }
       location.href = `/m/${r.code}`;
     }
   } catch (ex) {
@@ -184,7 +195,9 @@ function render() {
     el("div.page-head",
       el("div",
         el("h1", editCode ? "Match settings" : TITLES[state.mode]),
-        el("p.lede", editCode ? "Changes reset everyone's Ready." : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
+        el("p.lede", editCode ? "Changes reset everyone's Ready."
+          : challengeHandle ? ["Challenging ", el("strong.mono", challengeHandle), ". Set the rules; they get the invite when you create it."]
+            : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
       editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => state.mode = v, "Mode")),
     el("div.stack",
       (() => {

@@ -158,6 +158,19 @@ CREATE TABLE IF NOT EXISTS team_messages (
 );
 CREATE INDEX IF NOT EXISTS team_messages_match ON team_messages(match_id, team_idx, id);
 
+-- saved invites to a lobby, so they reach players who were offline (open while the lobby is)
+CREATE TABLE IF NOT EXISTS challenges (
+  id          INTEGER PRIMARY KEY,
+  match_id    INTEGER NOT NULL REFERENCES matches(id),
+  from_id     INTEGER NOT NULL REFERENCES users(id),
+  to_id       INTEGER NOT NULL REFERENCES users(id),
+  created_at  INTEGER NOT NULL,
+  declined_at INTEGER,
+  UNIQUE (match_id, to_id)
+);
+CREATE INDEX IF NOT EXISTS challenges_to ON challenges(to_id, created_at);
+CREATE INDEX IF NOT EXISTS challenges_from ON challenges(from_id, created_at);
+
 -- one active lobby/match/queue entry per user (the insert fails if one exists)
 CREATE TABLE IF NOT EXISTS active_locks (
   user_id    INTEGER PRIMARY KEY REFERENCES users(id),

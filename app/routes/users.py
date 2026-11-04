@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from app import clock, db
+from app import clock, community, db
 from app.auth import session, users
-from app.matches import stats_data, store
+from app.matches import stats_data
 from app.ws.hub import hub
 
 router = APIRouter(prefix="/api")
@@ -100,14 +100,11 @@ async def leaderboard(me=Depends(session.require_user)):
 
 @router.post("/matches/{code}/invite")
 async def invite(code: str, body: InviteIn, me=Depends(session.require_user)):
-    match = store.match_by_code(code)
-    if match is None or match["status"] != "lobby":
-        raise HTTPException(400, "You can only invite to a match that hasn't started.")
-    if not any(p["user_id"] == me["id"] for p in store.players(match["id"])):
-        raise HTTPException(403, "Only players can invite.")
-    other = _user_or_404(body.handle)
-    hub.send_user(other["id"], "invite", {"from": me["handle"], "code": match["code"], "mode": match["mode"]})
-    return {"ok": True, "online": hub.online(other["id"])}
+    """Saved as a challenge, so it also reaches someone who's offline right now."""
+    try:
+        return community.send(me, code, body.handle)
+    except community.ChallengeError as e:
+        raise HTTPException(400, str(e))
 
 
 def presence_changed(user_id: int, is_online: bool) -> None:
