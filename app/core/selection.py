@@ -49,6 +49,8 @@ def filter_errors(f: Filters) -> list[str]:
     both = set(f.tags_include) & set(f.tags_avoid)
     if both:
         errors.append(f"A tag can't be both included and avoided: {', '.join(sorted(both))}.")
+    if f.avoid_interactive and "interactive" in f.tags_include:
+        errors.append("You required the interactive tag but also chose to avoid interactive problems. Pick one.")
     return errors
 
 

@@ -134,3 +134,11 @@ def test_custom_check(problems):
     assert res.unknown == ["9999Z"]
     assert res.warnings == [("alice", "2010A")]  # warning only, still allowed
     assert len(res.errors) == 3
+
+
+def test_requiring_interactive_while_avoiding_it_is_rejected():
+    from app.core.selection import filter_errors
+    clash = Filters(3, 1200, 1600, ("interactive",), (), True)
+    assert any("interactive" in e for e in filter_errors(clash))
+    assert filter_errors(Filters(3, 1200, 1600, ("interactive",), (), False)) == []
+    assert filter_errors(Filters(3, 1200, 1600, ("dp",), (), True)) == []

@@ -34,6 +34,8 @@ if (editCode) {
     handicap: s.handicap, team_size: s.team_size || 2, team_count: s.team_count || 2, fill: s.fill || "free",
     uneven_ok: !!s.uneven_ok,
   });
+  // The "Avoid interactive problems" checkbox stands for the interactive tag's avoided state.
+  if (state.tags_avoid.delete("interactive")) state.avoid_interactive = true;
 }
 
 const TITLES = { friend: "New friend duel", team: "New team duel", group: "New group room" };
@@ -57,14 +59,21 @@ function ratingSelect(id, value, onChange) {
 
 function tagPicker() {
   // Click cycles: neutral -> include -> avoid -> neutral.
+  // "interactive" is avoided through the checkbox below, so the chip and checkbox always agree.
   return el("div.chips", { role: "group", "aria-label": "Tags" }, tags.filter((t) => t !== "*special").map((t) => {
-    const inc = state.tags_include.has(t), avo = state.tags_avoid.has(t);
+    const interactive = t === "interactive";
+    const inc = state.tags_include.has(t);
+    const avo = interactive ? state.avoid_interactive : state.tags_avoid.has(t);
     return el("button", {
       type: "button",
       class: `chip${inc ? " on" : ""}${avo ? " avoid" : ""}`,
       "aria-label": `${t}: ${inc ? "required" : avo ? "avoided" : "any"}`,
       onclick: () => {
-        if (inc) { state.tags_include.delete(t); state.tags_avoid.add(t); }
+        if (interactive) {
+          if (inc) { state.tags_include.delete(t); state.avoid_interactive = true; }
+          else if (avo) state.avoid_interactive = false;
+          else state.tags_include.add(t);
+        } else if (inc) { state.tags_include.delete(t); state.tags_avoid.add(t); }
         else if (avo) state.tags_avoid.delete(t);
         else state.tags_include.add(t);
         render();
@@ -153,7 +162,12 @@ function render() {
       el("label", "Tags — click once to require, twice to avoid"),
       tags.length ? tagPicker() : el("p.small.muted", "Tags appear once the problem list has loaded.")),
     el("label.check", el("input", { type: "checkbox", checked: state.avoid_interactive,
-      onchange: (e) => { state.avoid_interactive = e.target.checked; refreshPreview(); } }), "Avoid interactive problems"),
+      onchange: (e) => {
+        state.avoid_interactive = e.target.checked;
+        if (e.target.checked) state.tags_include.delete("interactive");
+        render();
+        refreshPreview();
+      } }), "Avoid interactive problems"),
     preview);
 
   const customFields = el("div.stack",
