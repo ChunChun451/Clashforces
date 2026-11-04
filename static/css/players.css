@@ -15,24 +15,30 @@
 .pl-search-wrap { padding: var(--s3) var(--s5); border-bottom: 1px solid var(--line); }
 .pl-search { width: 100%; }
 
-.pl-main, .pl-text, .feed-main, .ch-main { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
-.pl-text, .feed-main, .ch-main { flex-direction: column; align-items: flex-start; gap: 2px; min-width: 0; }
-.feed-main, .ch-main { flex: 1; }
+.pl-main, .ch-main { display: flex; align-items: center; gap: var(--s2); min-width: 0; }
+.ch-main { flex-direction: column; align-items: flex-start; gap: 2px; flex: 1; }
 .pl-name { display: inline-flex; align-items: center; gap: var(--s2); min-width: 0; }
 .pl-name .handle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pl-tag { font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 0 6px; line-height: 18px; }
 .pl-side { display: flex; align-items: center; gap: var(--s3); flex: none; }
-.pl-nums { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.pl-nums b { color: var(--text-strong); font-weight: 500; }
+.panel-list .meta.accent { color: var(--accent); }
 .live-word { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-weight: 500; }
 
-.feed > li { justify-content: flex-start; }
-.feed-icon {
-  display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: var(--r);
-  border: 1px solid var(--line); background: var(--surface-2); color: var(--muted);
+/* Quiet rows: compact, and the Challenge button only shows on the row you point at. */
+.pl-list > li, .feed > li { min-height: 44px; }
+@media (hover: hover) {
+  /* the button sits over the status and swaps in on hover or keyboard focus */
+  .pl-row { position: relative; }
+  .pl-row .pl-act { position: absolute; right: var(--s5); top: 50%; transform: translateY(-50%); opacity: 0; transition: opacity var(--fast); }
+  .pl-row .meta { transition: opacity var(--fast); }
+  .pl-row:hover .pl-act, .pl-row:focus-within .pl-act { opacity: 1; }
+  .pl-row:hover .meta, .pl-row:focus-within .meta { opacity: 0; }
 }
-.feed > li > :last-child:not(.feed-main) { margin-left: auto; flex: none; }
-.feed-main > span:first-child { line-height: 1.4; }
+
+.feed-main { flex: 1; min-width: 0; line-height: 1.45; }
+.feed-side { flex: none; display: inline-flex; gap: var(--s3); font-size: 13px; color: var(--muted); }
+.feed-side a { color: var(--muted); border-bottom-color: transparent; }
+.feed-side a:hover { color: var(--text-strong); }
 
 .challenges .panel-list > li { flex-wrap: wrap; }
 .challenges .meta.danger { color: var(--danger); }
@@ -42,6 +48,5 @@
   .community .panel-scroll { max-height: 560px; }
 }
 @media (max-width: 720px) {
-  .pl-nums { display: none; }
   .panel-list > li { padding-left: var(--s4); padding-right: var(--s4); }
 }
