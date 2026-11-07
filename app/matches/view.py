@@ -138,6 +138,25 @@ def team_rows_json(match, rows: list[Row], player_rows, problem_rows, member_sub
     return out
 
 
+def sprint_json(match, s: dict, player_rows, problem_rows, now: int) -> dict:
+    """Where a sprint stands: each opened problem's outcome, and the open one's deadline."""
+    steps = store.sprint_state(match, player_rows, problem_rows)
+    labels = {p["problem_key"]: p["label"] for p in problem_rows if p["user_id"] is None}
+    limit = store.sprint_limit_s(match)
+    cur = steps[-1] if steps and steps[-1].closed_at is None else None
+    return {
+        "total": len(labels),
+        "limit_min": s.get("sprint_limit_min") or 0,
+        "current": None if cur is None else labels.get(cur.key),
+        "opened_at": None if cur is None else cur.revealed_at,
+        "deadline": None if cur is None or not limit else cur.revealed_at + limit,
+        "steps": [{"label": labels.get(st.key), "opened_at": st.revealed_at, "closed_at": st.closed_at,
+                   "outcome": "open" if st.closed_at is None else "claimed" if st.claimed else "skipped"}
+                  for st in steps],
+        "_keys": [{"key": st.key} for st in steps],
+    }
+
+
 def lobby_blocker(match, s: dict, player_rows) -> str | None:
     """Why the match can't start yet (team mode), or None."""
     if not store.is_team(match):
@@ -175,6 +194,14 @@ def build(match, viewer: int | None) -> dict:
     now = clock.now()
     me = next((p for p in pr if p["user_id"] == viewer), None)
     revealed = match["start_time"] is not None and now >= match["start_time"] and match["status"] in ("running", "ended")
+    sprint = sprint_json(match, s, pr, pb, now) if revealed and store.is_sprint(match) else None
+    shown = pb
+    if sprint and match["status"] == "running":
+        # only the problems opened so far; the rest stay hidden until someone claims the current one
+        opened = {st["key"] for st in sprint.pop("_keys")}
+        shown = [x for x in pb if x["problem_key"] in opened]
+    elif sprint:
+        sprint.pop("_keys")
 
     state = {
         "code": match["code"],
@@ -211,11 +238,13 @@ def build(match, viewer: int | None) -> dict:
             "rating_after": p["rating_after"],
             "team": p["team"],
         } for p in pr],
-        "problems": [problem_json(x) for x in pb] if revealed else [],
+        "problems": [problem_json(x) for x in shown] if revealed else [],
         "standings": [],
         "rematch_code": rematch_code(match),
         "is_host": viewer is not None and viewer == match["creator_id"],
     }
+    if sprint:
+        state["sprint"] = sprint
     rv = None
     if match["mode"] == "contest":
         from app.matches import contest, reveal
@@ -254,15 +283,15 @@ def build(match, viewer: int | None) -> dict:
         else:
             visible, hidden = all_subs, []
             state["frozen"] = False
-        state["standings"] = team_rows_json(match, score(visible), pr, pb, visible, hidden)
+        state["standings"] = team_rows_json(match, score(visible), pr, shown, visible, hidden)
         return state
     if freeze_active(match, s):
         visible, hidden = freeze.split_visible(all_subs, viewer if me else None, freeze_start(match, s))
         state["frozen"] = True
-        state["standings"] = rows_json(score(visible), pr, pb, freeze.hidden_counts(hidden))
+        state["standings"] = rows_json(score(visible), pr, shown, freeze.hidden_counts(hidden))
     else:
         state["frozen"] = False
-        state["standings"] = rows_json(score(all_subs), pr, pb)
+        state["standings"] = rows_json(score(all_subs), pr, shown)
     return state
 
 
@@ -270,7 +299,8 @@ def build(match, viewer: int | None) -> dict:
 # older versions (or added later) never leak.
 PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive", "since_year",
                        "custom_problems", "duration_min", "freeze_min", "handicap", "team_size", "team_count",
-                       "fill", "uneven_ok", "title", "format", "max_players", "description")
+                       "fill", "uneven_ok", "title", "format", "max_players", "description", "sprint",
+                       "sprint_limit_min")
 
 
 def public_settings(s: dict) -> dict:

@@ -145,9 +145,12 @@ function myEnd() {
   return M.end_time;
 }
 
+const isSprint = () => !!(M.settings && M.settings.sprint);
+const rulesName = () => (M.rules === "icpc" ? "ICPC" : isSprint() ? "Sprint" : "Lockout");
+
 function settingsSummary(s, wide = false) {
   const items = [
-    ["Rules", M.rules === "icpc" ? "ICPC" : "Lockout"],
+    ["Rules", rulesName()],
     ["Problems", s.custom_problems ? `Custom: ${s.custom_problems}` : `${s.count} · ${s.rating_min}–${s.rating_max}`],
   ];
   if (!s.custom_problems && s.tags_include.length) items.push(["Tags", s.tags_include.join(", ")]);
@@ -156,6 +159,7 @@ function settingsSummary(s, wide = false) {
   if (!s.custom_problems && s.avoid_interactive) items.push(["Interactive", "avoided"]);
   items.push(["Duration", `${s.duration_min} min`]);
   if (s.freeze_min) items.push(["Freeze", `last ${s.freeze_min} min`]);
+  if (s.sprint) items.splice(1, 0, ["Per problem", s.sprint_limit_min ? `${s.sprint_limit_min} min, then skipped` : "no time limit"]);
   if (s.handicap) items.push(["Handicap", handicapText(s.handicap)]);
   if (isContest()) {
     items.splice(1, 1, ["Problems", `${M.contest.problem_count} · set by the host`]);
@@ -246,7 +250,7 @@ function header() {
       el("div.match-meta",
         isContest() ? el("span.chip", "Contest") : null,
         format ? el("span.chip", format) : null,
-        el("span.chip", M.rules === "icpc" ? "ICPC" : "Lockout"),
+        el("span.chip", { title: isSprint() ? "Lockout, one problem at a time" : null }, rulesName()),
         el("span.code-pill", { title: "Match code" }, code),
         isHost() && isContest() ? el("span.chip.on", "Hosting") : isPlayer() ? null : el("span.chip", "Spectating"),
         isContest() && !isHost() && M.contest.host ? el("span.small.muted", "Hosted by ", handleEl(M.contest.host.handle, M.contest.host.cf_rating)) : null,
@@ -318,7 +322,7 @@ function lobby() {
         el("p.panel-foot", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it."))),
     M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
     el("div.lobby-bar", actions),
-    creator && M.mode !== "ranked" && M.players.length >= 2 ? handicapEditor() : null);
+    creator && M.mode !== "ranked" && M.players.length >= 2 && !isSprint() ? handicapEditor() : null);
 }
 
 // A player row in a lobby. Hosts get move / kick controls; captains are marked.
@@ -734,14 +738,19 @@ function problemCards() {
   }
   const perPlayer = M.problems.some((p) => p.owner !== null);
   const list = perPlayer && isPlayer() ? M.problems.filter((p) => p.owner === myId) : M.problems;
+  const sp = M.status === "running" && M.sprint ? M.sprint : null;
+  const outcome = new Map((M.sprint ? M.sprint.steps : []).map((st) => [st.label, st.outcome]));
+  const locked = sp ? Math.max(0, sp.total - list.length) : 0;
   // Columns follow the problem count so the last row is never a lone card: 3 → 3, 5 → 3+2, 8 → 4+4.
-  const n = list.length;
+  const n = list.length + locked;
   const cols = n <= 4 ? n : { 5: 3, 6: 3, 7: 4, 8: 4, 9: 3, 10: 5 }[n] || 4;
   const colsMd = n <= 3 ? n : n % 2 === 0 ? 2 : 3; // tablets
-  return el("div.problems", { id: "problem-cards", style: `--cols: ${Math.max(1, cols)}; --cols-md: ${Math.max(1, colsMd)}` }, list.map((p) => {
+  const cards = list.map((p) => {
     const owner = M.rules === "lockout" ? owners.get(p.label) : null;
+    const state = outcome.get(p.label);
     const cls = ["problem", solvedByMe.has(p.label) && (!owner || mine(owner)) ? "solved" : "",
-      owner && !mine(owner) ? "taken" : ""].join(" ");
+      owner && !mine(owner) ? "taken" : "", state === "open" && sp ? "sprint-open" : "",
+      state === "skipped" ? "skipped" : ""].join(" ");
     const ownerPlayer = perPlayer && p.owner ? playerById(p.owner) : null;
     return el("article", { class: cls },
       el("div.problem-top",
@@ -754,8 +763,19 @@ function problemCards() {
       showTags && p.tags.length ? el("div.chips", p.tags.map((t) => el("span.chip", t))) : null,
       owner && isTeam() ? el("div.owner.muted", "Taken by ", teamBadge(owner.team), ` ${owner.name}`, owner.by ? ` · ${owner.by}` : "") : null,
       owner && !isTeam() ? el("div.owner.muted", "Taken by ", handleEl(owner.handle, owner.cf_rating, { link: false })) : null,
-      ownerPlayer && !isPlayer() ? el("div.owner.muted", "For ", handleEl(ownerPlayer.handle, ownerPlayer.cf_rating, { link: false })) : null);
-  }));
+      ownerPlayer && !isPlayer() ? el("div.owner.muted", "For ", handleEl(ownerPlayer.handle, ownerPlayer.cf_rating, { link: false })) : null,
+      state === "skipped" ? el("div.owner.muted", "Skipped · nobody solved it in time") : null,
+      state === "open" && sp ? el("div.sprint-now", el("span.sprint-dot", { "aria-hidden": "true" }),
+        sp.deadline ? ["Open · skipped in ", el("span.mono", { id: "sprint-clock" }, fmtDuration(sp.deadline - serverNow()))]
+          : "Open · first to solve it opens the next") : null);
+  });
+  for (let i = 0; i < locked; i++) {
+    const label = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[list.length + i] || "?";
+    cards.push(el("article.problem.locked", { "aria-label": `Problem ${label}, not open yet` },
+      el("div.problem-top", el("span.problem-letter", label), el("span.problem-name.muted", icon("lock", 14), " Locked")),
+      el("div.problem-meta", el("span", i === 0 ? "Opens when the current one is solved" + (sp.deadline ? " or skipped" : "") : "Waiting"))));
+  }
+  return el("div.problems", { id: "problem-cards", style: `--cols: ${Math.max(1, cols)}; --cols-md: ${Math.max(1, colsMd)}` }, cards);
 }
 
 function resultTitle() {
@@ -935,6 +955,8 @@ function tick() {
     if (left <= 0) render(); else cd.textContent = String(left);
     return;
   }
+  const sc = $("#sprint-clock");
+  if (sc && M.sprint && M.sprint.deadline) sc.textContent = fmtDuration(Math.max(0, M.sprint.deadline - now));
   const t = $("#timer");
   if (!t) return;
   const left = myEnd() - now;

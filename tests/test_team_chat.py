@@ -128,7 +128,7 @@ async def test_moved_player_sees_only_the_new_team(world):
     assert [x["body"] for x in chat.history(m, w.u["c3"]["id"])["messages"]] == ["owls plan"]
 
 
-async def test_read_only_after_the_end(world):
+async def test_open_after_the_end_for_the_post_match_talk(world):
     w = world
     m = team_contest(w)
     chat.post(m, w.u["c0"], "gl")
@@ -137,11 +137,10 @@ async def test_read_only_after_the_end(world):
     chat.post(m, w.u["c0"], "running")
     contest.end_early(w.u["host"], m["code"])
     m = store.match_by_id(m["id"])
-    with pytest.raises(service.MatchError, match="closed"):
-        w.now.t += 10
-        chat.post(m, w.u["c0"], "gg")
+    w.now.t += 10
+    chat.post(m, w.u["c3"], "gg, B was nasty")
     h = chat.history(m, w.u["c3"]["id"])
-    assert not h["open"] and [x["body"] for x in h["messages"]] == ["gl", "running"]
+    assert h["open"] and [x["body"] for x in h["messages"]] == ["gl", "running", "gg, B was nasty"]
 
 
 async def test_no_chat_outside_team_matches(world):
@@ -258,16 +257,19 @@ async def test_group_room_chat_and_no_chat_in_ranked(world):
         chat.post(store.match_by_id(m["id"]), w.u["c0"], "hello stranger")
 
 
-async def test_duel_chat_is_read_only_after_the_end(world):
+async def test_duel_chat_after_the_end_and_closed_when_cancelled(world):
     w = world
     code = service.create(w.u["c0"], "friend", "icpc", DUEL)
     service.join(w.u["c1"], code)
     m = store.match_by_code(code)
     chat.post(m, w.u["c0"], "glhf")
     db.execute("UPDATE matches SET status = 'ended' WHERE id = ?", (m["id"],))
+    w.now.t += 2
+    chat.post(store.match_by_id(m["id"]), w.u["c1"], "gg, how did you do C?")
+    db.execute("UPDATE matches SET status = 'cancelled' WHERE id = ?", (m["id"],))
     m = store.match_by_id(m["id"])
-    with pytest.raises(service.MatchError, match="closed"):
+    with pytest.raises(service.MatchError, match="cancelled"):
         w.now.t += 2
-        chat.post(m, w.u["c1"], "gg")
+        chat.post(m, w.u["c0"], "hello?")
     h = chat.history(m, w.u["c1"]["id"])
-    assert not h["open"] and [x["body"] for x in h["messages"]] == ["glhf"]
+    assert not h["open"] and [x["body"] for x in h["messages"]] == ["glhf", "gg, how did you do C?"]

@@ -4,7 +4,8 @@ shared channel (ROOM) for the players of a friend duel or group room.
 Only the members of a channel read and write it; the host, spectators, big screens
 and other teams never get it. A player moved to another team sees that team's chat from
 then on. Ranked matches and solo contests have no chat. Messages are plain text, at most CHAT_MAX characters, and rate limited per user.
-The chat is open in the lobby and during the match, and read-only once it is over.
+The chat is open in the lobby, during the match and after it (to talk it over);
+only a cancelled match's chat is read-only.
 """
 
 from collections import defaultdict, deque
@@ -14,7 +15,7 @@ from app.matches import store
 from app.matches.service import MatchError
 from app.ws.hub import hub
 
-OPEN_STATUSES = ("lobby", "starting", "running")
+OPEN_STATUSES = ("lobby", "starting", "running", "ended")  # stays open for the post-match talk
 ROOM = -1                          # the shared channel of a friend duel or group room (team_idx in team_messages)
 ROOM_MODES = ("friend", "group")
 
@@ -83,7 +84,7 @@ def post(match, user, body) -> dict:
     if team is None:
         raise MatchError("The chat is only for players in this match.")
     if not is_open(match):
-        raise MatchError("The match is over, so the chat is closed.")
+        raise MatchError("This match was cancelled, so the chat is closed.")
     text = clean(body)
     if not text:
         raise MatchError("Write something first.")

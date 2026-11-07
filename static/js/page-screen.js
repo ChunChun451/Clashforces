@@ -93,7 +93,7 @@ function renderHead() {
       el("div.sc-meta",
         M.contest ? el("span.chip", "Contest") : null,
         format ? el("span.chip", format) : null,
-        el("span.chip", M.rules === "icpc" ? "ICPC" : "Lockout"),
+        el("span.chip", M.rules === "icpc" ? "ICPC" : M.settings && M.settings.sprint ? "Sprint" : "Lockout"),
         M.contest && M.contest.host ? el("span.chip", "Host", handleEl(M.contest.host.handle, M.contest.host.cf_rating, { link: false })) : null)),
     el("div.sc-clock",
       el("div.sc-label", { id: "sc-label" }),

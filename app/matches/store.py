@@ -3,7 +3,8 @@
 import json
 import sqlite3
 
-from app import db
+from app import clock, db
+from app.core import sprint as sprint_core
 from app.core import team as team_core
 from app.core.icpc import score_icpc
 from app.core.lockout import score_lockout
@@ -85,7 +86,42 @@ def subs(match, player_rows, problem_rows) -> list[Sub]:
         f" ORDER BY creation_time, id",
         (*ids, *keys, match["start_time"], last_end),
     )
-    return [Sub(r["id"], r["user_id"], r["problem_key"], r["verdict"], r["creation_time"]) for r in rows]
+    out = [Sub(r["id"], r["user_id"], r["problem_key"], r["verdict"], r["creation_time"]) for r in rows]
+    if is_sprint(match):
+        # only what was submitted while its problem was the open one counts
+        out = sprint_core.in_window(sprint_steps(match, problem_rows, out, last_end), out)
+    return out
+
+
+# ---------- sprint: lockout with one problem open at a time ----------
+
+def is_sprint(match) -> bool:
+    return match["rules"] == "lockout" and bool(settings(match).get("sprint"))
+
+
+def sprint_keys(problem_rows) -> list[str]:
+    shared = sorted((p for p in problem_rows if p["user_id"] is None), key=lambda p: p["label"])
+    return [p["problem_key"] for p in shared]
+
+
+def sprint_limit_s(match) -> int | None:
+    m = int(settings(match).get("sprint_limit_min") or 0)
+    return m * 60 if m else None
+
+
+def sprint_steps(match, problem_rows, raw_subs, last_end: int) -> list:
+    now = min(clock.now(), last_end)
+    if match["ended_at"] is not None:
+        now = min(now, match["ended_at"])
+    return sprint_core.schedule(match["start_time"], sprint_keys(problem_rows), raw_subs, sprint_limit_s(match), now)
+
+
+def sprint_state(match, player_rows, problem_rows) -> list:
+    """The problems revealed so far, as sprint steps (empty before the start)."""
+    if match["start_time"] is None or not player_rows or not problem_rows:
+        return []
+    last_end = max((p["end_time"] or match["end_time"]) for p in player_rows)
+    return sprint_steps(match, problem_rows, subs(match, player_rows, problem_rows), last_end)
 
 
 def points(problem_rows) -> dict[str, int]:

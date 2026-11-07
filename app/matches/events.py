@@ -37,6 +37,9 @@ def submissions(match_id: int, user_id: int, changed: list[Submission]) -> None:
         snapshot = view.build(match, viewer)
         visible = [c for c in changed
                    if not (snapshot.get("frozen") and not same_side(viewer) and fs is not None and c.time >= fs)]
+        if snapshot.get("sprint"):
+            shown = {p["key"] for p in snapshot["problems"]}  # never name a problem that isn't open yet
+            visible = [c for c in visible if c.problem_key in shown]
         return {
             "standings": snapshot["standings"],
             "frozen": snapshot.get("frozen", False),

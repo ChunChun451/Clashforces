@@ -27,6 +27,7 @@ const state = {
   use_custom: false, custom_problems: "",
   duration_min: 60, freeze_min: 0,
   handicap: null,
+  sprint_limit_min: 10,
 };
 
 if (editCode) {
@@ -39,7 +40,9 @@ if (editCode) {
     custom_problems: s.custom_problems || "", duration_min: s.duration_min, freeze_min: s.freeze_min || 0,
     handicap: s.handicap, team_size: s.team_size || 2, team_count: s.team_count || 2, fill: s.fill || "free",
     uneven_ok: !!s.uneven_ok, since_year: s.since_year || null,
+    sprint_limit_min: s.sprint ? s.sprint_limit_min || 0 : 10,
   });
+  if (s.sprint) state.rules = "sprint";  // shown as its own rules choice; stored as Lockout + sprint
   // The "Avoid interactive problems" checkbox stands for the interactive tag's avoided state.
   if (state.tags_avoid.delete("interactive")) state.avoid_interactive = true;
 }
@@ -114,12 +117,22 @@ async function validateCustom() {
   } catch (e) { customResult.replaceChildren(el("div.danger", e.message)); }
 }
 
+// Sprint is Lockout with one problem open at a time.
+const realRules = () => (state.rules === "sprint" ? "lockout" : state.rules);
+const SPRINT_LIMITS = [[0, "No limit"], [5, "5 min"], [10, "10 min"], [15, "15 min"], [20, "20 min"], [30, "30 min"]];
+const RULE_TEXT = {
+  icpc: "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try.",
+  lockout: "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.",
+  sprint: "Lockout, one problem at a time. Only the current problem is shown; the first to solve it takes its points and the next one opens for everyone.",
+};
+
 function payload() {
   return {
     mode: state.mode,
-    rules: state.rules,
+    rules: realRules(),
     settings: {
-      rules: state.rules,
+      rules: realRules(),
+      ...(state.rules === "sprint" ? { sprint: true, sprint_limit_min: state.sprint_limit_min } : {}),
       count: state.count, rating_min: state.rating_min, rating_max: state.rating_max,
       tags_include: [...state.tags_include], tags_avoid: [...state.tags_avoid],
       avoid_interactive: state.avoid_interactive,
@@ -127,7 +140,7 @@ function payload() {
       custom_problems: state.use_custom ? state.custom_problems : null,
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
-      handicap: state.mode === "team" ? null : state.handicap,
+      handicap: state.mode === "team" || state.rules === "sprint" ? null : state.handicap,
       ...(state.mode === "team" ? { team_size: state.team_size, team_count: state.team_count, fill: state.fill, uneven_ok: state.uneven_ok } : {}),
     },
   };
@@ -214,13 +227,20 @@ function render() {
     el("div.stack",
       (() => {
         const rules = panel("Rules", null,
-          segmented([["icpc", "ICPC"], ["lockout", "Lockout"]], state.rules, (v) => {
+          segmented([["icpc", "ICPC"], ["lockout", "Lockout"], ["sprint", "Sprint"]], state.rules, (v) => {
             state.rules = v;
             if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
+            if (v === "sprint") state.handicap = null;
           }, "Rules"),
-          el("p.small.muted", state.rules === "icpc"
-            ? "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try."
-            : "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught."));
+          el("p.small.muted", RULE_TEXT[state.rules]),
+          state.rules === "sprint"
+            ? el("div.field", el("label", { for: "sprint-limit" }, "Time per problem"),
+              el("select", { id: "sprint-limit", onchange: (e) => { state.sprint_limit_min = Number(e.target.value); render(); } },
+                SPRINT_LIMITS.map(([v, t]) => el("option", { value: v, selected: v === state.sprint_limit_min }, t))),
+              el("p.small.muted", state.sprint_limit_min
+                ? `Nobody solves it in ${state.sprint_limit_min} minutes? It's skipped (no points) and the next one opens.`
+                : "A problem stays open until someone solves it."))
+            : null);
         if (state.mode !== "team") return rules;
         const sizes = [2, 3, 4, 5, 6].map((v) => [v, String(v)]);
         const teams = panel("Teams", null,
@@ -243,6 +263,7 @@ function render() {
             ? el("div.field", el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
             : null)),
       el("p.small.muted", state.mode === "team" ? "Team duels have no handicaps."
+        : state.rules === "sprint" ? "Sprint has no handicaps."
         : state.mode === "group" ? "Handicaps are set in the lobby once players have joined."
           : "Handicaps are set in the lobby once your friend has joined."),
       err,

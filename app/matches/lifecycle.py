@@ -12,7 +12,7 @@ import logging
 
 from app import clock, config, db
 from app.cf.client import CFError, get_client
-from app.core import lockout
+from app.core import lockout, sprint
 from app.matches import contest, draft, events, finalize, locks, store, view
 from app.models import Submission
 from app.poller.poller import poller
@@ -114,8 +114,13 @@ async def check_clinch(match_id: int) -> None:
 def _decided(match, now: int | None = None) -> bool:
     now = now or clock.now()
     rows, _ = store.standings(match)
-    pts = store.points(store.problems(match["id"]))
+    pb = store.problems(match["id"])
+    pts = store.points(pb)
     players = store.players(match["id"])
+    if store.is_sprint(match):
+        # a skipped problem gives no points, so it can't change the result
+        skipped = sprint.skipped(store.sprint_state(match, players, pb))
+        pts = {k: v for k, v in pts.items() if k not in skipped}
     can_score = {p["user_id"] for p in players if p["forfeited_at"] is None and p["end_time"] > now}
     if store.is_team(match):
         # a team can still score while any member can
@@ -174,6 +179,32 @@ def _tick_running(match, now: int) -> None:
             poller.unwatch(p["user_id"])
     if players and all(now >= p["end_time"] for p in players):
         end_match(mid, "time", at=max(p["end_time"] for p in players))
+        return
+    if store.is_sprint(match):
+        _tick_sprint(match, players)
+
+
+_sprint_seen: dict[int, tuple] = {}     # match_id -> (revealed, closed) last sent
+
+
+def _tick_sprint(match, players) -> None:
+    """Send the new board when a problem opens (claimed or timed out), and end the match when all are done."""
+    mid = match["id"]
+    steps = store.sprint_state(match, players, store.problems(mid))
+    seen = (len(steps), sum(s.closed_at is not None for s in steps))
+    if _sprint_seen.get(mid) == seen:
+        return
+    first = mid not in _sprint_seen
+    _sprint_seen[mid] = seen
+    if first:
+        return
+    events.state(mid)
+    if mid not in _clinch_busy:
+        _clinch_busy.add(mid)
+        try:
+            _spawn(check_clinch(mid))
+        except RuntimeError:
+            _clinch_busy.discard(mid)
 
 
 def _tick_final_checks(match, now: int) -> None:

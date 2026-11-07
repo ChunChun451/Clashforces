@@ -46,7 +46,29 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         if errors:
             raise SettingsError(errors[0])
     s["handicap"] = clean_handicap(s["handicap"], rules, s, mode)
+    if raw.get("sprint"):
+        s.update(clean_sprint(raw, rules, s, mode))
     return s
+
+
+SPRINT_LIMITS = (0, 5, 10, 15, 20, 30, 45, 60)  # minutes per problem; 0 = no limit
+
+
+def clean_sprint(raw: dict, rules: str, s: dict, mode: str) -> dict:
+    """Sprint: Lockout where problems open one at a time."""
+    if rules != "lockout":
+        raise SettingsError("Sprint is a Lockout mode.")
+    if mode in ("ranked", "contest"):
+        raise SettingsError("Sprint is for friend duels, group rooms and team duels.")
+    if s.get("handicap"):
+        raise SettingsError("Sprint has no handicaps.")
+    try:
+        limit = int(raw.get("sprint_limit_min") or 0)
+    except (TypeError, ValueError):
+        raise SettingsError("Unknown time per problem.")
+    if limit not in SPRINT_LIMITS:
+        raise SettingsError("Unknown time per problem.")
+    return {"sprint": True, "sprint_limit_min": limit}
 
 
 def clean_teams(raw: dict) -> dict:
