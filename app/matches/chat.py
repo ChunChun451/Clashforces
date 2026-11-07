@@ -1,8 +1,9 @@
-"""Team chat: a private channel per team in team matches and team contests.
+"""Match chat: a private channel per team in team matches and team contests, and one
+shared channel (ROOM) for the players of a friend duel or group room.
 
-Only the members of a team read and write its chat; the host, spectators, big screens
+Only the members of a channel read and write it; the host, spectators, big screens
 and other teams never get it. A player moved to another team sees that team's chat from
-then on. Messages are plain text, at most CHAT_MAX characters, and rate limited per user.
+then on. Ranked matches and solo contests have no chat. Messages are plain text, at most CHAT_MAX characters, and rate limited per user.
 The chat is open in the lobby and during the match, and read-only once it is over.
 """
 
@@ -14,6 +15,8 @@ from app.matches.service import MatchError
 from app.ws.hub import hub
 
 OPEN_STATUSES = ("lobby", "starting", "running")
+ROOM = -1                          # the shared channel of a friend duel or group room (team_idx in team_messages)
+ROOM_MODES = ("friend", "group")
 
 _sent: dict[int, deque] = defaultdict(deque)  # user_id -> times of their recent messages
 
@@ -26,6 +29,18 @@ def my_team(match, user_id: int | None) -> int | None:
     return t if t is not None and t >= 0 else None
 
 
+def my_channel(match, user_id: int | None) -> int | None:
+    """The chat the viewer belongs to: their team, ROOM for a friend duel or group room, or None."""
+    if user_id is None:
+        return None
+    if store.is_team(match):
+        return my_team(match, user_id)
+    if match["mode"] in ROOM_MODES and db.one("SELECT 1 FROM match_players WHERE match_id = ? AND user_id = ?",
+                                               (match["id"], user_id)):
+        return ROOM
+    return None
+
+
 def is_open(match) -> bool:
     return match["status"] in OPEN_STATUSES
 
@@ -36,10 +51,10 @@ def _message(row) -> dict:
 
 
 def history(match, user_id: int | None) -> dict:
-    """The last CHAT_HISTORY messages of the viewer's own team, oldest first."""
-    team = my_team(match, user_id)
+    """The last CHAT_HISTORY messages of the viewer's own channel, oldest first."""
+    team = my_channel(match, user_id)
     if team is None:
-        raise MatchError("Team chat is only for players on a team.")
+        raise MatchError("The chat is only for players in this match.")
     rows = db.all(
         "SELECT t.*, u.handle FROM (SELECT * FROM team_messages WHERE match_id = ? AND team_idx = ?"
         " ORDER BY id DESC LIMIT ?) t LEFT JOIN users u ON u.id = t.user_id ORDER BY t.id",
@@ -64,9 +79,9 @@ def _rate_limit(user_id: int, now: int) -> None:
 
 
 def post(match, user, body) -> dict:
-    team = my_team(match, user["id"] if user else None)
+    team = my_channel(match, user["id"] if user else None)
     if team is None:
-        raise MatchError("Team chat is only for players on a team.")
+        raise MatchError("The chat is only for players in this match.")
     if not is_open(match):
         raise MatchError("The match is over, so the chat is closed.")
     text = clean(body)
@@ -80,7 +95,7 @@ def post(match, user, body) -> dict:
                      (match["id"], team, user["id"], text, now))
     msg = {"id": cur.lastrowid, "team": team, "user_id": user["id"], "handle": user["handle"], "body": text,
            "created_at": now}
-    members = {p["user_id"] for p in store.players(match["id"]) if p["team"] == team}
+    members = {p["user_id"] for p in store.players(match["id"]) if team == ROOM or p["team"] == team}
     # per viewer: only this team's members get it (big screens count as spectators)
     hub.send_match(match["code"], "chat.message", lambda uid: {"code": match["code"], **msg} if uid in members else None)
     return msg

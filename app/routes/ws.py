@@ -70,7 +70,7 @@ async def handle(conn: Conn, user, type_: str, data: dict) -> None:
             return
         hub.subscribe(conn, match["code"])
         await conn.send({"type": "match.state", "data": view.build(match, conn.viewer)})
-        if chat.my_team(match, conn.viewer) is not None:
+        if chat.my_channel(match, conn.viewer) is not None:
             await conn.send({"type": "chat.history", "data": chat.history(match, conn.viewer)})
     elif type_ == "unsubscribe":
         hub.unsubscribe(conn, code)

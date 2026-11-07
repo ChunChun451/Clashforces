@@ -248,8 +248,9 @@
 .reveal-bar { flex: 0 1 220px; height: 4px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
 .reveal-bar > span { display: block; height: 100%; background: var(--accent); transition: width 600ms var(--ease); }
 
-/* ---------- team chat: a drawer in the corner, so the page's columns stay as they are ---------- */
+/* ---------- match chat: a drawer in the corner, so the page's columns stay as they are ---------- */
 .chat-dock { position: fixed; right: var(--s5); bottom: var(--s5); z-index: 30; }
+.chat-dock.room { --team: var(--accent); }  /* friend duels and group rooms: one chat for all players */
 .chat-toggle { position: relative; gap: var(--s2); box-shadow: inset 0 2px 0 var(--team), 0 12px 32px -12px rgba(0, 0, 0, .5); }
 .chat-toggle .icon { color: var(--team); }
 .chat-dot { position: absolute; top: -3px; right: -3px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 2px var(--bg); }

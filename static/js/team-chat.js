@@ -1,4 +1,5 @@
-// Team chat: a private drawer per team on the match page. Only your team sees it.
+// Match chat: a drawer on the match page. In team matches each team has its own; friend duels
+// and group rooms have one shared by the players (ROOM). Spectators never see it.
 // Lives outside #app so the page's re-renders never touch it (or what you're typing).
 import { el } from "./api.js";
 import { on, send } from "./ws.js";
@@ -6,6 +7,8 @@ import { teamBadge, teamClass } from "./standings.js";
 import { icon } from "./icons.js";
 
 const OPEN = ["lobby", "starting", "running"];
+const ROOM = -1;                       // the shared channel of a friend duel or group room
+const ROOM_MODES = ["friend", "group"];
 const MAX = 500;
 
 export function teamChat(code, myId) {
@@ -19,7 +22,7 @@ export function teamChat(code, myId) {
   let unread = false;
   let error = "";
 
-  const dock = el("aside.chat-dock", { "aria-label": "Team chat" });
+  const dock = el("aside.chat-dock", { "aria-label": "Chat" });
   const list = el("ol.chat-list", { "aria-live": "polite" });
   const input = el("input", { type: "text", id: "chat-input", maxlength: MAX, autocomplete: "off",
     placeholder: "Message your team", "aria-label": "Message your team" });
@@ -57,7 +60,8 @@ export function teamChat(code, myId) {
   function drawList() {
     const near = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
     if (!messages.length) {
-      list.replaceChildren(el("li.chat-empty", el("strong", "No messages yet"), el("span", "Only your team can read this chat.")));
+      list.replaceChildren(el("li.chat-empty", el("strong", "No messages yet"),
+        el("span", team === ROOM ? "Only players in this match can read it." : "Only your team can read this chat.")));
       return;
     }
     let prev = null;
@@ -81,19 +85,24 @@ export function teamChat(code, myId) {
     const sig = `${team}|${name}|${writable}|${expanded}|${expanded ? "" : unread}`;
     if (sig === built) { if (expanded) drawList(); return; }
     built = sig;
-    dock.className = `chat-dock ${teamClass(team)}${expanded ? " open" : ""}`;
+    const room = team === ROOM;
+    const label = room ? "Chat" : "Team chat";
+    dock.className = `chat-dock ${room ? "room" : teamClass(team)}${expanded ? " open" : ""}`;
     if (!expanded) {
       dock.replaceChildren(el("button.btn.chat-toggle", { type: "button", onclick: () => setExpanded(true),
-        "aria-label": `Open team chat${unread ? " (new messages)" : ""}` },
-      icon("message", 16), "Team chat", unread ? el("span.chat-dot", { "aria-hidden": "true" }) : null));
+        "aria-label": `Open ${label.toLowerCase()}${unread ? " (new messages)" : ""}` },
+      icon("message", 16), label, unread ? el("span.chat-dot", { "aria-hidden": "true" }) : null));
       return;
     }
+    input.placeholder = room ? "Message the other players" : "Message your team";
+    input.setAttribute("aria-label", input.placeholder);
     err.textContent = error;
     err.hidden = !error;
-    dock.replaceChildren(el("section.panel.chat-panel", { "aria-label": `${name} chat` },
+    dock.replaceChildren(el("section.panel.chat-panel", { "aria-label": room ? "Chat" : `${name} chat` },
       el("div.panel-head",
-        el("h2.team-name", teamBadge(team, name), el("span.chat-title", name), el("span.muted.chat-sub", "team chat")),
-        el("button.btn.ghost.small.icon-sm", { type: "button", "aria-label": "Close team chat", title: "Close", onclick: () => setExpanded(false) }, "×")),
+        room ? el("h2", el("span.chat-title", "Chat"), " ", el("span.muted.chat-sub", "players only"))
+          : el("h2.team-name", teamBadge(team, name), el("span.chat-title", name), el("span.muted.chat-sub", "team chat")),
+        el("button.btn.ghost.small.icon-sm", { type: "button", "aria-label": `Close ${label.toLowerCase()}`, title: "Close", onclick: () => setExpanded(false) }, "×")),
       list,
       writable
         ? el("div.chat-compose", form, el("div.chat-hint", err, count))
@@ -126,14 +135,16 @@ export function teamChat(code, myId) {
 
   // Called with every match.state: follows team moves and the end of the match.
   function update(M) {
-    const mine = M && M.teams && M.me ? M.my_team : null;
+    let mine = M && M.teams && M.me ? M.my_team : null;
+    if (M && M.me && !M.teams && ROOM_MODES.includes(M.mode)) mine = ROOM;
     if (mine === null || mine === undefined) { team = null; draw(); return; }
+    if (team === null && mine === ROOM && !messages.length) send("chat.history", { code });  // just joined the lobby
     if (team !== null && mine !== team) {
       messages = [];          // moved to another team: only that team's chat from now on
       send("chat.history", { code });
     }
     team = mine;
-    name = M.teams[mine] ? M.teams[mine].name : `Team ${"ABCDEF"[mine]}`;
+    name = mine === ROOM ? "Chat" : M.teams[mine] ? M.teams[mine].name : `Team ${"ABCDEF"[mine]}`;
     writable = OPEN.includes(M.status);
     draw();
   }

@@ -210,3 +210,64 @@ def test_migration_adds_team_messages_to_an_old_database(tmp_path):
         assert cols == {"id", "match_id", "team_idx", "user_id", "body", "created_at"}
     c.close()
     db._conn = None
+
+
+# ---------- friend duels and group rooms: one chat for the players ----------
+
+DUEL = {"count": 3, "rating_min": 1400, "rating_max": 1800, "duration_min": 60}
+
+
+async def test_friend_duel_lobby_chat(world, spies):
+    w = world
+    code = service.create(w.u["c0"], "friend", "icpc", DUEL)
+    m = store.match_by_code(code)
+    a, b, watcher, anon = spies(w.u["c0"]["id"]), spies(w.u["c1"]["id"]), spies(w.u["c2"]["id"]), spies(None)
+    for s in (a, b, watcher, anon):
+        hub.subscribe(s, code)
+    got = lambda s: [x["data"]["body"] for x in s.got if x["type"] == "chat.message"]  # noqa: E731
+
+    assert chat.post(m, w.u["c0"], "waiting for you")["team"] == chat.ROOM
+    assert got(a) == ["waiting for you"] and got(b) == []            # c1 hasn't joined yet
+    with pytest.raises(service.MatchError, match="only for players"):
+        chat.post(m, w.u["c1"], "hi")
+
+    service.join(w.u["c1"], code)
+    assert [x["body"] for x in chat.history(m, w.u["c1"]["id"])["messages"]] == ["waiting for you"]
+    w.now.t += 2
+    chat.post(m, w.u["c1"], "here, 1400-1800 ok?")
+    assert got(a) == ["waiting for you", "here, 1400-1800 ok?"]
+    assert got(b) == ["here, 1400-1800 ok?"]                          # live from when they joined; older ones come with history
+    assert got(watcher) == got(anon) == []                            # spectators never get it
+    for outsider in (w.u["c2"]["id"], None):
+        with pytest.raises(service.MatchError, match="only for players"):
+            chat.history(m, outsider)
+    assert "waiting for you" not in json.dumps(view.build(m, None))
+
+
+async def test_group_room_chat_and_no_chat_in_ranked(world):
+    w = world
+    code = service.create(w.u["c0"], "group", "icpc", DUEL)
+    for h in ("c1", "c2"):
+        service.join(w.u[h], code)
+    m = store.match_by_code(code)
+    chat.post(m, w.u["c2"], "three of us")
+    assert [x["body"] for x in chat.history(m, w.u["c1"]["id"])["messages"]] == ["three of us"]
+
+    db.execute("UPDATE matches SET mode = 'ranked' WHERE id = ?", (m["id"],))
+    with pytest.raises(service.MatchError, match="only for players"):
+        chat.post(store.match_by_id(m["id"]), w.u["c0"], "hello stranger")
+
+
+async def test_duel_chat_is_read_only_after_the_end(world):
+    w = world
+    code = service.create(w.u["c0"], "friend", "icpc", DUEL)
+    service.join(w.u["c1"], code)
+    m = store.match_by_code(code)
+    chat.post(m, w.u["c0"], "glhf")
+    db.execute("UPDATE matches SET status = 'ended' WHERE id = ?", (m["id"],))
+    m = store.match_by_id(m["id"])
+    with pytest.raises(service.MatchError, match="closed"):
+        w.now.t += 2
+        chat.post(m, w.u["c1"], "gg")
+    h = chat.history(m, w.u["c1"]["id"])
+    assert not h["open"] and [x["body"] for x in h["messages"]] == ["glhf"]
