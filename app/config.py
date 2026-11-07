@@ -102,6 +102,7 @@ ANNOUNCEMENT_MAX = 500
 REVEAL_AUTO_S = 1.5               # freeze reveal: seconds per step on auto-play
 
 # ---------- team chat ----------
+SINCE_YEAR_MIN = 2010             # "problems from YEAR on": earliest year offered
 CHAT_MAX = 500                    # characters per message
 CHAT_HISTORY = 200                # messages kept on screen per team
 CHAT_MIN_GAP_S = 1                # at most one message per second per user

@@ -8,6 +8,7 @@ from app.core import custom_list
 from app.core.dedup import dup_groups
 from app.core.selection import Filters, SelectionError, select, select_per_player, targets
 from tests.conftest import load
+from tests.test_match_flow import world  # noqa: F401  (fixture)
 
 RUNNING = {2050}
 
@@ -142,3 +143,40 @@ def test_requiring_interactive_while_avoiding_it_is_rejected():
     assert any("interactive" in e for e in filter_errors(clash))
     assert filter_errors(Filters(3, 1200, 1600, ("interactive",), (), False)) == []
     assert filter_errors(Filters(3, 1200, 1600, ("dp",), (), True)) == []
+
+
+def test_since_year_keeps_newer_contests_only(problems):
+    f = Filters(3, 800, 3500, since_year=2024, min_contest_id=2000)
+    for seed in range(10):
+        assert all(p.contest_id >= 2000 for p in select(problems, RUNNING, set(), f, random.Random(seed)))
+    with pytest.raises(SelectionError, match="from 2030 or later") as e:
+        select(problems, RUNNING, set(), Filters(3, 800, 3500, since_year=2030, min_contest_id=2100))
+    assert e.value.stage == "year"
+    # per-player ranges keep the year too
+    sets = select_per_player(problems, RUNNING, [(1, "a", 800, 3500, set()), (2, "b", 800, 3500, set())],
+                             Filters(1, 800, 3500, since_year=2024, min_contest_id=2000), random.Random(1))
+    assert all(p.contest_id >= 2000 for picked in sets.values() for p in picked)
+
+
+def test_since_year_setting(cache_filled):
+    from app import db
+    from app.cf import cache
+    from app.matches import settings
+    assert cache.first_contest_id(2023) == 1950
+    assert cache.first_contest_id(2024) == 2050            # first contest held in 2024 or later
+    assert cache.first_contest_id(2031) == 100000          # nothing that new: nothing qualifies
+    s = settings.clean({"since_year": "2024"}, "icpc", "friend")
+    assert s["since_year"] == 2024 and settings.filters(s).min_contest_id == 2050
+    assert settings.clean({}, "icpc", "friend")["since_year"] is None
+    assert settings.filters(settings.clean({}, "icpc", "friend")).min_contest_id == 0
+    for bad in ("2009", "3000", "soon"):
+        with pytest.raises(settings.SettingsError):
+            settings.clean({"since_year": bad}, "icpc", "friend")
+    db.execute("DELETE FROM contests")
+    assert cache.first_contest_id(2023) == 0               # contest list not loaded yet: no filter
+
+
+def test_since_year_reaches_the_lobby(world):  # noqa: F811
+    from app.matches import service, store, view
+    code = service.create(world.a, "friend", "icpc", {"since_year": 2023, "count": 1})
+    assert view.build(store.match_by_code(code), None)["settings"]["since_year"] == 2023

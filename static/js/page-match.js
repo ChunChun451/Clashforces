@@ -152,6 +152,7 @@ function settingsSummary(s, wide = false) {
   ];
   if (!s.custom_problems && s.tags_include.length) items.push(["Tags", s.tags_include.join(", ")]);
   if (!s.custom_problems && s.tags_avoid.length) items.push(["Avoid", s.tags_avoid.join(", ")]);
+  if (!s.custom_problems && s.since_year) items.push(["From", `${s.since_year} on`]);
   if (!s.custom_problems && s.avoid_interactive) items.push(["Interactive", "avoided"]);
   items.push(["Duration", `${s.duration_min} min`]);
   if (s.freeze_min) items.push(["Freeze", `last ${s.freeze_min} min`]);

@@ -1,6 +1,9 @@
 """Validate match settings coming from the API."""
 
+import datetime
+
 from app import config
+from app.cf import cache
 from app.core.selection import Filters, filter_errors
 
 
@@ -21,6 +24,7 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
         "tags_include": sorted({str(t) for t in raw.get("tags_include") or []}),
         "tags_avoid": sorted({str(t) for t in raw.get("tags_avoid") or []}),
         "avoid_interactive": bool(raw.get("avoid_interactive", False)),
+        "since_year": clean_year(raw.get("since_year")),
         "custom_problems": (str(raw.get("custom_problems") or "").strip() or None),
         "duration_min": int(raw.get("duration_min", 60)),
         "freeze_min": int(raw.get("freeze_min") or 0),
@@ -100,9 +104,24 @@ def _uid(h) -> int | None:
     return None if uid in (None, "") else int(uid)
 
 
+def clean_year(raw) -> int | None:
+    """Only problems from contests of this year or later (None = any year)."""
+    if raw in (None, "", 0, "any"):
+        return None
+    try:
+        year = int(raw)
+    except (TypeError, ValueError):
+        raise SettingsError("Pick a year for the problems, or any year.")
+    if not config.SINCE_YEAR_MIN <= year <= datetime.date.today().year:
+        raise SettingsError(f"The year must be between {config.SINCE_YEAR_MIN} and this year.")
+    return year
+
+
 def filters(s: dict) -> Filters:
+    year = s.get("since_year")
     return Filters(s["count"], s["rating_min"], s["rating_max"], tuple(s["tags_include"]),
-                   tuple(s["tags_avoid"]), s["avoid_interactive"])
+                   tuple(s["tags_avoid"]), s["avoid_interactive"],
+                   since_year=year, min_contest_id=cache.first_contest_id(year) if year else 0)
 
 
 def default_range(cf_rating: int) -> list[int]:

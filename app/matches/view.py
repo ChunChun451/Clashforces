@@ -268,7 +268,7 @@ def build(match, viewer: int | None) -> dict:
 
 # Only these settings are sent to browsers. An allow-list, so private keys stored by
 # older versions (or added later) never leak.
-PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive",
+PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive", "since_year",
                        "custom_problems", "duration_min", "freeze_min", "handicap", "team_size", "team_count",
                        "fill", "uneven_ok", "title", "format", "max_players", "description")
 

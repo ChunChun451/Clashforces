@@ -9,6 +9,10 @@ const challengeHandle = editCode ? null : (params.get("challenge") || "").trim()
 const me = await getMe();
 if (!me.user) location.href = `/login?next=${encodeURIComponent(location.pathname + location.search)}`;
 
+// "Problems from": older rounds skew easy for their rating, so newer-only is a common ask.
+const YEARS = [];
+for (let y = new Date().getFullYear(); y >= 2014; y -= 1) YEARS.push(y);
+
 const RATINGS = [];
 for (let r = 800; r <= 3500; r += 100) RATINGS.push(r);
 
@@ -19,6 +23,7 @@ const state = {
   count: 3, rating_min: 1200, rating_max: 1600,
   tags_include: new Set(), tags_avoid: new Set(),
   avoid_interactive: true,
+  since_year: null,
   use_custom: false, custom_problems: "",
   duration_min: 60, freeze_min: 0,
   handicap: null,
@@ -33,7 +38,7 @@ if (editCode) {
     avoid_interactive: s.avoid_interactive, use_custom: !!s.custom_problems,
     custom_problems: s.custom_problems || "", duration_min: s.duration_min, freeze_min: s.freeze_min || 0,
     handicap: s.handicap, team_size: s.team_size || 2, team_count: s.team_count || 2, fill: s.fill || "free",
-    uneven_ok: !!s.uneven_ok,
+    uneven_ok: !!s.uneven_ok, since_year: s.since_year || null,
   });
   // The "Avoid interactive problems" checkbox stands for the interactive tag's avoided state.
   if (state.tags_avoid.delete("interactive")) state.avoid_interactive = true;
@@ -118,6 +123,7 @@ function payload() {
       count: state.count, rating_min: state.rating_min, rating_max: state.rating_max,
       tags_include: [...state.tags_include], tags_avoid: [...state.tags_avoid],
       avoid_interactive: state.avoid_interactive,
+      since_year: state.since_year,
       custom_problems: state.use_custom ? state.custom_problems : null,
       duration_min: state.duration_min,
       freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
@@ -165,7 +171,13 @@ function numberInput(id, value, min, max, onChange) {
 function render() {
   const randomFields = el("div.stack",
     el("div.grid-2",
-      el("div.field", el("label", { for: "count" }, "Problems"), numberInput("count", state.count, 1, 10, (v) => state.count = v)),
+      el("div.row",
+        el("div.field.grow", el("label", { for: "count" }, "Problems"), numberInput("count", state.count, 1, 10, (v) => state.count = v)),
+        el("div.field.grow", el("label", { for: "since" }, "From year"),
+          el("select", { id: "since", title: "Only problems from contests held this year or later",
+            onchange: (e) => { state.since_year = e.target.value ? Number(e.target.value) : null; refreshPreview(); } },
+          el("option", { value: "", selected: !state.since_year }, "Any"),
+          YEARS.map((y) => el("option", { value: y, selected: state.since_year === y }, `${y}+`))))),
       el("div.row",
         el("div.field.grow", el("label", { for: "rmin" }, "Rating from"), ratingSelect("rmin", state.rating_min, (v) => state.rating_min = v)),
         el("div.field.grow", el("label", { for: "rmax" }, "to"), ratingSelect("rmax", state.rating_max, (v) => state.rating_max = v)))),

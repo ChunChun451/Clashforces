@@ -8,7 +8,7 @@ copies of one problem. Chosen problems are spread across the rating range.
 
 import math
 import random
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
 from app import config
 from app.models import Problem
@@ -22,6 +22,8 @@ class Filters:
     tags_include: tuple[str, ...] = ()
     tags_avoid: tuple[str, ...] = ()
     avoid_interactive: bool = False
+    since_year: int | None = None   # only problems from contests of this year or later...
+    min_contest_id: int = 0         # ...which is this contest id and up (ids follow dates)
 
 
 @dataclass
@@ -91,6 +93,10 @@ def filtered_pool(problems: list[Problem], running: set[int], touched_groups: se
         ("rating", lambda p: lo <= p.rating <= hi,
          lambda n: f"Only {n} rated problems exist in {rng_txt}. Widen the rating range."),
     ]
+    if f.min_contest_id:
+        stages.append(("year", lambda p: p.contest_id >= f.min_contest_id,
+                       lambda n: f"Only {n} problems in {rng_txt} are from {f.since_year} or later. "
+                                 "Pick an earlier year or widen the rating range."))
     if f.tags_include:
         inc = set(f.tags_include)
         stages.append(("tags_include", lambda p: inc & set(p.tags),
@@ -156,7 +162,7 @@ def select_per_player(problems: list[Problem], running: set[int], players: list[
     used = set(exclude_groups)
     out = {}
     for pid, name, lo, hi, touched in players:
-        pf = Filters(f.count, lo, hi, f.tags_include, f.tags_avoid, f.avoid_interactive)
+        pf = replace(f, rating_min=lo, rating_max=hi)
         picked = select(problems, running, touched, pf, rng, used, who=name)
         used |= {p.group for p in picked}
         out[pid] = picked

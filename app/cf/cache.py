@@ -6,6 +6,7 @@ is kept for fast selection and rebuilt whenever the tables change.
 """
 
 import asyncio
+import datetime
 import json
 import logging
 import time
@@ -104,6 +105,16 @@ def all_tags() -> list[str]:
 
 def contest_start(contest_id: int) -> int | None:
     return db.scalar("SELECT start_time FROM contests WHERE id = ?", (contest_id,))
+
+
+def first_contest_id(year: int) -> int:
+    """The first Codeforces contest held in `year` or later. Contest ids follow dates, so
+    "problems from 2020 on" is "contest id >= this". 0 while the contest list hasn't loaded."""
+    start = int(datetime.datetime(year, 1, 1, tzinfo=datetime.timezone.utc).timestamp())
+    first = db.scalar("SELECT MIN(id) FROM contests WHERE start_time >= ? AND id < ?", (start, GYM_MIN_ID))
+    if first is not None:
+        return first
+    return GYM_MIN_ID if db.scalar("SELECT COUNT(*) FROM contests") else 0
 
 
 def age_s(key: str) -> float:
