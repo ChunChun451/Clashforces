@@ -427,8 +427,47 @@ def update_settings(user, code: str, raw: dict) -> None:
     events.state(match["id"])
 
 
+def set_pick(user, code: str, text: str) -> dict:
+    """Freestyle: the problem this player sets for their opponents. Others only see that one is set."""
+    match = _lobby_of(user, code)
+    if not store.settings(match).get("freestyle"):
+        raise MatchError("This match isn't Freestyle.")
+    text = (text or "").strip()
+    if not text:
+        db.execute("UPDATE match_players SET pick = NULL, ready = 0 WHERE match_id = ? AND user_id = ?",
+                   (match["id"], user["id"]))
+        events.state(match["id"])
+        return {"pick": None, "warnings": []}
+    keys, leftovers = custom_list.parse(text)
+    if leftovers or len(keys) != 1:
+        raise MatchError("Paste one problem, e.g. 2043C or its Codeforces link.")
+    key = keys[0]
+    p = cache.get(key) or custom_list.gym_problem(key)
+    if p is None:
+        raise MatchError(f"{key} wasn't found on Codeforces.")
+    if p.contest_id in cache.running_contest_ids():
+        raise MatchError(f"{key} is from a contest that is running right now. Pick another.")
+    db.execute("UPDATE match_players SET pick = ? WHERE match_id = ? AND user_id = ?",
+               (p.key, match["id"], user["id"]))
+    warnings = [f"{o['current_handle']} has already tried it." for o in store.players(match["id"])
+                if o["user_id"] != user["id"] and p.group in ingest.touched_groups(o["user_id"])]
+    events.state(match["id"])
+    return {"pick": pick_json(p.key), "warnings": warnings}
+
+
+def pick_json(key: str | None) -> dict | None:
+    if not key:
+        return None
+    p = cache.get(key)
+    return {"key": key, "name": p.name if p else key, "rating": p.rating if p else None}
+
+
 def set_ready(user, code: str, ready: bool) -> None:
     match = _lobby_of(user, code)
+    if ready and store.settings(match).get("freestyle"):
+        me = next(p for p in store.players(match["id"]) if p["user_id"] == user["id"])
+        if not me["pick"]:
+            raise MatchError("Set a problem for your opponents first.")
     db.execute("UPDATE match_players SET ready = ? WHERE match_id = ? AND user_id = ?",
                (1 if ready else 0, match["id"], user["id"]))
     events.state(match["id"])
@@ -447,6 +486,8 @@ def start_blocker(match, players, force: bool = False) -> str | None:
     if not store.is_team(match):
         if match["mode"] == "contest" and len(players) < 2:
             return "A contest needs at least 2 players."
+        if store.settings(match).get("freestyle") and not all(p["pick"] for p in players):
+            return "Everyone needs to set a problem first."
         return None
     count, size, s = _team_conf(match)
     draft = s.get("draft") or {}
@@ -537,6 +578,9 @@ def choose_problems(match, players, rng) -> list[tuple]:
         exclude.add(p.group if p else key)
     h = s.get("handicap") or {}
 
+    if s.get("freestyle"):
+        return _freestyle_problems(s, players, problems, running, touched, exclude, rng)
+
     if s.get("custom_problems"):
         by_key = {p.key: p for p in problems}
         res = custom_list.check(s["custom_problems"], by_key, running, {})
@@ -565,6 +609,33 @@ def choose_problems(match, players, rng) -> list[tuple]:
     chosen = selection.select(problems, running, all_touched, f, rng, exclude)
     pts = selection.lockout_points(len(chosen))
     return [(None, lab, p.key, pt) for lab, p, pt in zip(selection.labels(len(chosen)), chosen, pts)]
+
+
+def _freestyle_problems(s, players, problems, running, touched, exclude, rng) -> list[tuple]:
+    """Each player: the shared random problem(s) first, then one problem set by each opponent."""
+    by_key = {p.key: p for p in problems}
+    picks = []
+    for pl in players:
+        who = pl["current_handle"]
+        if not pl["pick"]:
+            raise MatchError(f"{who} hasn't set a problem yet.")
+        p = by_key.get(pl["pick"]) or custom_list.gym_problem(pl["pick"])
+        if p is None:
+            raise MatchError(f"The problem {who} set wasn't found on Codeforces. {who} needs to pick another.")
+        if p.contest_id in running:
+            raise MatchError(f"The problem {who} set is from a contest running right now. {who} needs to pick another.")
+        picks.append((pl["user_id"], p))
+    groups = [p.group for _, p in picks]
+    if len(set(groups)) < len(groups):
+        raise MatchError("Two players set the same problem. One of you needs to pick another.")
+    cache.add_gym([p for _, p in picks])
+    all_touched = set().union(*touched.values()) if touched else set()
+    common = selection.select(problems, running, all_touched, settings_mod.filters(s), rng, exclude | set(groups))
+    out = []
+    for pl in players:
+        mine = list(common) + [p for owner, p in picks if owner != pl["user_id"]]
+        out += [(pl["user_id"], lab, p.key, 0) for lab, p in zip(selection.labels(len(mine)), mine)]
+    return out
 
 
 def _begin(match, players, problem_rows) -> None:

@@ -64,6 +64,10 @@ class PickIn(BaseModel):
     user_id: int
 
 
+class ProblemPickIn(BaseModel):
+    text: str = ""
+
+
 class StartIn(BaseModel):
     force: bool = False
 
@@ -130,6 +134,12 @@ async def update_settings(code: str, body: SettingsIn, user=Depends(session.requ
 async def ready(code: str, body: ReadyIn, user=Depends(session.require_user)):
     _run(service.set_ready, user, code, body.ready)
     return {"ok": True}
+
+
+@router.put("/matches/{code}/pick")
+async def set_pick(code: str, body: ProblemPickIn, user=Depends(session.require_user)):
+    """Freestyle: the problem this player sets for their opponents."""
+    return _run(service.set_pick, user, code, body.text)
 
 
 @router.post("/matches/{code}/team")

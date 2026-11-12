@@ -58,8 +58,9 @@ def rows_json(rows: list[Row], player_rows, problem_rows, hidden=None) -> list[d
     out = []
     for row in rows:
         p = info[row.player]
+        mine = store.player_problem_keys(problem_rows, row.player)
         labels = {pb["problem_key"]: pb["label"] for pb in problem_rows
-                  if pb["problem_key"] in store.player_problem_keys(problem_rows, row.player)}
+                  if pb["problem_key"] in mine and pb["user_id"] in (None, row.player)}
         cells = []
         for key, label in sorted(labels.items(), key=lambda kv: kv[1]):
             cells.append(cell_json(row.cells.get(key), label, hidden.get((row.player, key), 0)))
@@ -172,7 +173,12 @@ def teams_json(match, player_rows) -> list[dict]:
             for t, name in enumerate(store.team_names(match))]
 
 
-def problem_json(pb, show_tags: bool = True) -> dict:
+def pick_json(key):
+    from app.matches import service
+    return service.pick_json(key)
+
+
+def problem_json(pb, show_tags: bool = True, set_by: str | None = None) -> dict:
     tags = json.loads(pb["tags"]) if pb["tags"] else []
     return {
         "label": pb["label"],
@@ -184,6 +190,7 @@ def problem_json(pb, show_tags: bool = True) -> dict:
         "owner": pb["user_id"],
         "url": problem_url(pb["contest_id"], pb["idx"]),
         "contest_url": contest_url(pb["contest_id"]),
+        "set_by": set_by,
     }
 
 
@@ -203,6 +210,8 @@ def build(match, viewer: int | None) -> dict:
     elif sprint:
         sprint.pop("_keys")
 
+    # freestyle: who set each problem (picks stay secret until the problems are revealed)
+    setters = {p["pick"]: p["handle"] or p["current_handle"] for p in pr if p["pick"]} if s.get("freestyle") else {}
     state = {
         "code": match["code"],
         "mode": match["mode"],
@@ -220,6 +229,7 @@ def build(match, viewer: int | None) -> dict:
         "me": None if me is None else {
             "user_id": viewer, "ready": bool(me["ready"]), "end_time": me["end_time"],
             "forfeited": me["forfeited_at"] is not None,
+            "pick": pick_json(me["pick"]) if s.get("freestyle") else None,
         },
         "viewer_id": viewer,
         "players": [{
@@ -237,8 +247,9 @@ def build(match, viewer: int | None) -> dict:
             "rating_before": p["rating_before"],
             "rating_after": p["rating_after"],
             "team": p["team"],
+            "picked": bool(p["pick"]) if s.get("freestyle") else None,
         } for p in pr],
-        "problems": [problem_json(x) for x in shown] if revealed else [],
+        "problems": [problem_json(x, set_by=setters.get(x["problem_key"])) for x in shown] if revealed else [],
         "standings": [],
         "rematch_code": rematch_code(match),
         "is_host": viewer is not None and viewer == match["creator_id"],
@@ -300,7 +311,7 @@ def build(match, viewer: int | None) -> dict:
 PUBLIC_SETTING_KEYS = ("count", "rating_min", "rating_max", "tags_include", "tags_avoid", "avoid_interactive", "since_year",
                        "custom_problems", "duration_min", "freeze_min", "handicap", "team_size", "team_count",
                        "fill", "uneven_ok", "title", "format", "max_players", "description", "sprint",
-                       "sprint_limit_min")
+                       "sprint_limit_min", "freestyle")
 
 
 def public_settings(s: dict) -> dict:
@@ -329,7 +340,8 @@ def result_payload(match) -> dict:
         steps = freeze.reveal_steps(score, order, all_subs, fs)
         if steps:
             labels = {(p, k): lab for p in order for k, lab in
-                      ((x["problem_key"], x["label"]) for x in pb if x["problem_key"] in order[p])}
+                      ((x["problem_key"], x["label"]) for x in pb
+                       if x["problem_key"] in order[p] and x["user_id"] in (None, p))}
             remaining = freeze.hidden_counts(hidden)
             out_steps = []
             for st in steps:

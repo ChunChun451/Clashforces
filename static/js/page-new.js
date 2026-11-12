@@ -43,6 +43,7 @@ if (editCode) {
     sprint_limit_min: s.sprint ? s.sprint_limit_min || 0 : 10,
   });
   if (s.sprint) state.rules = "sprint";  // shown as its own rules choice; stored as Lockout + sprint
+  if (s.freestyle) state.rules = "freestyle";  // stored as ICPC + freestyle
   // The "Avoid interactive problems" checkbox stands for the interactive tag's avoided state.
   if (state.tags_avoid.delete("interactive")) state.avoid_interactive = true;
 }
@@ -117,13 +118,15 @@ async function validateCustom() {
   } catch (e) { customResult.replaceChildren(el("div.danger", e.message)); }
 }
 
-// Sprint is Lockout with one problem open at a time.
-const realRules = () => (state.rules === "sprint" ? "lockout" : state.rules);
+// Sprint is Lockout with one problem open at a time. Freestyle is ICPC with problems set by the players.
+const realRules = () => (state.rules === "sprint" ? "lockout" : state.rules === "freestyle" ? "icpc" : state.rules);
+const isFreestyle = () => state.rules === "freestyle" && state.mode !== "team";
 const SPRINT_LIMITS = [[0, "No limit"], [5, "5 min"], [10, "10 min"], [15, "15 min"], [20, "20 min"], [30, "30 min"]];
 const RULE_TEXT = {
   icpc: "Most solved wins. Ties go to lower penalty: minutes to each accept + 20 per wrong try.",
   lockout: "First to solve a problem takes its points. Harder problems are worth more. Ends early when the leader can't be caught.",
   sprint: "Lockout, one problem at a time. Only the current problem is shown; the first to solve it takes its points and the next one opens for everyone.",
+  freestyle: "Everyone gets the random problem, plus one problem set by each opponent. In the lobby, each player picks a problem for the others; it stays secret until the start. Scored like ICPC.",
 };
 
 function payload() {
@@ -133,14 +136,15 @@ function payload() {
     settings: {
       rules: realRules(),
       ...(state.rules === "sprint" ? { sprint: true, sprint_limit_min: state.sprint_limit_min } : {}),
+      ...(isFreestyle() ? { freestyle: true } : {}),
       count: state.count, rating_min: state.rating_min, rating_max: state.rating_max,
       tags_include: [...state.tags_include], tags_avoid: [...state.tags_avoid],
       avoid_interactive: state.avoid_interactive,
       since_year: state.since_year,
-      custom_problems: state.use_custom ? state.custom_problems : null,
+      custom_problems: state.use_custom && !isFreestyle() ? state.custom_problems : null,
       duration_min: state.duration_min,
-      freeze_min: state.rules === "icpc" ? state.freeze_min : 0,
-      handicap: state.mode === "team" || state.rules === "sprint" ? null : state.handicap,
+      freeze_min: realRules() === "icpc" ? state.freeze_min : 0,
+      handicap: state.mode === "team" || state.rules === "sprint" || isFreestyle() ? null : state.handicap,
       ...(state.mode === "team" ? { team_size: state.team_size, team_count: state.team_count, fill: state.fill, uneven_ok: state.uneven_ok } : {}),
     },
   };
@@ -223,14 +227,19 @@ function render() {
         el("p.lede", editCode ? "Changes reset everyone's Ready."
           : challengeHandle ? ["Challenging ", el("strong.mono", challengeHandle), ". Set the rules; they get the invite when you create it."]
             : "Set the rules, then share the link. Problems stay hidden until everyone is ready.")),
-      editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => state.mode = v, "Mode")),
+      editCode ? null : segmented([["friend", "Friend duel"], ["team", "Team duel"], ["group", "Group room"]], state.mode, (v) => {
+        state.mode = v;
+        if (v === "team" && state.rules === "freestyle") state.rules = "icpc";
+      }, "Mode")),
     el("div.stack",
       (() => {
         const rules = panel("Rules", null,
-          segmented([["icpc", "ICPC"], ["lockout", "Lockout"], ["sprint", "Sprint"]], state.rules, (v) => {
+          segmented([["icpc", "ICPC"], ["lockout", "Lockout"], ["sprint", "Sprint"],
+            ...(state.mode === "team" ? [] : [["freestyle", "Freestyle"]])], state.rules, (v) => {
             state.rules = v;
             if (v === "lockout" && state.handicap && state.handicap.type !== "extra_time") state.handicap = null;
-            if (v === "sprint") state.handicap = null;
+            if (v === "sprint" || v === "freestyle") state.handicap = null;
+            if (v === "freestyle") { state.use_custom = false; state.count = 1; }
           }, "Rules"),
           el("p.small.muted", RULE_TEXT[state.rules]),
           state.rules === "sprint"
@@ -254,16 +263,21 @@ function render() {
               : "Pick sides in the lobby, or shuffle / balance by rating there. Unrated.")));
         return el("div.grid-2.equal", teams, rules);
       })(),
-      panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
-        state.use_custom ? customFields : randomFields),
+      isFreestyle()
+        ? panel("Random problem", null,
+          el("p.small.muted", "The same for everyone. Each player also gets one problem from each opponent, set in the lobby."),
+          randomFields)
+        : panel("Problems", segmented([[false, "Random"], [true, "My own list"]], state.use_custom, (v) => state.use_custom = v, "Problem source"),
+          state.use_custom ? customFields : randomFields),
       panel("Time", null,
         el("div.grid-2",
           el("div.field", el("label", { for: "dur" }, "Duration (minutes)"), numberInput("dur", state.duration_min, 15, 300, (v) => state.duration_min = v)),
-          state.rules === "icpc"
+          realRules() === "icpc"
             ? el("div.field", el("label", { for: "frz" }, "Freeze last N minutes (0 = off)"), numberInput("frz", state.freeze_min, 0, 299, (v) => state.freeze_min = v))
             : null)),
       el("p.small.muted", state.mode === "team" ? "Team duels have no handicaps."
         : state.rules === "sprint" ? "Sprint has no handicaps."
+        : isFreestyle() ? "Freestyle has no handicaps."
         : state.mode === "group" ? "Handicaps are set in the lobby once players have joined."
           : "Handicaps are set in the lobby once your friend has joined."),
       err,

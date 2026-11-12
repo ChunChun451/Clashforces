@@ -104,6 +104,7 @@ CREATE TABLE IF NOT EXISTS match_players (
   penalty_bonus   INTEGER NOT NULL DEFAULT 0,    -- minutes, e.g. -40
   rating_min      INTEGER,                       -- per-player range handicap
   rating_max      INTEGER,
+  pick            TEXT,                          -- freestyle: the problem this player sets for the others
   forfeited_at    INTEGER,
   final_checked   INTEGER NOT NULL DEFAULT 0,
   place           INTEGER, solved INTEGER, penalty INTEGER, points REAL,

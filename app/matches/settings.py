@@ -48,7 +48,24 @@ def clean(raw: dict, rules: str, mode: str) -> dict:
     s["handicap"] = clean_handicap(s["handicap"], rules, s, mode)
     if raw.get("sprint"):
         s.update(clean_sprint(raw, rules, s, mode))
+    if raw.get("freestyle"):
+        s.update(clean_freestyle(rules, s, mode))
     return s
+
+
+def clean_freestyle(rules: str, s: dict, mode: str) -> dict:
+    """Freestyle: everyone gets the random problem(s), plus one problem set by each opponent."""
+    if mode not in ("friend", "group"):
+        raise SettingsError("Freestyle is for friend duels and group rooms.")
+    if rules != "icpc":
+        raise SettingsError("Freestyle uses ICPC rules.")
+    if s.get("custom_problems"):
+        raise SettingsError("Freestyle picks a random problem; the others come from the players.")
+    if s.get("handicap"):
+        raise SettingsError("Freestyle has no handicaps.")
+    if s.get("sprint"):
+        raise SettingsError("Freestyle can't be combined with Sprint.")
+    return {"freestyle": True}
 
 
 SPRINT_LIMITS = (0, 5, 10, 15, 20, 30, 45, 60)  # minutes per problem; 0 = no limit

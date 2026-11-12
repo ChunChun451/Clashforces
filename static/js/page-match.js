@@ -146,13 +146,15 @@ function myEnd() {
 }
 
 const isSprint = () => !!(M.settings && M.settings.sprint);
-const rulesName = () => (M.rules === "icpc" ? "ICPC" : isSprint() ? "Sprint" : "Lockout");
+const isFreestyle = () => !!(M.settings && M.settings.freestyle);
+const rulesName = () => (isFreestyle() ? "Freestyle" : M.rules === "icpc" ? "ICPC" : isSprint() ? "Sprint" : "Lockout");
 
 function settingsSummary(s, wide = false) {
   const items = [
     ["Rules", rulesName()],
     ["Problems", s.custom_problems ? `Custom: ${s.custom_problems}` : `${s.count} · ${s.rating_min}–${s.rating_max}`],
   ];
+  if (s.freestyle) items.splice(1, 1, ["Problems", `${s.count} random (${s.rating_min}–${s.rating_max}) + 1 from each opponent`]);
   if (!s.custom_problems && s.tags_include.length) items.push(["Tags", s.tags_include.join(", ")]);
   if (!s.custom_problems && s.tags_avoid.length) items.push(["Avoid", s.tags_avoid.join(", ")]);
   if (!s.custom_problems && s.since_year) items.push(["From", `${s.since_year} on`]);
@@ -279,7 +281,8 @@ function lobby() {
       handleEl(p.handle, p.cf_rating),
       p.user_id === M.creator_id ? el("span.chip", "host") : null,
       p.user_id === myId ? el("span.chip.you", "you") : null,
-      p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null),
+      p.needs_reverify ? el("span.danger.small", "must re-verify handle") : null,
+      isFreestyle() ? el("span", { class: p.picked ? "small accent" : "small muted" }, p.picked ? "· problem set" : "· no problem yet") : null),
     el("span", { class: p.ready ? "side small accent" : "side small muted" }, p.ready ? "Ready" : "Not ready")));
   // 1v1: show the empty seat, so the panel reads as "waiting for one more".
   if (M.mode !== "group") for (let i = M.players.length; i < maxPlayers; i++) {
@@ -304,7 +307,8 @@ function lobby() {
     actions = el("div.actions",
       M.status === "starting"
         ? el("span.muted", el("span.spinner"), "  Checking handles and picking problems…")
-        : el("button.btn" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }) },
+        : el("button.btn" + (ready ? "" : ".primary"), { type: "button", onclick: () => act("ready", { ready: !ready }),
+          disabled: isFreestyle() && !ready && !M.me.pick, title: isFreestyle() && !M.me.pick ? "Set a problem for your opponents first" : null },
           ready ? "Not ready" : "Ready"),
       M.mode !== "ranked" ? el("button.btn.ghost", { type: "button", onclick: async () => { if (await act("leave")) location.href = "/"; } }, "Leave") : null,
       creator && M.mode !== "ranked" ? el("a.btn.ghost", { href: `/new?edit=${code}` }, "Edit settings") : null);
@@ -321,8 +325,41 @@ function lobby() {
         el("div.panel-body", settingsSummary(s)),
         el("p.panel-foot", "Problems are revealed when everyone is ready. You submit on Codeforces; we track it."))),
     M.mode === "ranked" && isPlayer() ? el("p.note", "Opponent found. Press Ready within 60 seconds or the match is cancelled.") : null,
+    isFreestyle() && isPlayer() ? pickPanel() : null,
     el("div.lobby-bar", actions),
-    creator && M.mode !== "ranked" && M.players.length >= 2 && !isSprint() ? handicapEditor() : null);
+    creator && M.mode !== "ranked" && M.players.length >= 2 && !isSprint() && !isFreestyle() ? handicapEditor() : null);
+}
+
+// Freestyle: the problem I set for my opponents. Secret until the start.
+let pickNote = null;  // { warnings: [...] } or { error: "..." } from the last save
+async function savePick(text) {
+  try {
+    const r = await api(`/api/matches/${code}/pick`, { method: "PUT", body: { text } });
+    pickNote = { warnings: r.warnings || [] };
+  } catch (e) { pickNote = { error: e.message }; }
+  render();
+}
+
+function pickPanel() {
+  const pick = M.me.pick;
+  const ready = M.me.ready;
+  return el("section.panel",
+    el("div.panel-head", el("h2", "Your problem for your opponents")),
+    el("div.panel-body.stack",
+      pick
+        ? el("div.row",
+          el("span.grow", el("a.mono", { href: cfProblemUrl(pick.key), target: "_blank", rel: "noopener" }, pick.key),
+            ` · ${pick.name} · ${pick.rating ?? "unrated"}`),
+          ready ? null : el("button.btn.ghost.small", { type: "button", onclick: () => savePick("") }, "Remove"))
+        : el("p.small.muted", "Pick any Codeforces problem. Everyone else gets it; you don't. Nobody sees it until the match starts."),
+      ready ? el("p.small.muted", "Press Not ready to change it.")
+        : el("form.row", { onsubmit: (e) => { e.preventDefault(); savePick(e.target.elements.pick.value); } },
+          // the id changes with the pick, so a saved entry isn't restored into the fresh box after re-render
+          el("input.grow", { id: `pick-input-${pick ? pick.key : "none"}`, name: "pick", style: "flex: 1; min-width: 0", placeholder: pick ? "Change it: 2043C or a problem link" : "2043C or a problem link",
+            autocomplete: "off", "aria-label": "Problem for your opponents" }),
+          el("button.btn" + (pick ? "" : ".primary"), { type: "submit" }, pick ? "Change" : "Set problem")),
+      pickNote && pickNote.error ? el("div.small.danger", pickNote.error) : null,
+      pickNote && pickNote.warnings ? pickNote.warnings.map((w) => el("div.small.warn", `Heads up: ${w}`)) : null));
 }
 
 // A player row in a lobby. Hosts get move / kick controls; captains are marked.
@@ -737,7 +774,12 @@ function problemCards() {
     }
   }
   const perPlayer = M.problems.some((p) => p.owner !== null);
-  const list = perPlayer && isPlayer() ? M.problems.filter((p) => p.owner === myId) : M.problems;
+  let list = perPlayer && isPlayer() ? M.problems.filter((p) => p.owner === myId) : M.problems;
+  if (perPlayer && !isPlayer() && isFreestyle()) {
+    // watchers: each problem once (the random one is shared, each pick goes to every opponent)
+    const seen = new Set();
+    list = list.filter((p) => !seen.has(p.key) && seen.add(p.key));
+  }
   const sp = M.status === "running" && M.sprint ? M.sprint : null;
   const outcome = new Map((M.sprint ? M.sprint.steps : []).map((st) => [st.label, st.outcome]));
   const locked = sp ? Math.max(0, sp.total - list.length) : 0;
@@ -763,7 +805,8 @@ function problemCards() {
       showTags && p.tags.length ? el("div.chips", p.tags.map((t) => el("span.chip", t))) : null,
       owner && isTeam() ? el("div.owner.muted", "Taken by ", teamBadge(owner.team), ` ${owner.name}`, owner.by ? ` · ${owner.by}` : "") : null,
       owner && !isTeam() ? el("div.owner.muted", "Taken by ", handleEl(owner.handle, owner.cf_rating, { link: false })) : null,
-      ownerPlayer && !isPlayer() ? el("div.owner.muted", "For ", handleEl(ownerPlayer.handle, ownerPlayer.cf_rating, { link: false })) : null,
+      p.set_by ? el("div.owner.muted", "Set by ", p.set_by) : null,
+      ownerPlayer && !isPlayer() && !isFreestyle() ? el("div.owner.muted", "For ", handleEl(ownerPlayer.handle, ownerPlayer.cf_rating, { link: false })) : null,
       state === "skipped" ? el("div.owner.muted", "Skipped · nobody solved it in time") : null,
       state === "open" && sp ? el("div.sprint-now", el("span.sprint-dot", { "aria-hidden": "true" }),
         sp.deadline ? ["Open · skipped in ", el("span.mono", { id: "sprint-clock" }, fmtDuration(sp.deadline - serverNow()))]

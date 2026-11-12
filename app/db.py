@@ -40,6 +40,8 @@ def _migrate(conn: sqlite3.Connection) -> None:
     cols = {r[1] for r in conn.execute("PRAGMA table_info(match_players)")}
     if "team" not in cols:
         conn.execute("ALTER TABLE match_players ADD COLUMN team INTEGER")
+    if "pick" not in cols:  # freestyle: each player sets a problem for their opponents
+        conn.execute("ALTER TABLE match_players ADD COLUMN pick TEXT")
     cols = {r[1] for r in conn.execute("PRAGMA table_info(matches)")}
     if "scheduled_at" not in cols:
         conn.execute("ALTER TABLE matches ADD COLUMN scheduled_at INTEGER")
