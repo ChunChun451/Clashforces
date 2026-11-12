@@ -91,3 +91,26 @@ async def test_freestyle_room(world):
     await finish(w, match)
     places = {p["handle"]: p["place"] for p in store.players(match["id"])}
     assert places["Bob_77"] == 3
+
+
+async def test_fixed_common_until_cutoff(world, monkeypatch):
+    w = world
+    carl = users.by_id(users.create("carl", 1500, 1500))
+    db.execute("UPDATE users SET history_synced = 1")
+    fixed = [p.key for p in cache.problems() if p.rating == 1500][0]
+    monkeypatch.setattr(service, "FIXED_COMMON", {"bob_77": fixed})
+    monkeypatch.setattr(service, "FIXED_COMMON_UNTIL", w.now.t + 100)
+    pa, pb, pc = _picks(3)
+    for cutoff_passed in (False, True):
+        if cutoff_passed:
+            w.now.t += 200
+        code = service.create(w.a, "group", "icpc", {"count": 1, "rating_min": 1100, "rating_max": 1500, "freestyle": True})
+        service.join(w.b, code)
+        service.join(carl, code)
+        for u, k in ((w.a, pa), (w.b, pb), (carl, pc)):
+            service.set_pick(u, code, k)
+        match = store.match_by_code(code)
+        rows = service.choose_problems(match, store.players(match["id"]), random.Random(1))
+        assert (rows[0][2] == fixed) is not cutoff_passed
+        for u in (w.a, w.b, carl):
+            service.leave(u, code)

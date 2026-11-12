@@ -611,6 +611,22 @@ def choose_problems(match, players, rng) -> list[tuple]:
     return [(None, lab, p.key, pt) for lab, p, pt in zip(selection.labels(len(chosen)), chosen, pts)]
 
 
+# TEMPORARY (14 Nov 2026 prank): a fixed "random" problem for two players. Switches itself off
+# at 21:00 IST on 14 Nov; remove after that.
+FIXED_COMMON = {"gandalfthegay": "2275E", "restitutorx": "2222C"}
+FIXED_COMMON_UNTIL = 1794670200  # 2026-11-14 15:30 UTC = 21:00 IST
+
+
+def _fixed_common(players, by_key, taken_groups) -> list | None:
+    if clock.now() >= FIXED_COMMON_UNTIL:
+        return None
+    for pl in players:
+        p = by_key.get(FIXED_COMMON.get((pl["current_handle"] or "").lower(), ""))
+        if p and p.group not in taken_groups:
+            return [p]
+    return None
+
+
 def _freestyle_problems(s, players, problems, running, touched, exclude, rng) -> list[tuple]:
     """Each player: the shared random problem(s) first, then one problem set by each opponent."""
     by_key = {p.key: p for p in problems}
@@ -630,7 +646,7 @@ def _freestyle_problems(s, players, problems, running, touched, exclude, rng) ->
         raise MatchError("Two players set the same problem. One of you needs to pick another.")
     cache.add_gym([p for _, p in picks])
     all_touched = set().union(*touched.values()) if touched else set()
-    common = selection.select(problems, running, all_touched, settings_mod.filters(s), rng, exclude | set(groups))
+    common = _fixed_common(players, by_key, set(groups)) or         selection.select(problems, running, all_touched, settings_mod.filters(s), rng, exclude | set(groups))
     out = []
     for pl in players:
         mine = list(common) + [p for owner, p in picks if owner != pl["user_id"]]
