@@ -635,7 +635,7 @@ def _has_solved(user_id: int, key: str) -> bool:
 # TEMPORARY (14 Nov 2026 prank): in friend/group Lockout lobbies with this player, one problem comes
 # from this list (one they haven't solved yet). Same cutoff as above; remove after that.
 PLANT_HANDLE = "gandalfthegay"
-PLANT_KEYS = ("2005B1", "2164B", "2009C", "2181H", "2021B")
+PLANT_KEYS = ("2005B2", "2164B", "2009C", "2181H", "2021B")
 
 
 def _plant_lockout(match, s, players, chosen, by_key, rng) -> list:
