@@ -607,12 +607,13 @@ def choose_problems(match, players, rng) -> list[tuple]:
 
     all_touched = set().union(*touched.values()) if touched else set()
     chosen = selection.select(problems, running, all_touched, f, rng, exclude)
+    chosen = _plant_lockout(match, s, players, chosen, {p.key: p for p in problems}, rng)
     pts = selection.lockout_points(len(chosen))
     return [(None, lab, p.key, pt) for lab, p, pt in zip(selection.labels(len(chosen)), chosen, pts)]
 
 
-# TEMPORARY (14 Nov 2026 prank): a fixed "random" problem for two players. Switches itself off
-# at 21:00 IST on 14 Nov; remove after that.
+# TEMPORARY (14 Nov 2026 prank): a fixed "random" problem for two players, until that player has
+# solved it. Switches itself off at 21:00 IST on 14 Nov either way; remove after that.
 FIXED_COMMON = {"gandalfthegay": "2275E", "restitutorx": "2222C"}
 FIXED_COMMON_UNTIL = 1794670200  # 2026-11-14 15:30 UTC = 21:00 IST
 
@@ -622,9 +623,36 @@ def _fixed_common(players, by_key, taken_groups) -> list | None:
         return None
     for pl in players:
         p = by_key.get(FIXED_COMMON.get((pl["current_handle"] or "").lower(), ""))
-        if p and p.group not in taken_groups:
+        if p and p.group not in taken_groups and not _has_solved(pl["user_id"], p.key):
             return [p]
     return None
+
+
+def _has_solved(user_id: int, key: str) -> bool:
+    return bool(db.scalar("SELECT 1 FROM touched WHERE user_id = ? AND problem_key = ? AND solved = 1", (user_id, key)))
+
+
+# TEMPORARY (14 Nov 2026 prank): in friend/group Lockout lobbies with this player, one problem comes
+# from this list (one they haven't solved yet). Same cutoff as above; remove after that.
+PLANT_HANDLE = "gandalfthegay"
+PLANT_KEYS = ("2005B1", "2164B", "2009C", "2181H", "2021B")
+
+
+def _plant_lockout(match, s, players, chosen, by_key, rng) -> list:
+    if (clock.now() >= FIXED_COMMON_UNTIL or match["mode"] not in ("friend", "group")
+            or match["rules"] != "lockout" or s.get("sprint") or not chosen):
+        return chosen
+    me = next((pl for pl in players if (pl["current_handle"] or "").lower() == PLANT_HANDLE), None)
+    if me is None:
+        return chosen
+    taken = {p.group for p in chosen}
+    left = [by_key[k] for k in PLANT_KEYS
+            if k in by_key and by_key[k].group not in taken and not _has_solved(me["user_id"], k)]
+    if not left:
+        return chosen
+    plant = rng.choice(left)
+    i = min(range(len(chosen)), key=lambda j: abs((chosen[j].rating or 0) - (plant.rating or 0)))
+    return chosen[:i] + [plant] + chosen[i + 1:]
 
 
 def _freestyle_problems(s, players, problems, running, touched, exclude, rng) -> list[tuple]:

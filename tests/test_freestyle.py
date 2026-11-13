@@ -114,3 +114,59 @@ async def test_fixed_common_until_cutoff(world, monkeypatch):
         assert (rows[0][2] == fixed) is not cutoff_passed
         for u in (w.a, w.b, carl):
             service.leave(u, code)
+
+
+async def test_fixed_common_stops_once_solved(world, monkeypatch):
+    w = world
+    carl = users.by_id(users.create("carl", 1500, 1500))
+    db.execute("UPDATE users SET history_synced = 1")
+    fixed = [p.key for p in cache.problems() if p.rating == 1500][0]
+    monkeypatch.setattr(service, "FIXED_COMMON", {"bob_77": fixed})
+    monkeypatch.setattr(service, "FIXED_COMMON_UNTIL", w.now.t + 10_000)
+    pa, pb, pc = _picks(3)
+    for solved in (False, True):
+        if solved:
+            db.execute("INSERT INTO touched(user_id, problem_key, solved) VALUES (?,?,1)", (w.b["id"], fixed))
+        code = service.create(w.a, "group", "icpc", {"count": 1, "rating_min": 1100, "rating_max": 1500, "freestyle": True})
+        service.join(w.b, code)
+        service.join(carl, code)
+        for u, k in ((w.a, pa), (w.b, pb), (carl, pc)):
+            service.set_pick(u, code, k)
+        match = store.match_by_code(code)
+        rows = service.choose_problems(match, store.players(match["id"]), random.Random(1))
+        assert (rows[0][2] == fixed) is not solved
+        for u in (w.a, w.b, carl):
+            service.leave(u, code)
+
+
+async def test_lockout_plant(world, monkeypatch):
+    w = world
+    seen, plants = set(), []
+    for p in cache.problems():
+        if p.rating and 1000 <= p.rating <= 1200 and p.group not in seen and len(plants) < 2:
+            seen.add(p.group)
+            plants.append(p.key)
+    monkeypatch.setattr(service, "PLANT_HANDLE", "alice")
+    monkeypatch.setattr(service, "PLANT_KEYS", tuple(plants))
+    monkeypatch.setattr(service, "FIXED_COMMON_UNTIL", w.now.t + 10_000)
+    s = {"count": 3, "rating_min": 1600, "rating_max": 1800}
+
+    def keys(rules, mode="friend"):
+        code = service.create(w.a, mode, rules, s)
+        service.join(w.b, code)
+        match = store.match_by_code(code)
+        rows = service.choose_problems(match, store.players(match["id"]), random.Random(2))
+        for u in (w.a, w.b):
+            service.leave(u, code)
+        return [r[2] for r in rows]
+
+    got = keys("lockout")
+    assert len(got) == 3 and len(set(got) & set(plants)) == 1
+    assert not set(keys("icpc")) & set(plants)                        # Lockout only
+    db.execute("INSERT INTO touched(user_id, problem_key, solved) VALUES (?,?,1)", (w.a["id"], plants[0]))
+    assert set(keys("lockout")) & set(plants) == {plants[1]}           # only unsolved ones
+    db.execute("INSERT INTO touched(user_id, problem_key, solved) VALUES (?,?,1)", (w.a["id"], plants[1]))
+    assert not set(keys("lockout")) & set(plants)
+    db.execute("DELETE FROM touched")
+    w.now.t += 20_000
+    assert not set(keys("lockout")) & set(plants)                     # after the cutoff
