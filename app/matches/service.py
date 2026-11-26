@@ -612,10 +612,10 @@ def choose_problems(match, players, rng) -> list[tuple]:
     return [(None, lab, p.key, pt) for lab, p, pt in zip(selection.labels(len(chosen)), chosen, pts)]
 
 
-# TEMPORARY (14 Nov 2026 prank): a fixed "random" problem for two players, until that player has
-# solved it. Switches itself off at 21:00 IST on 14 Nov either way; remove after that.
+# TEMPORARY (prank, until the end of 28 Nov 2026): a fixed "random" problem for two players, until that player has
+# solved it. Switches itself off at the end of 28 Nov (IST) either way; remove after that.
 FIXED_COMMON = {"gandalfthegay": "2275E", "restitutorx": "2222C"}
-FIXED_COMMON_UNTIL = 1794670200  # 2026-11-14 15:30 UTC = 21:00 IST
+FIXED_COMMON_UNTIL = 1795890600  # 2026-11-28 18:30 UTC = midnight IST, end of 28 Nov
 
 
 def _fixed_common(players, by_key, taken_groups) -> list | None:
@@ -632,7 +632,7 @@ def _has_solved(user_id: int, key: str) -> bool:
     return bool(db.scalar("SELECT 1 FROM touched WHERE user_id = ? AND problem_key = ? AND solved = 1", (user_id, key)))
 
 
-# TEMPORARY (14 Nov 2026 prank): in friend/group Lockout lobbies with this player, one problem comes
+# TEMPORARY (prank, until the end of 28 Nov 2026): in friend/group Lockout lobbies with this player, one problem comes
 # from this list (one they haven't solved yet). Same cutoff as above; remove after that.
 PLANT_HANDLE = "gandalfthegay"
 PLANT_KEYS = ("2005B2", "2164B", "2009C", "2181H", "2021B")
