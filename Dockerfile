@@ -1,4 +1,5 @@
-FROM python:3.13-slim
+# bookworm (OpenSSL 3.0): on the Azure VM, trixie's OpenSSL 3.5 TLS handshake to PyPI times out, so pip install fails.
+FROM python:3.13-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     DB_PATH=/data/clashforces.db COOKIE_SECURE=1
