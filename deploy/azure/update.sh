@@ -40,7 +40,9 @@ check_idle "$short"
 if [ "$(docker image inspect -f '{{ index .Config.Labels "org.clashforces.commit" }}' clashforces:new 2>/dev/null)" != "$target" ]; then
     git reset -q --hard "$target"
     log "deploy($WHO): building $short ($(git log -1 --format=%s | cut -c1-70))"
-    if ! docker build -q -t clashforces:new --label "org.clashforces.commit=$target" . > "$STATE/build.log" 2>&1; then
+    # --network host: pip inside the build kept timing out to PyPI on Docker's bridge network,
+    # while the VM itself reaches it fine.
+    if ! docker build --network host -q -t clashforces:new --label "org.clashforces.commit=$target" . > "$STATE/build.log" 2>&1; then
         log "deploy($WHO): BUILD FAILED for $short; the running app is unchanged. Last lines:"
         tail -n 15 "$STATE/build.log" | sed 's/^/    /' | tee -a "$LOG"
         echo "$target build" > "$STATE/failed-commit"
